@@ -1,0 +1,281 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>TourVoyage – Discover Morocco | Premium Travel Experiences</title>
+  <meta name="description" content="Explore Morocco with expert guides. Book tours, circuits, hotels and desert experiences. Best prices guaranteed." />
+  <meta property="og:title" content="TourVoyage – Premium Morocco Travel" />
+  <meta property="og:type" content="website" />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;600;700;800&family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" />
+  <link rel="stylesheet" href="css/style.css" />
+  <link rel="icon" type="image/png" href="images/favicon.png" />
+</head>
+<body>
+
+<!-- NAVBAR -->
+<nav class="navbar" id="mainNavbar">
+  <div class="container">
+    <div class="navbar-inner">
+      <a href="index.html" class="navbar-brand"><img src="images/logo.png" alt="TourVoyage Logo" style="height: 38px;"></a>
+      <div class="navbar-nav nav-menu-dynamic"></div>
+      <div class="navbar-actions">
+        <span class="navbar-phone"><i class="fa-solid fa-phone"></i> <span class="site-phone"></span></span>
+        <a href="contact.html" class="btn btn-primary btn-sm">Book Now</a>
+        <button class="navbar-toggle" id="navToggle" aria-label="Menu"><i class="fa-solid fa-bars"></i></button>
+      </div>
+    </div>
+  </div>
+</nav>
+<div class="mobile-menu" id="mobileMenu">
+  <div class="nav-menu-dynamic"></div>
+  <div class="navbar-actions">
+    <a href="contact.html" class="btn btn-primary btn-sm">Book Now</a>
+  </div>
+</div>
+
+<!-- HERO -->
+<section class="hero" id="home">
+  <div class="hero-bg"></div>
+  <div class="hero-particles"></div>
+  <div class="container">
+    <div class="hero-grid">
+      <div class="hero-content">
+        <div class="hero-badge"><i class="fa-solid fa-star"></i> Premium Morocco Travel Experiences</div>
+        <h1 class="hero-title">
+          Discover the<br>
+          Magic of <span class="highlight">Morocco</span><br>
+          <span class="highlight-gold" id="heroTagline">With Expert Guides</span>
+        </h1>
+        <p class="hero-subtitle">
+          From the golden dunes of the Sahara to the ancient medinas of Marrakech — 
+          curated tours crafted for unforgettable memories.
+        </p>
+  
+        <!-- Search Bar -->
+        <div class="hero-search-wrap">
+          <div class="hero-search">
+            <div class="hero-search-field" style="flex:2">
+              <span class="search-icon"><i class="fa-solid fa-magnifying-glass"></i></span>
+              <div>
+                <div class="search-label">Search Tours</div>
+                <input id="heroSearchInput" type="text" placeholder="e.g. Marrakech, Sahara..." style="background:none;border:none;outline:none;color:var(--text-primary);font-size:0.9rem;width:100%" />
+              </div>
+            </div>
+            <div class="hero-search-field">
+              <span class="search-icon"><i class="fa-solid fa-location-dot"></i></span>
+              <div style="width:100%">
+                <div class="search-label">Destination</div>
+                <select id="heroSearchDest" style="background:none;border:none;outline:none;color:var(--text-secondary);font-size:0.88rem;width:100%">
+                  <option value="">All Destinations</option>
+                </select>
+              </div>
+            </div>
+            <button id="heroSearchBtn" class="btn btn-primary" style="border-radius:0 14px 14px 0;padding:16px 28px">
+              <i class="fa-solid fa-search"></i> Search
+            </button>
+          </div>
+        </div>
+  
+        <div class="hero-cta">
+          <a href="tours.html" class="btn btn-gold btn-lg"><i class="fa-solid fa-compass"></i> Explore All Tours</a>
+          <a href="about.html" class="btn btn-outline btn-lg"><i class="fa-solid fa-play"></i> Our Story</a>
+        </div>
+  
+        <div class="hero-stats">
+          <div>
+            <div class="hero-stat-val"><span data-stat="tours">0</span><span>+</span></div>
+            <div class="hero-stat-label">Tours Available</div>
+          </div>
+          <div>
+            <div class="hero-stat-val"><span data-stat="reservations">0</span><span>+</span></div>
+            <div class="hero-stat-label">Happy Travelers</div>
+          </div>
+          <div>
+            <div class="hero-stat-val"><span data-stat="destinations">0</span><span></span></div>
+            <div class="hero-stat-label">Destinations</div>
+          </div>
+          <div>
+            <div class="hero-stat-val">4.9<span>★</span></div>
+            <div class="hero-stat-label">Average Rating</div>
+          </div>
+        </div>
+      </div>
+      
+      <div class="hero-image-wrap">
+        <div class="hero-img-box">
+          <img src="images/hero_desert_sunset.png" alt="Moroccan Desert Caravan at Sunset" class="hero-featured-image" />
+          <div class="hero-img-badge">
+            <div class="badge-icon"><i class="fa-solid fa-star" style="color: var(--gold);"></i></div>
+            <div class="badge-text">
+              <strong>4.9/5 Rating</strong>
+              <span>Trusted by 5k+ Guests</span>
+            </div>
+          </div>
+          <div class="hero-img-badge-bottom">
+            <i class="fa-solid fa-compass"></i> 100% Local Guides
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- WHY CHOOSE US -->
+<section class="section-sm" style="background:var(--navy2)">
+  <div class="container">
+    <div class="why-grid">
+      <div class="why-card">
+        <div class="why-icon" style="background:rgba(20,184,166,0.15);color:var(--teal)"><i class="fa-solid fa-shield-heart"></i></div>
+        <h4 class="why-title">100% Safe Travel</h4>
+        <p class="why-text">Licensed guides, insured vehicles and 24/7 support for peace of mind throughout your journey.</p>
+      </div>
+      <div class="why-card">
+        <div class="why-icon" style="background:rgba(245,158,11,0.15);color:var(--gold)"><i class="fa-solid fa-medal"></i></div>
+        <h4 class="why-title">Best Price Guarantee</h4>
+        <p class="why-text">We match any competitor price. Book direct and save with our exclusive deals and coupon codes.</p>
+      </div>
+      <div class="why-card">
+        <div class="why-icon" style="background:rgba(108,99,255,0.15);color:#6c63ff"><i class="fa-solid fa-headset"></i></div>
+        <h4 class="why-title">Expert Local Guides</h4>
+        <p class="why-text">Our passionate local guides know every hidden gem, story, and flavor of Morocco.</p>
+      </div>
+      <div class="why-card">
+        <div class="why-icon" style="background:rgba(236,72,153,0.15);color:var(--pink)"><i class="fa-solid fa-calendar-check"></i></div>
+        <h4 class="why-title">Flexible Booking</h4>
+        <p class="why-text">Free cancellation up to 48 hours before your tour. Custom itineraries available on request.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- FEATURED TOURS -->
+<section class="section">
+  <div class="container">
+    <div class="text-center" style="margin-bottom:48px">
+      <div class="section-tag">Our Tours</div>
+      <h2 class="section-title">Featured Tours & Experiences</h2>
+      <p class="section-subtitle">Handpicked adventures that showcase the very best of Morocco</p>
+    </div>
+    <div class="tours-grid" id="featuredToursGrid">
+      <!-- Populated by JS -->
+    </div>
+    <div class="text-center" style="margin-top:40px">
+      <a href="tours.html" class="btn btn-outline btn-lg"><i class="fa-solid fa-compass"></i> View All Tours</a>
+    </div>
+  </div>
+</section>
+
+<!-- DESTINATIONS -->
+<section class="section" style="background:var(--navy2)">
+  <div class="container">
+    <div style="display:flex;justify-content:space-between;align-items:flex-end;margin-bottom:40px;flex-wrap:wrap;gap:16px">
+      <div>
+        <div class="section-tag">Destinations</div>
+        <h2 class="section-title" style="margin-bottom:0">Popular Destinations</h2>
+      </div>
+      <a href="destinations.html" class="btn btn-outline">Explore All <i class="fa-solid fa-arrow-right"></i></a>
+    </div>
+    <div class="dest-grid" id="destGrid">
+      <!-- Populated by JS -->
+    </div>
+  </div>
+</section>
+
+<!-- TESTIMONIALS -->
+<section class="section">
+  <div class="container">
+    <div style="display:flex;justify-content:space-between;align-items:flex-end;margin-bottom:40px;flex-wrap:wrap;gap:16px">
+      <div>
+        <div class="section-tag">Reviews</div>
+        <h2 class="section-title" style="margin-bottom:0">What Our Travelers Say</h2>
+      </div>
+      <div class="testimonials-controls">
+        <button class="test-btn" id="testPrev"><i class="fa-solid fa-chevron-left"></i></button>
+        <button class="test-btn" id="testNext"><i class="fa-solid fa-chevron-right"></i></button>
+      </div>
+    </div>
+    <div class="testimonials-wrap">
+      <div class="testimonials-track" id="testimonialsTrack">
+        <!-- Populated by JS -->
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- NEWSLETTER -->
+<section class="newsletter-section section-sm">
+  <div class="container">
+    <div class="newsletter-inner">
+      <div class="newsletter-text">
+        <h3 class="newsletter-title">Get Exclusive Travel Deals ✈️</h3>
+        <p class="newsletter-subtitle">Subscribe and receive special offers, travel tips, and early access to new tours.</p>
+      </div>
+      <form class="newsletter-form" onsubmit="return false">
+        <input type="email" class="newsletter-input" placeholder="Enter your email address" required />
+        <button type="submit" class="btn btn-primary">Subscribe</button>
+      </form>
+    </div>
+  </div>
+</section>
+
+<!-- FOOTER -->
+<footer>
+  <div class="container">
+    <div class="footer-grid">
+      <div class="footer-brand">
+        <div class="footer-brand-name"><img src="images/logo.png" alt="TourVoyage Logo" style="height: 34px;"></div>
+        <p class="footer-desc footer-desc-text">Your trusted partner for authentic Morocco travel experiences.</p>
+        <div class="footer-socials footer-socials-dynamic"></div>
+      </div>
+      <div>
+        <h5 class="footer-col-title">Quick Links</h5>
+        <div class="footer-links">
+          <a href="tours.html" class="footer-link">All Tours</a>
+          <a href="destinations.html" class="footer-link">Destinations</a>
+          <a href="hotels.html" class="footer-link">Hotels</a>
+          <a href="about.html" class="footer-link">About Us</a>
+          <a href="contact.html" class="footer-link">Contact</a>
+        </div>
+      </div>
+      <div>
+        <h5 class="footer-col-title">Tour Types</h5>
+        <div class="footer-links">
+          <a href="tours.html?cat=circuit" class="footer-link">Circuits</a>
+          <a href="tours.html?cat=excursion" class="footer-link">Excursions</a>
+          <a href="tours.html?cat=city-tour" class="footer-link">City Tours</a>
+          <a href="tours.html?dest=Sahara" class="footer-link">Desert Tours</a>
+          <a href="tours.html?dest=Marrakech" class="footer-link">Marrakech Tours</a>
+        </div>
+      </div>
+      <div>
+        <h5 class="footer-col-title">Contact</h5>
+        <div class="footer-contact-item"><i class="fa-solid fa-phone"></i><span class="footer-phone"></span></div>
+        <div class="footer-contact-item"><i class="fa-solid fa-envelope"></i><span class="footer-email"></span></div>
+        <div class="footer-contact-item"><i class="fa-solid fa-location-dot"></i><span class="footer-address"></span></div>
+      </div>
+    </div>
+  </div>
+  <div class="container">
+    <div class="footer-bottom">
+      <span class="footer-copy">© <span id="footerYear"></span> <span class="footer-site-name">TourVoyage</span>. All rights reserved.</span>
+      <div class="footer-bottom-links">
+        <a href="#" class="footer-bottom-link">Privacy Policy</a>
+        <a href="#" class="footer-bottom-link">Terms of Service</a>
+        <a href="#" class="footer-bottom-link">Sitemap</a>
+      </div>
+    </div>
+  </div>
+</footer>
+
+<button class="back-to-top" aria-label="Back to top"><i class="fa-solid fa-arrow-up"></i></button>
+<div id="siteToastContainer" class="toast-container"></div>
+
+<script src="../shared/data.js"></script>
+<script src="js/main.js"></script>
+<script>document.getElementById('footerYear').textContent = new Date().getFullYear();</script>
+</body>
+</html>

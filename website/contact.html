@@ -1,0 +1,129 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" /><meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Contact TourVoyage – Book Your Morocco Adventure</title>
+  <meta name="description" content="Get in touch with our travel experts. Book your Morocco tour or request a custom itinerary." />
+  <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;600;700;800&family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" />
+  <link rel="stylesheet" href="css/style.css" />
+  <link rel="icon" type="image/png" href="images/favicon.png" />
+</head>
+<body>
+<nav class="navbar" id="mainNavbar"><div class="container"><div class="navbar-inner">
+  <a href="index.html" class="navbar-brand"><img src="images/logo.png" alt="TourVoyage Logo" style="height: 38px;"></a>
+  <div class="navbar-nav nav-menu-dynamic"></div>
+  <div class="navbar-actions"><a href="contact.html" class="btn btn-primary btn-sm">Book Now</a><button class="navbar-toggle" id="navToggle"><i class="fa-solid fa-bars"></i></button></div>
+</div></div></nav>
+<div class="mobile-menu" id="mobileMenu"><div class="nav-menu-dynamic"></div></div>
+
+<div class="page-hero">
+  <div class="container">
+    <div class="page-hero-breadcrumb"><a href="index.html">Home</a><i class="fa-solid fa-chevron-right"></i><span>Contact</span></div>
+    <h1 class="page-hero-title">Get In Touch</h1>
+    <p class="page-hero-sub">We're here to help plan your perfect Morocco adventure</p>
+  </div>
+</div>
+
+<section class="section"><div class="container">
+  <div class="contact-layout">
+    <div class="contact-info-card">
+      <h3 class="contact-info-title">Contact Information</h3>
+      <div class="contact-info-item">
+        <div class="contact-info-icon" style="background:rgba(20,184,166,0.15);color:var(--teal)"><i class="fa-solid fa-phone"></i></div>
+        <div><div class="contact-info-label">Phone</div><div class="contact-info-val footer-phone"></div></div>
+      </div>
+      <div class="contact-info-item">
+        <div class="contact-info-icon" style="background:rgba(108,99,255,0.15);color:#6c63ff"><i class="fa-solid fa-envelope"></i></div>
+        <div><div class="contact-info-label">Email</div><div class="contact-info-val footer-email"></div></div>
+      </div>
+      <div class="contact-info-item">
+        <div class="contact-info-icon" style="background:rgba(245,158,11,0.15);color:var(--gold)"><i class="fa-solid fa-location-dot"></i></div>
+        <div><div class="contact-info-label">Address</div><div class="contact-info-val footer-address"></div></div>
+      </div>
+      <div class="contact-info-item">
+        <div class="contact-info-icon" style="background:rgba(16,185,129,0.15);color:var(--green)"><i class="fa-brands fa-whatsapp"></i></div>
+        <div><div class="contact-info-label">WhatsApp</div><div class="contact-info-val"><a href="#" class="site-whatsapp" style="color:var(--teal)">Chat with us</a></div></div>
+      </div>
+      <hr style="border-color:var(--border);margin:20px 0" />
+      <h4 style="font-size:0.9rem;font-weight:700;margin-bottom:14px">Business Hours</h4>
+      <div style="font-size:0.84rem;color:var(--text-secondary);line-height:2">
+        <div><strong style="color:var(--text-primary)">Mon – Fri:</strong> 8:00 AM – 6:00 PM</div>
+        <div><strong style="color:var(--text-primary)">Saturday:</strong> 9:00 AM – 1:00 PM</div>
+        <div><strong style="color:var(--text-primary)">Sunday:</strong> 10:00 AM – 4:00 PM</div>
+      </div>
+      <hr style="border-color:var(--border);margin:20px 0" />
+      <h4 style="font-size:0.9rem;font-weight:700;margin-bottom:12px">Follow Us</h4>
+      <div class="footer-socials footer-socials-dynamic"></div>
+    </div>
+    <div class="contact-form-card">
+      <h3 class="contact-form-title">Send Us a Message</h3>
+      <p class="contact-form-sub">Fill out the form below and we'll get back to you within 24 hours.</p>
+      <form id="contactForm">
+        <div class="contact-form-grid">
+          <div class="form-group">
+            <label class="form-label">Full Name *</label>
+            <input id="cName" type="text" class="form-input" required placeholder="Your full name" />
+          </div>
+          <div class="form-group">
+            <label class="form-label">Email *</label>
+            <input id="cEmail" type="email" class="form-input" required placeholder="your@email.com" />
+          </div>
+          <div class="form-group">
+            <label class="form-label">Phone</label>
+            <input id="cPhone" type="tel" class="form-input" placeholder="+212 6 00 00 00 00" />
+          </div>
+          <div class="form-group">
+            <label class="form-label">Subject *</label>
+            <input id="cSubject" type="text" class="form-input" required placeholder="Tour inquiry, booking, etc." />
+          </div>
+          <div class="form-group full-width">
+            <label class="form-label">Preferred Tour</label>
+            <select id="cTour" class="form-input">
+              <option value="">-- Select a Tour (optional) --</option>
+            </select>
+          </div>
+          <div class="form-group full-width">
+            <label class="form-label">Message *</label>
+            <textarea id="cMessage" class="form-textarea" rows="5" required placeholder="Tell us about your travel plans, group size, dates, special requirements..."></textarea>
+          </div>
+          <div class="form-group full-width">
+            <button type="submit" class="btn btn-primary" style="width:100%;justify-content:center;padding:14px">
+              <i class="fa-solid fa-paper-plane"></i> Send Message
+            </button>
+          </div>
+        </div>
+      </form>
+    </div>
+  </div>
+</div></section>
+
+<footer><div class="container"><div class="footer-grid">
+  <div class="footer-brand"><div class="footer-brand-name"><img src="images/logo.png" alt="TourVoyage Logo" style="height: 34px;"></div><p class="footer-desc footer-desc-text">Your trusted Morocco travel partner.</p><div class="footer-socials footer-socials-dynamic"></div></div>
+  <div><h5 class="footer-col-title">Quick Links</h5><div class="footer-links"><a href="tours.html" class="footer-link">Tours</a><a href="destinations.html" class="footer-link">Destinations</a><a href="hotels.html" class="footer-link">Hotels</a><a href="about.html" class="footer-link">About</a><a href="contact.html" class="footer-link">Contact</a></div></div>
+  <div><h5 class="footer-col-title">Popular Tours</h5><div class="footer-links"><a href="tours.html" class="footer-link">Marrakech City Tour</a><a href="tours.html" class="footer-link">Sahara Desert</a><a href="tours.html" class="footer-link">Atlas Circuit</a><a href="tours.html" class="footer-link">Imperial Cities</a></div></div>
+  <div><h5 class="footer-col-title">Contact</h5><div class="footer-contact-item"><i class="fa-solid fa-phone"></i><span class="footer-phone"></span></div><div class="footer-contact-item"><i class="fa-solid fa-envelope"></i><span class="footer-email"></span></div><div class="footer-contact-item"><i class="fa-solid fa-location-dot"></i><span class="footer-address"></span></div></div>
+</div></div>
+<div class="container"><div class="footer-bottom"><span class="footer-copy">&copy; <span id="footerYear"></span> TourVoyage.</span></div></div></footer>
+<button class="back-to-top"><i class="fa-solid fa-arrow-up"></i></button>
+<div id="siteToastContainer" class="toast-container"></div>
+<script src="../shared/data.js"></script>
+<script src="js/main.js"></script>
+<script>
+document.getElementById('footerYear').textContent = new Date().getFullYear();
+// Populate tour dropdown
+window.addEventListener('load', () => {
+  const sel = document.getElementById('cTour');
+  if(sel && window.TM) {
+    TM.get('tours').filter(t=>t.active).forEach(t => {
+      const opt = document.createElement('option');
+      opt.value = t.id; opt.textContent = t.title; sel.appendChild(opt);
+    });
+  }
+  // WhatsApp link
+  const wa = TM.get('settings').whatsapp;
+  const waLink = document.querySelector('.site-whatsapp');
+  if(waLink && wa) waLink.href = 'https://wa.me/' + wa.replace(/[^0-9]/g,'');
+});
+</script>
+</body></html>
