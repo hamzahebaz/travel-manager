@@ -1060,6 +1060,7 @@ function renderUsers() {
         <span style="font-weight:600;color:var(--text-primary)">${u.name}</span>
       </div></td>
       <td><a href="mailto:${u.email}" style="color:var(--blue)">${u.email}</a></td>
+      <td><code>${u.password || (u.role === 'Administrator' ? 'Hamza123' : 'admin')}</code></td>
       <td><span class="role-badge ${roleColors[u.role] || 'role-customer'}">${u.role}</span></td>
       <td><span class="status-badge ${u.status === 'active' ? 'confirmed' : 'cancelled'}">${u.status}</span></td>
       <td style="font-size:0.8rem">${u.joined}</td>
@@ -1085,15 +1086,20 @@ function deleteUser(id) {
 function saveUser() {
   const name = document.getElementById('uName').value.trim();
   const email = document.getElementById('uEmail').value.trim();
-  if (!name || !email) { showToast('Name and email required', 'error'); return; }
+  const password = document.getElementById('uPassword').value.trim();
+  if (!name || !email || !password) { showToast('Name, email and password required', 'error'); return; }
   TM.addItem('users', {
-    name, email,
+    name, email, password,
     role: document.getElementById('uRole').value,
     status: document.getElementById('uStatus').value,
     joined: new Date().toISOString().split('T')[0],
     avatar: name.charAt(0).toUpperCase(),
   });
   closeModal('addUserModal');
+  // Clear modal inputs
+  document.getElementById('uName').value = '';
+  document.getElementById('uEmail').value = '';
+  document.getElementById('uPassword').value = '';
   renderUsers();
   showToast(`${name} invited!`, 'success');
 }

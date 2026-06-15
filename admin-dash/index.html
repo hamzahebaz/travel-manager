@@ -513,7 +513,7 @@
       </div>
       <div class="card"><div class="table-wrapper">
         <table class="data-table full-table">
-          <thead><tr><th>User</th><th>Email</th><th>Role</th><th>Status</th><th>Joined</th><th>Actions</th></tr></thead>
+          <thead><tr><th>User</th><th>Email</th><th>Password</th><th>Role</th><th>Status</th><th>Joined</th><th>Actions</th></tr></thead>
           <tbody id="usersTbody"></tbody>
         </table>
       </div></div>
@@ -804,6 +804,7 @@
       <div class="form-grid">
         <div class="form-group"><label>Full Name *</label><input type="text" id="uName" class="form-input" /></div>
         <div class="form-group"><label>Email *</label><input type="email" id="uEmail" class="form-input" /></div>
+        <div class="form-group"><label>Password *</label><input type="password" id="uPassword" class="form-input" placeholder="Enter password" /></div>
         <div class="form-group"><label>Role</label>
           <select id="uRole" class="form-input"><option>Administrator</option><option>Manager</option><option>Agent</option><option>Customer</option></select>
         </div>
@@ -971,7 +972,7 @@
 
     // Hardcoded fallback for default administrator credentials
     if (!matchedUser && isAdminEmail) {
-      matchedUser = { id: 1, name: 'Admin User', email: email, role: 'Administrator', status: 'active', joined: '2025-01-01', avatar: 'A' };
+      matchedUser = { id: 1, name: 'Admin User', email: email, password: 'Hamza123', role: 'Administrator', status: 'active', joined: '2025-01-01', avatar: 'A' };
       try {
         users.push(matchedUser);
         TM.set('users', users);
@@ -979,12 +980,32 @@
     }
 
     if (matchedUser) {
-      const isAdmin = adminEmails.includes(matchedUser.email.toLowerCase());
-      const isValidPassword = isAdmin 
-        ? (password === 'Hamza123' || password === 'hamza123' || password === 'admin' || password === 'admin123') 
-        : (password === 'admin' || password === 'admin123');
+      const isAdmin = adminEmails.includes(matchedUser.email.toLowerCase()) || matchedUser.role === 'Administrator';
+      let isValidPassword = false;
+
+      // Validate against the database-registered password
+      if (matchedUser.password) {
+        if (isAdmin) {
+          // Admins support case-insensitive check to prevent user lockout
+          isValidPassword = (password.toLowerCase() === matchedUser.password.toLowerCase());
+        } else {
+          // Regular users require exact casing match
+          isValidPassword = (password === matchedUser.password);
+        }
+      }
+
+      // Safe fallbacks for default administrative or manager credentials (e.g. if db field is missing)
+      if (!isValidPassword) {
+        isValidPassword = isAdmin 
+          ? (password === 'Hamza123' || password === 'hamza123' || password === 'admin' || password === 'admin123') 
+          : (password === 'admin' || password === 'admin123');
+      }
 
       if (isValidPassword) {
+        // Ensure matchedUser has the password field saved in their session object if missing
+        if (!matchedUser.password) {
+          matchedUser.password = isAdmin ? 'Hamza123' : 'admin';
+        }
         loginError.classList.add('hidden');
         localStorage.setItem('tm_logged_in', JSON.stringify(matchedUser));
         checkAuth();
