@@ -2,6 +2,11 @@
 <html lang="en">
 <head>
   <base href="../">
+  <script>
+    if (!localStorage.getItem('tm_logged_in')) {
+      document.write('<style>aside.sidebar, div.main-wrapper { display: none !important; }</style>');
+    }
+  </script>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>TM – Tour Manager Dashboard</title>
@@ -863,7 +868,108 @@
   </div>
 </div>
 
+<!-- LOGIN PAGE -->
+<div id="loginPage" class="login-page">
+  <div class="login-card">
+    <div class="login-header">
+      <img src="website/images/logo.png" alt="TourVoyage Logo" class="login-logo" onerror="this.src='../website/images/logo.png'">
+      <h2>Admin Portal</h2>
+      <p>Please sign in to manage your platform</p>
+    </div>
+    <form id="loginForm" onsubmit="return false">
+      <div class="form-group" style="margin-bottom: 16px;">
+        <label for="loginEmail" style="display:block;margin-bottom:6px;font-size:0.8rem;">Email Address</label>
+        <div class="input-icon-wrap">
+          <i class="fa-solid fa-envelope"></i>
+          <input type="email" id="loginEmail" class="form-input" placeholder="admin@tourvoyage.com" required value="admin@tourvoyage.com" />
+        </div>
+      </div>
+      <div class="form-group" style="margin-bottom: 20px;">
+        <label for="loginPassword" style="display:block;margin-bottom:6px;font-size:0.8rem;">Password</label>
+        <div class="input-icon-wrap">
+          <i class="fa-solid fa-lock"></i>
+          <input type="password" id="loginPassword" class="form-input" placeholder="••••••••" required value="admin" />
+        </div>
+      </div>
+      <div id="loginError" class="login-error hidden">
+        <i class="fa-solid fa-circle-exclamation"></i> <span>Invalid email or password.</span>
+      </div>
+      <button type="submit" class="btn btn-primary btn-block" id="loginBtn">
+        <i class="fa-solid fa-right-to-bracket"></i> Sign In
+      </button>
+    </form>
+    <div class="login-footer">
+      <p>Demo Credentials: <code>admin@tourvoyage.com</code> / <code>admin</code></p>
+    </div>
+  </div>
+</div>
+
 <script src="shared/data.js"></script>
 <script src="dashboard.js"></script>
+<script>
+  // Auth Handler
+  const loginForm = document.getElementById('loginForm');
+  const loginPage = document.getElementById('loginPage');
+  const loginEmail = document.getElementById('loginEmail');
+  const loginPassword = document.getElementById('loginPassword');
+  const loginError = document.getElementById('loginError');
+  const sidebar = document.getElementById('sidebar');
+  const mainWrapper = document.getElementById('mainWrapper');
+
+  function checkAuth() {
+    const loggedIn = localStorage.getItem('tm_logged_in');
+    if (loggedIn) {
+      loginPage.classList.add('hidden');
+      if (sidebar) sidebar.style.display = '';
+      if (mainWrapper) mainWrapper.style.display = '';
+      
+      // Inject CSS override
+      const style = document.createElement('style');
+      style.innerHTML = 'aside.sidebar, div.main-wrapper { display: flex !important; }';
+      document.head.appendChild(style);
+    } else {
+      loginPage.classList.remove('hidden');
+      if (sidebar) sidebar.style.display = 'none';
+      if (mainWrapper) mainWrapper.style.display = 'none';
+      
+      // Inject CSS hiding rules
+      const style = document.createElement('style');
+      style.innerHTML = 'aside.sidebar, div.main-wrapper { display: none !important; }';
+      document.head.appendChild(style);
+    }
+  }
+
+  loginForm.addEventListener('submit', (e) => {
+    e.preventDefault();
+    const email = loginEmail.value.trim().toLowerCase();
+    const password = loginPassword.value;
+
+    // Check credentials against TM users database
+    const users = TM.get('users') || [];
+    const matchedUser = users.find(u => u.email.toLowerCase() === email);
+
+    if (matchedUser && (password === 'admin' || password === 'admin123')) {
+      loginError.classList.add('hidden');
+      localStorage.setItem('tm_logged_in', JSON.stringify(matchedUser));
+      checkAuth();
+      location.reload(); // Force reload to cleanly initialize all charts/stats with auth state
+    } else {
+      loginError.classList.remove('hidden');
+    }
+  });
+
+  // Handle Logout Buttons
+  document.addEventListener('click', (e) => {
+    const logoutBtn = e.target.closest('.sidebar-footer-logout, .profile-menu a.danger');
+    if (logoutBtn) {
+      e.preventDefault();
+      localStorage.removeItem('tm_logged_in');
+      location.reload();
+    }
+  });
+
+  // Run initial check
+  checkAuth();
+</script>
 </body>
 </html>
