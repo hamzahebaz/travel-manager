@@ -907,6 +907,12 @@
 <script src="shared/data.js"></script>
 <script src="dashboard.js"></script>
 <script>
+  // Handle reset query param to clear local storage
+  if (new URLSearchParams(window.location.search).get('reset') === 'true') {
+    localStorage.clear();
+    window.location.href = window.location.pathname; // redirect to clean URL
+  }
+
   // Auth Handler
   const loginForm = document.getElementById('loginForm');
   const loginPage = document.getElementById('loginPage');
