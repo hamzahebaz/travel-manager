@@ -963,6 +963,55 @@ function initNewsletter() {
   });
 }
 
+function initCleanUrls() {
+  if (window.location.protocol === 'file:') return;
+
+  const mapping = {
+    'index.html': '/',
+    'tours.html': '/tours',
+    'about.html': '/about',
+    'contact.html': '/contact',
+    'destinations.html': '/destinations',
+    'hotels.html': '/hotels'
+  };
+
+  // Rewrite address bar to clean URL (removes .html and website/)
+  const path = window.location.pathname;
+  if (path.endsWith('.html') || path.includes('/website/')) {
+    let cleanPath = path.replace('.html', '').replace('/website/', '/');
+    if (cleanPath.endsWith('/index')) {
+      cleanPath = cleanPath.slice(0, -6) || '/';
+    }
+    if (!cleanPath) cleanPath = '/';
+    try {
+      window.history.replaceState({}, '', cleanPath + window.location.search);
+    } catch (e) {
+      console.warn('History API replaceState failed', e);
+    }
+  }
+
+  // Intercept click events on links to handle navigation cleanly
+  document.addEventListener('click', e => {
+    const a = e.target.closest('a');
+    if (!a) return;
+    const href = a.getAttribute('href');
+    if (!href || href.startsWith('http') || href.startsWith('#') || href.startsWith('javascript:')) return;
+
+    // Check if the link corresponds to one of our pages
+    let targetPage = href.split('?')[0];
+    if (mapping[targetPage]) {
+      e.preventDefault();
+      let newUrl = mapping[targetPage];
+      const query = href.includes('?') ? href.substring(href.indexOf('?')) : '';
+      window.location.href = newUrl + query;
+    } else if (href.startsWith('tour-detail.html?')) {
+      e.preventDefault();
+      const query = href.substring(href.indexOf('?'));
+      window.location.href = '/tour-detail' + query;
+    }
+  });
+}
+
 // ─── INIT ────────────────────────────────────────────────────────────────────
 document.addEventListener('DOMContentLoaded', () => {
   // Wait for TM to be available
@@ -971,6 +1020,7 @@ document.addEventListener('DOMContentLoaded', () => {
     return;
   }
 
+  initCleanUrls();
   initNavbar();
   initBackToTop();
   initFooter();

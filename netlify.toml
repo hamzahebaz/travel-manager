@@ -1,0 +1,34 @@
+[[redirects]]
+  from = "/"
+  to = "/website/index.html"
+  status = 200
+
+[[redirects]]
+  from = "/tours"
+  to = "/website/tours.html"
+  status = 200
+
+[[redirects]]
+  from = "/about"
+  to = "/website/about.html"
+  status = 200
+
+[[redirects]]
+  from = "/contact"
+  to = "/website/contact.html"
+  status = 200
+
+[[redirects]]
+  from = "/destinations"
+  to = "/website/destinations.html"
+  status = 200
+
+[[redirects]]
+  from = "/hotels"
+  to = "/website/hotels.html"
+  status = 200
+
+[[redirects]]
+  from = "/tour-detail"
+  to = "/website/tour-detail.html"
+  status = 200

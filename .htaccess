@@ -1,0 +1,17 @@
+RewriteEngine On
+
+# 1. External Redirect: Clean URL bar from /website/tours.html to /tours
+RewriteCond %{THE_REQUEST} \s/website/(index|tours|about|contact|destinations|hotels)\.html[\s?] [NC]
+RewriteRule ^website/(.*)\.html$ /$1 [R=301,L]
+
+RewriteCond %{THE_REQUEST} \s/website/tour-detail\.html[\s?] [NC]
+RewriteRule ^website/tour-detail\.html$ /tour-detail [R=301,L]
+
+# 2. Internal Rewrite: Map clean paths back to their actual locations
+RewriteRule ^$ website/index.html [L]
+RewriteRule ^tours$ website/tours.html [L]
+RewriteRule ^about$ website/about.html [L]
+RewriteRule ^contact$ website/contact.html [L]
+RewriteRule ^destinations$ website/destinations.html [L]
+RewriteRule ^hotels$ website/hotels.html [L]
+RewriteRule ^tour-detail$ website/tour-detail.html [L]

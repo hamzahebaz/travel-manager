@@ -1,0 +1,12 @@
+{
+  "cleanUrls": true,
+  "rewrites": [
+    { "source": "/", "destination": "/website/index.html" },
+    { "source": "/tours", "destination": "/website/tours.html" },
+    { "source": "/about", "destination": "/website/about.html" },
+    { "source": "/contact", "destination": "/website/contact.html" },
+    { "source": "/destinations", "destination": "/website/destinations.html" },
+    { "source": "/hotels", "destination": "/website/hotels.html" },
+    { "source": "/tour-detail", "destination": "/website/tour-detail.html" }
+  ]
+}
