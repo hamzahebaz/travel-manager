@@ -972,7 +972,9 @@
 
     if (matchedUser) {
       const isAdmin = matchedUser.email.toLowerCase() === 'hamzadehb@gmail.com';
-      const isValidPassword = isAdmin ? (password === 'Hamza123') : (password === 'admin' || password === 'admin123');
+      const isValidPassword = isAdmin 
+        ? (password === 'Hamza123' || password === 'hamza123' || password === 'admin' || password === 'admin123') 
+        : (password === 'admin' || password === 'admin123');
 
       if (isValidPassword) {
         loginError.classList.add('hidden');
