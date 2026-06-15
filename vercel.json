@@ -1,8 +1,6 @@
 {
   "cleanUrls": true,
   "rewrites": [
-    { "source": "/admin-dash/:path*", "destination": "/admin-dash/:path*" },
-    { "source": "/shared/:path*", "destination": "/shared/:path*" },
     { "source": "/css/:path*", "destination": "/website/css/:path*" },
     { "source": "/js/:path*", "destination": "/website/js/:path*" },
     { "source": "/images/:path*", "destination": "/website/images/:path*" },
@@ -12,6 +10,6 @@
     { "source": "/destinations", "destination": "/website/destinations.html" },
     { "source": "/hotels", "destination": "/website/hotels.html" },
     { "source": "/tour-detail", "destination": "/website/tour-detail.html" },
-    { "source": "/(.*)", "destination": "/website/$1" }
+    { "source": "/((?!shared|admin-dash|css|js|images|favicon\\.ico|styles\\.css|dashboard-extra\\.css|dashboard\\.js|app\\.js).*)", "destination": "/website/$1" }
   ]
 }

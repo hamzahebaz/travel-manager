@@ -96,7 +96,10 @@ function initNavbar() {
   });
 
   // Active nav link
-  const current = window.location.pathname.split('/').pop() || 'index.html';
+  let current = window.location.pathname.split('/').pop() || 'index.html';
+  if (current && !current.includes('.')) {
+    current = current + '.html';
+  }
   $$('.nav-link[data-page]').forEach(link => {
     if (link.getAttribute('data-page') === current) link.classList.add('active');
   });
@@ -1033,7 +1036,10 @@ document.addEventListener('DOMContentLoaded', () => {
     'destinations.html': 'destinations', 'hotels.html': 'hotels',
     'about.html': 'about', 'contact.html': 'contact',
   };
-  const currentPage = window.location.pathname.split('/').pop() || 'index.html';
+  let currentPage = window.location.pathname.split('/').pop() || 'index.html';
+  if (currentPage && !currentPage.includes('.')) {
+    currentPage = currentPage + '.html';
+  }
   TM.applySEO(pageMap[currentPage] || 'home');
 
   // Page-specific init
