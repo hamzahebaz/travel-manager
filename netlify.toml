@@ -1,4 +1,25 @@
 [[redirects]]
+  from = "/website"
+  to = "/"
+  status = 301
+  force = true
+
+[[redirects]]
+  from = "/css/*"
+  to = "/website/css/:splat"
+  status = 200
+
+[[redirects]]
+  from = "/js/*"
+  to = "/website/js/:splat"
+  status = 200
+
+[[redirects]]
+  from = "/images/*"
+  to = "/website/images/:splat"
+  status = 200
+
+[[redirects]]
   from = "/"
   to = "/website/index.html"
   status = 200

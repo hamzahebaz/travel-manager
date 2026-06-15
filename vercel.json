@@ -1,6 +1,12 @@
 {
   "cleanUrls": true,
+  "redirects": [
+    { "source": "/website", "destination": "/", "permanent": true }
+  ],
   "rewrites": [
+    { "source": "/css/:path*", "destination": "/website/css/:path*" },
+    { "source": "/js/:path*", "destination": "/website/js/:path*" },
+    { "source": "/images/:path*", "destination": "/website/images/:path*" },
     { "source": "/", "destination": "/website/index.html" },
     { "source": "/tours", "destination": "/website/tours.html" },
     { "source": "/about", "destination": "/website/about.html" },

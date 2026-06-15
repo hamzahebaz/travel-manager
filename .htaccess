@@ -1,13 +1,20 @@
 RewriteEngine On
 
-# 1. External Redirect: Clean URL bar from /website/tours.html to /tours
+# 1. Redirect /website to root /
+RewriteRule ^website$ / [R=301,L]
+
+# 2. Redirect /website/tours.html to /tours (and same for other pages)
 RewriteCond %{THE_REQUEST} \s/website/(index|tours|about|contact|destinations|hotels)\.html[\s?] [NC]
 RewriteRule ^website/(.*)\.html$ /$1 [R=301,L]
 
 RewriteCond %{THE_REQUEST} \s/website/tour-detail\.html[\s?] [NC]
 RewriteRule ^website/tour-detail\.html$ /tour-detail [R=301,L]
 
-# 2. Internal Rewrite: Map clean paths back to their actual locations
+# 3. Rewrite relative assets (css/js/images) to website/ folder silently
+RewriteCond %{REQUEST_URI} !^/website/
+RewriteRule ^(css|js|images)/(.*)$ website/$1/$2 [L]
+
+# 4. Internal Rewrite: Map clean paths back to their actual locations
 RewriteRule ^$ website/index.html [L]
 RewriteRule ^tours$ website/tours.html [L]
 RewriteRule ^about$ website/about.html [L]
