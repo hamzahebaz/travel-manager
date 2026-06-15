@@ -1,8 +1,12 @@
 [[redirects]]
-  from = "/website"
-  to = "/"
-  status = 301
-  force = true
+  from = "/admin-dash/*"
+  to = "/admin-dash/:splat"
+  status = 200
+
+[[redirects]]
+  from = "/shared/*"
+  to = "/shared/:splat"
+  status = 200
 
 [[redirects]]
   from = "/css/*"
@@ -17,11 +21,6 @@
 [[redirects]]
   from = "/images/*"
   to = "/website/images/:splat"
-  status = 200
-
-[[redirects]]
-  from = "/"
-  to = "/website/index.html"
   status = 200
 
 [[redirects]]
@@ -52,4 +51,9 @@
 [[redirects]]
   from = "/tour-detail"
   to = "/website/tour-detail.html"
+  status = 200
+
+[[redirects]]
+  from = "/*"
+  to = "/website/:splat"
   status = 200
