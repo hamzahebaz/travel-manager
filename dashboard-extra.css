@@ -180,3 +180,8 @@
 .btn-block {
   width: 100%;
 }
+
+.hidden {
+  display: none !important;
+}
+
