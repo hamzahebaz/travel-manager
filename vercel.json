@@ -1,6 +1,8 @@
 {
   "cleanUrls": true,
   "rewrites": [
+    { "source": "/", "destination": "/website/index.html" },
+    { "source": "/index.html", "destination": "/website/index.html" },
     { "source": "/css/:path*", "destination": "/website/css/:path*" },
     { "source": "/js/:path*", "destination": "/website/js/:path*" },
     { "source": "/images/:path*", "destination": "/website/images/:path*" },
@@ -9,7 +11,6 @@
     { "source": "/contact", "destination": "/website/contact.html" },
     { "source": "/destinations", "destination": "/website/destinations.html" },
     { "source": "/hotels", "destination": "/website/hotels.html" },
-    { "source": "/tour-detail", "destination": "/website/tour-detail.html" },
-    { "source": "/((?!shared|admin-dash|website|css|js|images|favicon\\.ico|styles\\.css|dashboard-extra\\.css|dashboard\\.js|app\\.js).*)", "destination": "/website/$1" }
+    { "source": "/tour-detail", "destination": "/website/tour-detail.html" }
   ]
 }
