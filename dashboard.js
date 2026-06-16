@@ -1734,6 +1734,7 @@ function loadSettings() {
     setTiktok: 'tiktok', setLinkedin: 'linkedin', setPinterest: 'pinterest',
     setLogo: 'logo', setFavicon: 'favicon',
     setGA: 'googleAnalytics',
+    setGoogleSheetUrl: 'googleSheetUrl',
   };
   Object.entries(map).forEach(([id, key]) => {
     const el = document.getElementById(id);
@@ -1819,6 +1820,7 @@ function saveSettings() {
     setTiktok: 'tiktok', setLinkedin: 'linkedin', setPinterest: 'pinterest',
     setLogo: 'logo', setFavicon: 'favicon',
     setGA: 'googleAnalytics',
+    setGoogleSheetUrl: 'googleSheetUrl',
   };
   const s = TM.get('settings');
   Object.entries(map).forEach(([id, key]) => {
@@ -2007,6 +2009,9 @@ function deleteSubscriber(email) {
     let subscribers = TM.get('subscribers') || [];
     subscribers = subscribers.filter(s => s.email !== email);
     TM.set('subscribers', subscribers);
+    if (typeof TM.triggerGoogleSheetSync === 'function') {
+      TM.triggerGoogleSheetSync('subscribers', { email: email }, 'delete');
+    }
     renderSubscribers();
     showToast('Subscriber deleted successfully', 'error');
   });
@@ -2719,4 +2724,58 @@ window.addItineraryDayRow = addItineraryDayRow;
 window.addInclusionRow = addInclusionRow;
 window.addExclusionRow = addExclusionRow;
 window.addFaqRow = addFaqRow;
+
+function openGoogleSheetGuide() {
+  openModal('googleSheetGuideModal');
+}
+window.openGoogleSheetGuide = openGoogleSheetGuide;
+
+function syncAllToGoogleSheets() {
+  const settings = TM.get('settings');
+  const syncUrl = settings.googleSheetUrl;
+  if (!syncUrl || !syncUrl.startsWith('http')) {
+    showToast('Please configure a valid Google Sheet Web App URL in settings first', 'error');
+    return;
+  }
+
+  const reservations = TM.get('reservations') || [];
+  const users = TM.get('users') || [];
+  const subscribers = TM.get('subscribers') || [];
+
+  const total = reservations.length + users.length + subscribers.length;
+  if (total === 0) {
+    showToast('No data to sync', 'warning');
+    return;
+  }
+
+  showToast(`Syncing ${total} items to Google Sheets...`, 'info');
+  
+  let processed = 0;
+  const itemsToSync = [];
+  reservations.forEach(r => itemsToSync.push({ type: 'reservations', data: r }));
+  users.forEach(u => itemsToSync.push({ type: 'users', data: u }));
+  subscribers.forEach(s => itemsToSync.push({ type: 'subscribers', data: s }));
+
+  function sendNext() {
+    if (processed >= itemsToSync.length) {
+      showToast('Sync completed successfully!', 'success');
+      return;
+    }
+    const item = itemsToSync[processed];
+    fetch(syncUrl, {
+      method: 'POST',
+      mode: 'no-cors',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(item)
+    }).then(() => {
+      processed++;
+      sendNext();
+    }).catch(err => {
+      console.error('Batch sync error:', err);
+      showToast('Sync encountered an error, check console.', 'error');
+    });
+  }
+  sendNext();
+}
+window.syncAllToGoogleSheets = syncAllToGoogleSheets;
 

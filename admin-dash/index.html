@@ -689,6 +689,22 @@
             <button class="btn btn-outline" style="border-color:var(--red);color:var(--red)" onclick="if(confirm('Reset ALL data to defaults?')) { TM.resetAll(); location.reload(); }"><i class="fa-solid fa-trash"></i> Reset to Defaults</button>
           </div>
         </div>
+        <div class="card" style="padding:28px">
+          <h3 style="font-size:0.95rem;font-weight:700;margin-bottom:18px;padding-bottom:10px;border-bottom:1px solid var(--border)"><i class="fa-solid fa-file-excel" style="color:var(--primary)"></i> Google Sheets Integration</h3>
+          <div class="form-grid">
+            <div class="form-group full-width" style="margin-bottom:0">
+              <label>Google Sheet Web App URL</label>
+              <input type="url" id="setGoogleSheetUrl" class="form-input" placeholder="https://script.google.com/macros/s/.../exec" />
+              <small style="display:block;margin-top:6px;color:var(--text-muted);font-size:0.75rem;line-height:1.4">
+                Syncs invited users, customer reservations, and newsletter subscribers to Google Sheets in real-time.
+              </small>
+            </div>
+          </div>
+          <div style="display:flex;gap:10px;margin-top:16px">
+            <button type="button" class="btn btn-outline btn-sm" onclick="syncAllToGoogleSheets()"><i class="fa-solid fa-cloud-arrow-up"></i> Sync All Existing Data</button>
+            <button type="button" class="btn btn-outline btn-sm" onclick="openGoogleSheetGuide()"><i class="fa-solid fa-circle-question"></i> Setup Instructions</button>
+          </div>
+        </div>
       </div>
     </section>
 
@@ -1118,6 +1134,108 @@
     <div class="modal-footer">
       <button class="btn btn-outline" onclick="closeModal('confirmModal')">Cancel</button>
       <button class="btn btn-primary" id="confirmOkBtn" style="background:var(--red);box-shadow:none">Delete</button>
+    </div>
+  </div>
+</div>
+
+<!-- Google Sheet Guide Modal -->
+<div class="modal-overlay hidden" id="googleSheetGuideModal">
+  <div class="modal" style="max-width:600px">
+    <div class="modal-header">
+      <h3>Google Sheets Integration Setup</h3>
+      <button class="modal-close" onclick="closeModal('googleSheetGuideModal')"><i class="fa-solid fa-xmark"></i></button>
+    </div>
+    <div class="modal-body" style="max-height:70vh;overflow-y:auto;font-size:0.9rem;line-height:1.6;color:var(--text-secondary)">
+      <p style="margin-bottom:12px">Follow these steps to automatically backup all user, reservation, and subscriber data to your own Google Sheet:</p>
+      <ol style="margin-left:20px;margin-bottom:16px;display:flex;flex-direction:column;gap:8px">
+        <li>Create a new Google Sheet.</li>
+        <li>Go to <strong>Extensions > Apps Script</strong>.</li>
+        <li>Delete any existing code and paste the following Google Apps Script code:
+          <pre style="background:var(--bg-dark);padding:12px;border-radius:6px;font-size:0.75rem;overflow-x:auto;color:var(--text-primary);margin-top:6px">
+function doPost(e) {
+  try {
+    var json = JSON.parse(e.postData.contents);
+    var type = json.type; // "reservations", "users", "subscribers"
+    var action = json.action || "upsert"; // "upsert" or "delete"
+    var data = json.data;
+    
+    var ss = SpreadsheetApp.getActiveSpreadsheet();
+    var sheet = ss.getSheetByName(type);
+    if (!sheet) {
+      sheet = ss.insertSheet(type);
+      if (type === "reservations") {
+        sheet.appendRow(["ID", "Tour Name", "Customer", "Email", "Phone", "People", "Date", "Total (€)", "Status", "Created At"]);
+      } else if (type === "users") {
+        sheet.appendRow(["ID", "Name", "Email", "Role", "Status", "Joined"]);
+      } else if (type === "subscribers") {
+        sheet.appendRow(["Email", "Created At"]);
+      }
+    }
+    
+    var idValue = "";
+    var newRow = [];
+    if (type === "reservations") {
+      idValue = String(data.id);
+      newRow = [data.id, data.tourName || data.item, data.customer, data.email, data.phone, data.people, data.date, data.total, data.status, data.createdAt];
+    } else if (type === "users") {
+      idValue = String(data.id);
+      newRow = [data.id, data.name, data.email, data.role, data.status, data.joined];
+    } else if (type === "subscribers") {
+      idValue = String(data.email).toLowerCase();
+      newRow = [data.email, data.createdAt || new Date().toISOString()];
+    }
+    
+    // Find existing row by ID/Email in column A
+    var lastRow = sheet.getLastRow();
+    var foundIndex = -1;
+    if (lastRow > 1) {
+      var values = sheet.getRange(1, 1, lastRow, 1).getValues();
+      for (var i = 1; i < values.length; i++) {
+        if (String(values[i][0]).toLowerCase() === idValue.toLowerCase()) {
+          foundIndex = i + 1; // 1-based index
+          break;
+        }
+      }
+    }
+    
+    if (action === "delete") {
+      if (foundIndex !== -1) {
+        sheet.deleteRow(foundIndex);
+      }
+    } else {
+      // Upsert
+      if (foundIndex !== -1) {
+        sheet.getRange(foundIndex, 1, 1, newRow.length).setValues([newRow]);
+      } else {
+        sheet.appendRow(newRow);
+      }
+    }
+    
+    return ContentService.createTextOutput(JSON.stringify({result: "success"})).setMimeType(ContentService.MimeType.JSON);
+  } catch(error) {
+    return ContentService.createTextOutput(JSON.stringify({result: "error", message: error.toString()})).setMimeType(ContentService.MimeType.JSON);
+  }
+}</pre>
+        </li>
+        <li>Click the <strong>Save</strong> (floppy disk) icon.</li>
+        <li>Click <strong>Deploy > New deployment</strong> in the top right.</li>
+        <li>Select type: <strong>Web app</strong> (click the gear icon next to "Select type").</li>
+        <li>Configure:
+          <ul style="margin-left:20px;margin-top:4px">
+            <li>Execute as: <strong>Me (your email)</strong></li>
+            <li>Who has access: <strong>Anyone</strong> (crucial for backups to work).</li>
+          </ul>
+        </li>
+        <li>Click <strong>Deploy</strong> and authorize permissions if prompted.</li>
+        <li>Copy the <strong>Web app URL</strong> shown.</li>
+        <li>Paste it into the **Google Sheet Web App URL** input on the dashboard Settings, then click <strong>Save All</strong>.</li>
+      </ol>
+      <div style="background:var(--sand-warm);color:var(--terracotta);padding:12px;border-radius:8px;font-size:0.8rem;font-weight:600">
+        <i class="fa-solid fa-circle-info"></i> Once configured, every new reservation, subscriber sign-up, or invited user is backed up to your Google Sheet in real-time!
+      </div>
+    </div>
+    <div class="modal-footer" style="padding-top:16px;border-top:1px solid var(--border);display:flex;justify-content:flex-end">
+      <button class="btn btn-primary" onclick="closeModal('googleSheetGuideModal')">Got it</button>
     </div>
   </div>
 </div>

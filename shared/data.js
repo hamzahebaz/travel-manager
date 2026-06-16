@@ -151,6 +151,7 @@ const TM = (() => {
       accentColor: '#14b8a6',
       logoText: 'TourVoyage',
       websiteUrl: 'website/index.html',
+      googleSheetUrl: '',
       maintenanceMode: false,
       logo: 'website/images/logo.png',
       favicon: 'website/images/favicon.png',
@@ -264,6 +265,12 @@ Sitemap: https://yourdomain.com/sitemap.xml`,
     item.createdAt = item.createdAt || new Date().toISOString().split('T')[0];
     list.unshift(item);
     set(key, list);
+    
+    // Automatically backup reservations, users, or subscribers if configured
+    if (['reservations', 'users', 'subscribers'].includes(key)) {
+      triggerGoogleSheetSync(key, item, 'upsert');
+    }
+
     return item;
   }
 
@@ -273,6 +280,11 @@ Sitemap: https://yourdomain.com/sitemap.xml`,
     if (idx === -1) return null;
     list[idx] = { ...list[idx], ...updates };
     set(key, list);
+
+    if (['reservations', 'users', 'subscribers'].includes(key)) {
+      triggerGoogleSheetSync(key, list[idx], 'upsert');
+    }
+
     return list[idx];
   }
 
@@ -280,6 +292,10 @@ Sitemap: https://yourdomain.com/sitemap.xml`,
     const list = get(key);
     const filtered = list.filter(i => i.id != id);
     set(key, filtered);
+
+    if (['reservations', 'users', 'subscribers'].includes(key)) {
+      triggerGoogleSheetSync(key, { id: id }, 'delete');
+    }
   }
 
   function getItem(key, id) {
@@ -401,8 +417,25 @@ ${pages.map(p => `  <url>
     Object.keys(KEYS).forEach(k => _save(KEYS[k], DEFAULTS[k]));
   }
 
+  function triggerGoogleSheetSync(key, item, action = 'upsert') {
+    try {
+      const settings = get('settings');
+      const syncUrl = settings.googleSheetUrl;
+      if (!syncUrl || !syncUrl.startsWith('http')) return;
+      
+      fetch(syncUrl, {
+        method: 'POST',
+        mode: 'no-cors',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ type: key, data: item, action: action })
+      }).catch(err => console.error('Google Sheet sync failed', err));
+    } catch (e) {
+      console.error('Google Sheet sync error:', e);
+    }
+  }
+
   // Public API
-  return { get, set, getAll, addItem, updateItem, deleteItem, getItem, getBySlug, getSEO, setSEO, applySEO, getStats, validateCoupon, generateSitemap, resetAll, KEYS };
+  return { get, set, getAll, addItem, updateItem, deleteItem, getItem, getBySlug, getSEO, setSEO, applySEO, getStats, validateCoupon, generateSitemap, resetAll, KEYS, triggerGoogleSheetSync };
 
 })();
 
