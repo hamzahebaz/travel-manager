@@ -949,6 +949,22 @@
   </div>
 </div>
 
+<!-- Edit Menu Item Modal -->
+<div class="modal-overlay hidden" id="editMenuModal">
+  <div class="modal" style="max-width:400px">
+    <div class="modal-header"><h3>Edit Menu Item</h3><button class="modal-close" onclick="closeModal('editMenuModal')"><i class="fa-solid fa-xmark"></i></button></div>
+    <div class="modal-body">
+      <input type="hidden" id="editMenuId" />
+      <div class="form-group" style="margin-bottom:12px"><label>Label *</label><input type="text" id="editMLabel" class="form-input" placeholder="e.g. Tours" /></div>
+      <div class="form-group"><label>URL *</label><input type="text" id="editMUrl" class="form-input" placeholder="e.g. tours.html" /></div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-outline" onclick="closeModal('editMenuModal')">Cancel</button>
+      <button class="btn btn-primary" onclick="saveEditMenuItem()"><i class="fa-solid fa-save"></i> Save Changes</button>
+    </div>
+  </div>
+</div>
+
 <div class="toast-container" id="toastContainer"></div>
 <div class="modal-overlay hidden" id="confirmModal" style="z-index:2100">
   <div class="modal" style="max-width:380px">

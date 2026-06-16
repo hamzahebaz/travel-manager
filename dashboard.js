@@ -1155,15 +1155,20 @@ function renderMenu() {
   const list = document.getElementById('menuList');
   if (!list) return;
   const menu = TM.get('menu').sort((a,b) => a.order - b.order);
-  list.innerHTML = menu.map(m => `
-    <div class="menu-item-row" data-id="${m.id}">
-      <span class="menu-drag-handle"><i class="fa-solid fa-grip-vertical"></i></span>
-      <div style="flex:1">
-        <div class="menu-item-label">${m.label}</div>
-        <div class="menu-item-url">${m.url}</div>
+  list.innerHTML = menu.map((m, idx) => `
+    <div class="menu-item-row" data-id="${m.id}" draggable="true" ondragstart="onMenuDragStart(event)" ondragover="onMenuDragOver(event)" ondragleave="onMenuDragLeave(event)" ondrop="onMenuDrop(event)" style="cursor:move; transition: border-color 0.2s; display:flex; align-items:center; gap:10px; padding:12px; margin-bottom:8px; border:1px solid var(--border); border-radius:8px; background:var(--card-bg)">
+      <span class="menu-drag-handle" style="cursor:grab; color:var(--text-muted)"><i class="fa-solid fa-grip-vertical"></i></span>
+      <div style="flex:1; margin-left:10px">
+        <div class="menu-item-label" style="font-weight:600; color:var(--text-primary)">${m.label}</div>
+        <div class="menu-item-url" style="font-size:0.8rem; color:var(--text-muted); word-break:break-all">${m.url}</div>
       </div>
-      <label class="toggle-switch"><input type="checkbox" ${m.active ? 'checked' : ''} onchange="toggleMenuItem(${m.id},this.checked)" /><span class="toggle-slider"></span></label>
-      <button class="act-btn delete" onclick="deleteMenuItem(${m.id})"><i class="fa-solid fa-trash"></i></button>
+      <div style="display:flex; align-items:center; gap:8px">
+        <button type="button" class="act-btn" onclick="moveMenuItem(${idx}, -1)" ${idx === 0 ? 'disabled style="opacity:0.3;cursor:not-allowed"' : ''} title="Move Up"><i class="fa-solid fa-arrow-up"></i></button>
+        <button type="button" class="act-btn" onclick="moveMenuItem(${idx}, 1)" ${idx === menu.length - 1 ? 'disabled style="opacity:0.3;cursor:not-allowed"' : ''} title="Move Down"><i class="fa-solid fa-arrow-down"></i></button>
+        <button type="button" class="act-btn" onclick="openEditMenuModal(${m.id})" title="Edit Menu Item"><i class="fa-solid fa-pen-to-square"></i></button>
+        <label class="toggle-switch"><input type="checkbox" ${m.active ? 'checked' : ''} onchange="toggleMenuItem(${m.id},this.checked)" /><span class="toggle-slider"></span></label>
+        <button type="button" class="act-btn delete" onclick="deleteMenuItem(${m.id})" title="Remove"><i class="fa-solid fa-trash"></i></button>
+      </div>
     </div>`).join('');
 }
 
@@ -1197,6 +1202,85 @@ function saveMenu() {
   });
   showToast('Menu saved! Changes live on website.', 'success');
 }
+
+window.openEditMenuModal = function(id) {
+  const item = TM.getItem('menu', id);
+  if (!item) return;
+  document.getElementById('editMenuId').value = item.id;
+  document.getElementById('editMLabel').value = item.label;
+  document.getElementById('editMUrl').value = item.url;
+  openModal('editMenuModal');
+};
+
+window.saveEditMenuItem = function() {
+  const id = parseInt(document.getElementById('editMenuId').value);
+  const label = document.getElementById('editMLabel').value.trim();
+  const url = document.getElementById('editMUrl').value.trim();
+  if (!label || !url) { showToast('Label and URL required', 'error'); return; }
+  
+  TM.updateItem('menu', id, { label, url });
+  closeModal('editMenuModal');
+  renderMenu();
+  showToast('Menu item updated!', 'success');
+};
+
+window.moveMenuItem = function(index, direction) {
+  const menu = TM.get('menu').sort((a,b) => a.order - b.order);
+  const targetIndex = index + direction;
+  if (targetIndex < 0 || targetIndex >= menu.length) return;
+
+  // Swap orders
+  const temp = menu[index].order;
+  menu[index].order = menu[targetIndex].order;
+  menu[targetIndex].order = temp;
+
+  TM.set('menu', menu);
+  renderMenu();
+};
+
+let draggedMenuItemId = null;
+
+window.onMenuDragStart = function(e) {
+  draggedMenuItemId = e.currentTarget.getAttribute('data-id');
+  e.dataTransfer.effectAllowed = 'move';
+};
+
+window.onMenuDragOver = function(e) {
+  e.preventDefault();
+  e.dataTransfer.dropEffect = 'move';
+  const row = e.currentTarget;
+  row.style.borderColor = 'var(--terracotta)';
+};
+
+window.onMenuDragLeave = function(e) {
+  e.currentTarget.style.borderColor = '';
+};
+
+window.onMenuDrop = function(e) {
+  e.preventDefault();
+  const row = e.currentTarget;
+  row.style.borderColor = '';
+  const targetId = row.getAttribute('data-id');
+  if (!draggedMenuItemId || draggedMenuItemId === targetId) return;
+
+  let menu = TM.get('menu').sort((a,b) => a.order - b.order);
+  const draggedIdx = menu.findIndex(m => m.id == draggedMenuItemId);
+  const targetIdx = menu.findIndex(m => m.id == targetId);
+
+  if (draggedIdx !== -1 && targetIdx !== -1) {
+    const [removed] = menu.splice(draggedIdx, 1);
+    menu.splice(targetIdx, 0, removed);
+
+    // Reassign orders
+    menu.forEach((item, idx) => {
+      item.order = idx + 1;
+    });
+
+    TM.set('menu', menu);
+    renderMenu();
+    showToast('Menu order updated', 'success');
+  }
+};
 
 // ─── USERS CRUD ───────────────────────────────────────────────────────────────
 function renderUsers() {
