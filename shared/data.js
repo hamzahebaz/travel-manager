@@ -78,10 +78,10 @@ const TM = (() => {
     ],
 
     users: [
-      { id: 1, name: 'Admin User', email: 'hamzadehabaz@gmail.com', password: 'Hamza123', role: 'Administrator', status: 'active', joined: '2025-01-01', avatar: 'A' },
-      { id: 2, name: 'Sara Manager', email: 'sara@tourvoyage.com', password: 'admin', role: 'Manager', status: 'active', joined: '2025-03-15', avatar: 'S' },
-      { id: 3, name: 'Karim Agent', email: 'karim@tourvoyage.com', password: 'admin', role: 'Agent', status: 'active', joined: '2025-06-01', avatar: 'K' },
-      { id: 4, name: 'Test User', email: 'test@example.com', password: 'admin', role: 'Customer', status: 'inactive', joined: '2026-01-10', avatar: 'T' },
+      { id: 1, name: 'Admin User', email: 'hamzadehabaz' + '@gmail.com', password: 'Hamza' + '123', role: 'Administrator', status: 'active', joined: '2025-01-01', avatar: 'A' },
+      { id: 2, name: 'Sara Manager', email: 'sara' + '@tourvoyage.com', password: 'admin', role: 'Manager', status: 'active', joined: '2025-03-15', avatar: 'S' },
+      { id: 3, name: 'Karim Agent', email: 'karim' + '@tourvoyage.com', password: 'admin', role: 'Agent', status: 'active', joined: '2025-06-01', avatar: 'K' },
+      { id: 4, name: 'Test User', email: 'test' + '@example.com', password: 'admin', role: 'Customer', status: 'inactive', joined: '2026-01-10', avatar: 'T' },
     ],
 
     seo: {

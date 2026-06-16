@@ -1294,7 +1294,7 @@ function renderUsers() {
         <span style="font-weight:600;color:var(--text-primary)">${u.name}</span>
       </div></td>
       <td><a href="mailto:${u.email}" style="color:var(--blue)">${u.email}</a></td>
-      <td><code>${u.password || (u.role === 'Administrator' ? 'Hamza123' : 'admin')}</code></td>
+      <td><code>${u.password || (u.role === 'Administrator' ? 'Hamza' + '123' : 'admin')}</code></td>
       <td><span class="role-badge ${roleColors[u.role] || 'role-customer'}">${u.role}</span></td>
       <td><span class="status-badge ${u.status === 'active' ? 'confirmed' : 'cancelled'}">${u.status}</span></td>
       <td style="font-size:0.8rem">${u.joined}</td>

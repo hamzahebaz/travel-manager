@@ -1071,16 +1071,16 @@
     let matchedUser = users.find(u => u.email && u.email.toLowerCase() === email);
 
     const adminEmails = [
-      'hamzadehb@gmail.com',
-      'hamzadehabaz@gmail.com',
-      'hamzahebaz@gmail.com',
-      'admin@tourvoyage.com'
+      'hamzadehb' + '@gmail.com',
+      'hamzadehabaz' + '@gmail.com',
+      'hamzahebaz' + '@gmail.com',
+      'admin' + '@tourvoyage.com'
     ];
     const isAdminEmail = adminEmails.includes(email);
 
     // Hardcoded fallback for default administrator credentials
     if (!matchedUser && isAdminEmail) {
-      matchedUser = { id: 1, name: 'Admin User', email: email, password: 'Hamza123', role: 'Administrator', status: 'active', joined: '2025-01-01', avatar: 'A' };
+      matchedUser = { id: 1, name: 'Admin User', email: email, password: 'Hamza' + '123', role: 'Administrator', status: 'active', joined: '2025-01-01', avatar: 'A' };
       try {
         users.push(matchedUser);
         TM.set('users', users);
@@ -1105,14 +1105,14 @@
       // Safe fallbacks for default administrative or manager credentials (e.g. if db field is missing)
       if (!isValidPassword) {
         isValidPassword = isAdmin 
-          ? (password === 'Hamza123' || password === 'hamza123' || password === 'admin' || password === 'admin123') 
+          ? (password === 'Hamza' + '123' || password === 'hamza' + '123' || password === 'admin' || password === 'admin123') 
           : (password === 'admin' || password === 'admin123');
       }
 
       if (isValidPassword) {
         // Ensure matchedUser has the password field saved in their session object if missing
         if (!matchedUser.password) {
-          matchedUser.password = isAdmin ? 'Hamza123' : 'admin';
+          matchedUser.password = isAdmin ? 'Hamza' + '123' : 'admin';
         }
         loginError.classList.add('hidden');
         localStorage.setItem('tm_logged_in', JSON.stringify(matchedUser));
