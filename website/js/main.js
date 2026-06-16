@@ -418,7 +418,7 @@ function initTourDetailPage() {
 
   // Hero
   const heroImg = document.getElementById('detailHeroImg');
-  if (heroImg) heroImg.src = tour.image;
+  if (heroImg) heroImg.src = tour.bannerImage || tour.image;
 
   const heroTitle = document.getElementById('detailTitle');
   if (heroTitle) heroTitle.textContent = tour.title;
@@ -466,19 +466,115 @@ function initTourDetailPage() {
   const discPrice = tour.discount ? tour.price * (1 - tour.discount/100) : null;
   const displayPrice = discPrice ? discPrice : tour.price;
 
-  content.innerHTML = `
-    <!-- Itinerary -->
-    <div class="detail-section">
-      <h3><i class="fa-solid fa-route" style="color:var(--teal);margin-right:8px"></i>Itinerary</h3>
-      <div class="itinerary-list">
-        ${(tour.itinerary || []).map((item, i) => `
-          <div class="itinerary-item">
-            <div class="itinerary-day">${i+1}</div>
-            <div class="itinerary-text">${item}</div>
-          </div>
-        `).join('')}
+  // Travel Styles and Facilities badges
+  let attributesHTML = '';
+  if ((tour.travelStyles && tour.travelStyles.length) || (tour.facilities && tour.facilities.length)) {
+    attributesHTML = `
+      <div class="detail-section" style="padding-bottom:16px">
+        ${(tour.travelStyles || []).map(style => `<span style="display:inline-block;background:var(--sand-warm);color:var(--terracotta);padding:4px 12px;border-radius:100px;font-size:0.78rem;font-weight:600;margin-right:8px;margin-bottom:8px"><i class="fa-solid fa-compass"></i> ${style}</span>`).join('')}
+        ${(tour.facilities || []).map(fac => `<span style="display:inline-block;background:rgba(20,184,166,0.1);color:var(--teal);padding:4px 12px;border-radius:100px;font-size:0.78rem;font-weight:600;margin-right:8px;margin-bottom:8px"><i class="fa-solid fa-circle-check"></i> ${fac}</span>`).join('')}
       </div>
+    `;
+  }
+
+  // Advanced Itinerary Timeline with day description and images uploader support
+  let itineraryHTML = '';
+  if (tour.itineraryDays && tour.itineraryDays.length) {
+    itineraryHTML = `
+      <div class="detail-section">
+        <h3><i class="fa-solid fa-route" style="color:var(--teal);margin-right:8px"></i>Day-by-Day Itinerary</h3>
+        <div class="itinerary-timeline" style="display:flex;flex-direction:column;gap:20px;position:relative;padding-left:24px;margin-top:20px">
+          <div style="position:absolute;top:10px;bottom:10px;left:7px;width:2px;background:var(--sand-dark)"></div>
+          ${tour.itineraryDays.map((day, i) => `
+            <div class="timeline-day" style="position:relative">
+              <div style="position:absolute;top:4px;left:-24px;width:16px;height:16px;border-radius:50%;background:var(--terracotta);border:3px solid #fff;box-shadow:0 0 0 2px var(--sand-dark)"></div>
+              <div style="background:#fff;border:1px solid var(--border);border-radius:12px;padding:20px;box-shadow:0 4px 15px rgba(0,0,0,0.02)">
+                <div style="display:flex;justify-content:space-between;align-items:baseline;flex-wrap:wrap;gap:8px;margin-bottom:8px">
+                  <h4 style="font-family:var(--font-headings, 'Playfair Display', serif);font-size:1.15rem;font-weight:700;color:var(--coffee-dark);margin:0">${day.title}</h4>
+                  <span style="font-size:0.85rem;color:var(--terracotta);font-weight:600">${day.desc}</span>
+                </div>
+                <p style="font-size:0.88rem;color:var(--text-secondary);line-height:1.6;margin-bottom:12px">${day.content}</p>
+                ${day.image ? `
+                  <div style="width:100%;max-height:280px;border-radius:8px;overflow:hidden;margin-top:10px">
+                     <img src="${day.image}" style="width:100%;height:100%;object-fit:cover" alt="${day.title}" />
+                  </div>
+                ` : ''}
+              </div>
+            </div>
+          `).join('')}
+        </div>
+      </div>
+    `;
+  } else {
+    // Fallback to original layout
+    itineraryHTML = `
+      <div class="detail-section">
+        <h3><i class="fa-solid fa-route" style="color:var(--teal);margin-right:8px"></i>Itinerary</h3>
+        <div class="itinerary-list">
+          ${(tour.itinerary || []).map((item, i) => `
+            <div class="itinerary-item">
+              <div class="itinerary-day">${i+1}</div>
+              <div class="itinerary-text">${item}</div>
+            </div>
+          `).join('')}
+        </div>
+      </div>
+    `;
+  }
+
+  // YouTube embed video frame
+  let videoHTML = '';
+  if (tour.youtubeUrl) {
+    let embedUrl = tour.youtubeUrl;
+    if (embedUrl.includes('watch?v=')) {
+      embedUrl = embedUrl.replace('watch?v=', 'embed/');
+    } else if (embedUrl.includes('youtu.be/')) {
+      embedUrl = embedUrl.replace('youtu.be/', 'www.youtube.com/embed/');
+    }
+    videoHTML = `
+      <div class="detail-section">
+        <h3><i class="fa-solid fa-video" style="color:var(--teal);margin-right:8px"></i>Tour Video Preview</h3>
+        <div class="video-container" style="position:relative;padding-bottom:56.25%;height:0;overflow:hidden;border-radius:12px;box-shadow:0 10px 25px rgba(0,0,0,0.1);background:#000">
+          <iframe src="${embedUrl}" style="position:absolute;top:0;left:0;width:100%;height:100%;border:0" allowfullscreen></iframe>
+        </div>
+      </div>
+    `;
+  }
+
+  // FAQ accordion list
+  let faqsHTML = '';
+  if (tour.faqs && tour.faqs.length) {
+    faqsHTML = `
+      <div class="detail-section">
+        <h3><i class="fa-solid fa-question-circle" style="color:var(--teal);margin-right:8px"></i>Frequently Asked Questions</h3>
+        <div class="faqs-accordion" style="display:flex;flex-direction:column;gap:12px">
+          ${tour.faqs.map((faq, i) => `
+            <div class="faq-item" style="border:1px solid var(--border);border-radius:8px;overflow:hidden">
+              <button onclick="toggleFaqAccordion(this)" style="width:100%;display:flex;justify-content:space-between;align-items:center;padding:14px 20px;background:var(--cream);border:none;font-weight:600;color:var(--coffee-dark);cursor:pointer;text-align:left">
+                <span>${faq.q}</span>
+                <i class="fa-solid fa-chevron-down" style="transition:transform 0.3s ease"></i>
+              </button>
+              <div class="faq-answer" style="max-height:0;overflow:hidden;transition:max-height 0.3s ease-out, padding 0.3s ease-out;padding:0 20px;font-size:0.88rem;color:var(--text-secondary);line-height:1.6;background:#fff">
+                <div style="padding:12px 0">${faq.a}</div>
+              </div>
+            </div>
+          `).join('')}
+        </div>
+      </div>
+    `;
+  }
+
+  content.innerHTML = `
+    ${attributesHTML}
+
+    <!-- Description -->
+    <div class="detail-section">
+      <h3><i class="fa-solid fa-circle-info" style="color:var(--teal);margin-right:8px"></i>About This Tour</h3>
+      <p style="font-size:0.92rem;color:var(--text-secondary);line-height:1.8">${tour.description}</p>
     </div>
+
+    ${videoHTML}
+    ${itineraryHTML}
 
     <!-- Included / Excluded -->
     <div class="detail-section">
@@ -489,22 +585,31 @@ function initTourDetailPage() {
       </div>
     </div>
 
-    <!-- Description -->
-    <div class="detail-section">
-      <h3><i class="fa-solid fa-circle-info" style="color:var(--teal);margin-right:8px"></i>About This Tour</h3>
-      <p style="font-size:0.92rem;color:var(--text-secondary);line-height:1.8">${tour.description}</p>
-    </div>
+    ${faqsHTML}
   `;
 
   // Booking card
   const bookingCard = document.getElementById('bookingCard');
   if (bookingCard) {
+    const minDate = new Date();
+    minDate.setDate(minDate.getDate() + (tour.minAdvanceDays || 0));
+    const minDateString = minDate.toISOString().split('T')[0];
+
+    let advanceNoticeHTML = '';
+    if (tour.minAdvanceDays) {
+      advanceNoticeHTML = `<div style="font-size:0.75rem;color:var(--terracotta);background:var(--sand-warm);padding:6px 12px;border-radius:6px;margin-top:8px;font-weight:500"><i class="fa-solid fa-circle-info"></i> Réserver au moins ${tour.minAdvanceDays} jours à l'avance</div>`;
+    }
+
+    const initialPeople = tour.minPeople || 1;
+    const initialTotal = Math.round(displayPrice) * initialPeople;
+
     bookingCard.innerHTML = `
       <div class="booking-card-price">
         <div class="booking-price-label">Price per person</div>
         ${tour.discount ? `<div style="font-size:0.85rem;color:var(--text-muted);text-decoration:line-through">${sym}${tour.price}</div>` : ''}
         <div class="booking-price-val">${sym}${Math.round(displayPrice)}<small>/person</small></div>
         ${tour.discount ? `<div style="font-size:0.78rem;color:var(--green);margin-top:4px"><i class="fa-solid fa-tag"></i> ${tour.discount}% discount applied</div>` : ''}
+        ${advanceNoticeHTML}
       </div>
       <form class="booking-form" id="bookingForm" onsubmit="submitBooking(event, ${tour.id})">
         <div class="form-group">
@@ -521,11 +626,11 @@ function initTourDetailPage() {
         </div>
         <div class="form-group">
           <label class="form-label">Tour Date *</label>
-          <input class="form-input" type="date" id="bDate" required min="${new Date().toISOString().split('T')[0]}" />
+          <input class="form-input" type="date" id="bDate" required min="${minDateString}" value="${minDateString}" />
         </div>
         <div class="form-group">
           <label class="form-label">Number of People *</label>
-          <input class="form-input" type="number" id="bPeople" required min="1" max="${tour.maxPeople || 12}" value="1" oninput="updateBookingTotal(${Math.round(displayPrice)})" />
+          <input class="form-input" type="number" id="bPeople" required min="${tour.minPeople || 1}" max="${tour.maxPeople || 12}" value="${initialPeople}" oninput="updateBookingTotal(${Math.round(displayPrice)})" />
         </div>
         <div class="form-group">
           <label class="form-label">Coupon Code</label>
@@ -541,8 +646,8 @@ function initTourDetailPage() {
         </div>
         <div class="booking-summary" id="bookingSummary">
           <div class="booking-summary-row"><span>Price per person</span><span>${sym}${Math.round(displayPrice)}</span></div>
-          <div class="booking-summary-row"><span>Persons</span><span id="bPersonsDisplay">1</span></div>
-          <div class="booking-summary-row total"><span>Total</span><span id="bTotalDisplay">${sym}${Math.round(displayPrice)}</span></div>
+          <div class="booking-summary-row"><span>Persons</span><span id="bPersonsDisplay">${initialPeople}</span></div>
+          <div class="booking-summary-row total"><span>Total</span><span id="bTotalDisplay">${sym}${initialTotal}</span></div>
         </div>
         <button type="submit" class="btn btn-primary" style="width:100%;justify-content:center;margin-bottom:10px">
           <i class="fa-solid fa-calendar-check"></i> Book Now
@@ -1088,6 +1193,7 @@ document.addEventListener('DOMContentLoaded', () => {
   initAboutPage();
   initContactPage();
   initCarsPage();
+  initPopupSystem();
 });
 
 // Floating Support Chat Widget (with Chat, FAQ, Channels tabs)
@@ -1592,5 +1698,141 @@ Notes: ${notes}
     window.open(`https://wa.me/${cleanedNum}?text=${encodeURIComponent(message)}`, '_blank');
   }, 1000);
 };
+
+// ─── POPUP SYSTEM ────────────────────────────────────────────────────────────
+function initPopupSystem() {
+  let currentPage = window.location.pathname.split('/').pop() || 'index.html';
+  if (currentPage && !currentPage.includes('.')) {
+    currentPage = currentPage + '.html';
+  }
+
+  const popups = (window.TM ? TM.get('popups') : null) || [];
+  const activePopup = popups.find(p => p.status === 'Published' && (p.targetPage === 'all' || p.targetPage === currentPage));
+
+  if (!activePopup) return;
+
+  // Check 24h dismissal flag
+  const dismissedTime = localStorage.getItem('tm_popup_dismissed_' + activePopup.id);
+  if (dismissedTime) {
+    const now = new Date().getTime();
+    if (now - parseInt(dismissedTime) < 24 * 60 * 60 * 1000) {
+      return; // Closed recently
+    }
+  }
+
+  // Render popup overlay
+  const overlay = document.createElement('div');
+  overlay.id = 'webPopupOverlay';
+  overlay.style = `
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(0,0,0,0.6);
+    backdrop-filter: blur(4px);
+    z-index: 10000;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    opacity: 0;
+    transition: opacity 0.4s ease;
+    padding: 20px;
+  `;
+
+  const card = document.createElement('div');
+  card.style = `
+    background: #fff;
+    width: 100%;
+    max-width: 500px;
+    border-radius: 16px;
+    overflow: hidden;
+    box-shadow: 0 20px 40px rgba(0,0,0,0.25);
+    position: relative;
+    transform: scale(0.8);
+    transition: transform 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+    border: 1px solid rgba(255,255,255,0.2);
+  `;
+
+  let imageHTML = '';
+  if (activePopup.image) {
+    imageHTML = `<div style="width:100%; height:200px; overflow:hidden">
+      <img src="${activePopup.image}" style="width:100%; height:100%; object-fit:cover" alt="Promo" />
+    </div>`;
+  }
+
+  card.innerHTML = `
+    ${imageHTML}
+    <button id="closeWebPopupBtn" style="
+      position: absolute;
+      top: 12px;
+      right: 12px;
+      width: 32px;
+      height: 32px;
+      border-radius: 50%;
+      background: rgba(255,255,255,0.9);
+      border: 1px solid rgba(0,0,0,0.1);
+      font-size: 1.2rem;
+      font-weight: bold;
+      color: #333;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      box-shadow: 0 4px 10px rgba(0,0,0,0.1);
+      transition: all 0.2s ease;
+      z-index: 10;
+    " onmouseover="this.style.transform='scale(1.1)'" onmouseout="this.style.transform='scale(1)'">&times;</button>
+    <div style="padding: 24px; text-align: center">
+      <h3 style="font-family:var(--font-headings, 'Playfair Display', serif); font-size:1.5rem; font-weight:700; color:#2c1810; margin-bottom:12px">${activePopup.title}</h3>
+      <div style="font-size:0.92rem; color:#5c4033; line-height:1.6; margin-bottom:20px">${activePopup.content}</div>
+      <button id="closeWebPopupActionBtn" class="btn btn-primary" style="margin: 0 auto; min-width:140px; justify-content:center">Découvrir</button>
+    </div>
+  `;
+
+  overlay.appendChild(card);
+  document.body.appendChild(overlay);
+
+  // Trigger animations
+  setTimeout(() => {
+    overlay.style.opacity = '1';
+    card.style.transform = 'scale(1)';
+  }, 100);
+
+  const closePopup = () => {
+    localStorage.setItem('tm_popup_dismissed_' + activePopup.id, new Date().getTime());
+    overlay.style.opacity = '0';
+    card.style.transform = 'scale(0.8)';
+    setTimeout(() => {
+      overlay.remove();
+    }, 400);
+  };
+
+  document.getElementById('closeWebPopupBtn').addEventListener('click', closePopup);
+  document.getElementById('closeWebPopupActionBtn').addEventListener('click', closePopup);
+  overlay.addEventListener('click', (e) => {
+    if (e.target === overlay) closePopup();
+  });
+}
+
+// ─── FAQ ACCORDION TOGGLE ───────────────────────────────────────────────────
+function toggleFaqAccordion(btn) {
+  const item = btn.parentElement;
+  const answer = item.querySelector('.faq-answer');
+  const icon = btn.querySelector('i');
+  if (answer.style.maxHeight && answer.style.maxHeight !== '0px') {
+    answer.style.maxHeight = '0px';
+    icon.style.transform = 'rotate(0deg)';
+  } else {
+    // Close all other FAQs on the page first
+    document.querySelectorAll('.faq-answer').forEach(el => el.style.maxHeight = '0px');
+    document.querySelectorAll('.faq-item i').forEach(el => el.style.transform = 'rotate(0deg)');
+    
+    answer.style.maxHeight = answer.scrollHeight + 'px';
+    icon.style.transform = 'rotate(180deg)';
+  }
+}
+window.toggleFaqAccordion = toggleFaqAccordion;
+window.initPopupSystem = initPopupSystem;
 
 

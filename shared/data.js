@@ -23,12 +23,51 @@ const TM = (() => {
     robots:       'tm_robots',
     subscribers:  'tm_subscribers',
     cars:         'tm_cars',
+    popups:       'tm_popups',
   };
 
   // ─── Default Data ────────────────────────────────────────────────────────
   const DEFAULTS = {
     tours: [
-      { id: 1, slug: 'circuit-atlas-5-days', title: 'Circuit Aït Bougamez – 5 Days | Sahara & Atlas', destination: 'Marrakech', duration: '5 Days', price: 499, rating: 4.8, reviews: 42, image: 'https://images.unsplash.com/photo-1539650116574-75c0c6d38a7a?w=800&q=80', gallery: [], category: 'circuit', featured: true, active: true, description: 'Explore the breathtaking High Atlas mountains and the golden dunes of the Sahara on this 5-day adventure circuit.', itinerary: ['Day 1: Marrakech → Ouarzazate', 'Day 2: Draa Valley & Zagora', 'Day 3: Merzouga Sahara Dunes', 'Day 4: Todra Gorge & Dades', 'Day 5: Return to Marrakech'], included: ['Professional guide', 'Transport', 'Accommodation', 'Breakfast & Dinner', 'Camel ride'], excluded: ['Flights', 'Lunch', 'Personal expenses'], maxPeople: 12, discount: 0, createdAt: '2026-01-15' },
+      {
+        id: 1,
+        slug: 'circuit-atlas-5-days',
+        title: 'Circuit Aït Bougamez – 5 Days | Sahara & Atlas',
+        destination: 'Marrakech',
+        duration: '5 Days',
+        price: 499,
+        rating: 4.8,
+        reviews: 42,
+        image: 'https://images.unsplash.com/photo-1539650116574-75c0c6d38a7a?w=800&q=80',
+        gallery: [],
+        category: 'circuit',
+        featured: true,
+        active: true,
+        description: 'Explore the breathtaking High Atlas mountains and the golden dunes of the Sahara on this 5-day adventure circuit.',
+        itinerary: ['Day 1: Marrakech → Ouarzazate', 'Day 2: Draa Valley & Zagora', 'Day 3: Merzouga Sahara Dunes', 'Day 4: Todra Gorge & Dades', 'Day 5: Return to Marrakech'],
+        included: ['Professional guide', 'Transport', 'Accommodation', 'Breakfast & Dinner', 'Camel ride'],
+        excluded: ['Flights', 'Lunch', 'Personal expenses'],
+        maxPeople: 12,
+        discount: 0,
+        createdAt: '2026-01-15',
+        youtubeUrl: 'https://www.youtube.com/embed/dQw4w9WgXcQ',
+        minAdvanceDays: 2,
+        minPeople: 1,
+        bannerImage: 'https://images.unsplash.com/photo-1539650116574-75c0c6d38a7a?w=1200&q=80',
+        travelStyles: ['Cultural', 'Nature & Adventure'],
+        facilities: ['WiFi', 'Guest Rooms'],
+        faqs: [
+          { q: 'Is transportation included?', a: 'Yes, round-trip transport in an air-conditioned 4x4 or minivan from your hotel in Marrakech is fully included.' },
+          { q: 'What should I pack for the desert?', a: 'We recommend comfortable walking shoes, sunglasses, sunscreen, a hat, and warm clothing for the cool desert nights.' }
+        ],
+        itineraryDays: [
+          { title: 'Day 1: Marrakech → Ouarzazate', desc: 'Cross the High Atlas Mountains via Tizi n\'Tichka pass.', content: 'Start your journey from Marrakech, driving through beautiful Berber villages. Visit the UNESCO World Heritage site of Ait Benhaddou before arriving in Ouarzazate.', image: 'https://images.unsplash.com/photo-1539650116574-75c0c6d38a7a?w=800&q=80' },
+          { title: 'Day 2: Draa Valley & Zagora', desc: 'Drive through palm groves and volcanic landscapes.', content: 'Travel through the lush Draa Valley, lined with date palms. Arrive in Zagora for a camel trek into the desert camp.', image: 'https://images.unsplash.com/photo-1509316785289-025f5b846b35?w=800&q=80' },
+          { title: 'Day 3: Merzouga Sahara Dunes', desc: 'Deep Sahara exploration and overnight in a luxury camp.', content: 'Head further east to the iconic golden dunes of Erg Chebbi in Merzouga. Experience traditional Berber music and hospitality around the campfire.', image: 'https://images.unsplash.com/photo-1534534573898-db5148bc8b0c?w=800&q=80' },
+          { title: 'Day 4: Todra Gorge & Dades', desc: 'Walk under the towering limestone cliffs.', content: 'Wake up early for a spectacular desert sunrise, then travel to the dramatic Todra Gorges and Dades Valley.', image: 'https://images.unsplash.com/photo-1548013146-72479768bada?w=800&q=80' },
+          { title: 'Day 5: Return to Marrakech', desc: 'Scenic drive back through the High Atlas.', content: 'Enjoy your final breakfast in the mountains before returning to Marrakech, arriving in the late afternoon.', image: 'https://images.unsplash.com/photo-1539020140153-e479b8f22cc5?w=800&q=80' }
+        ]
+      },
       { id: 2, slug: 'sahara-desert-quad', title: 'Agafay Desert: Quad, Dromedary & Dinner – Premium', destination: 'Agafay', duration: '1 Day', price: 89, rating: 4.9, reviews: 78, image: 'https://images.unsplash.com/photo-1509316785289-025f5b846b35?w=800&q=80', gallery: [], category: 'excursion', featured: true, active: true, description: 'An unforgettable premium desert experience with quad biking, dromedary riding, and a magical dinner under the stars.', itinerary: ['09:00 – Pickup from Marrakech', '10:30 – Quad biking in Agafay', '14:00 – Dromedary ride & sunset', '19:00 – Berber dinner under stars', '22:00 – Return to Marrakech'], included: ['Transport', 'Quad bike', 'Dromedary ride', 'Dinner', 'Show'], excluded: ['Personal expenses', 'Tips'], maxPeople: 20, discount: 10, createdAt: '2026-01-20' },
       { id: 3, slug: 'marrakech-city-tour', title: 'Marrakech City Tour – Full Day Discovery', destination: 'Marrakech', duration: '1 Day', price: 45, rating: 4.7, reviews: 124, image: 'https://images.unsplash.com/photo-1539020140153-e479b8f22cc5?w=800&q=80', gallery: [], category: 'city-tour', featured: true, active: true, description: 'Discover the magical medina, souks, palaces, and gardens of Marrakech with an expert local guide.', itinerary: ['09:00 – Djemaa el-Fna', '10:30 – Koutoubia Mosque', '11:30 – Souks & Spice Market', '13:00 – Lunch at local restaurant', '15:00 – Bahia Palace', '16:30 – Majorelle Garden', '18:00 – Drop-off'], included: ['Guide', 'Transport', 'Entry fees', 'Mint tea'], excluded: ['Lunch', 'Shopping'], maxPeople: 15, discount: 0, createdAt: '2026-02-01' },
       { id: 4, slug: 'essaouira-day-trip', title: 'Essaouira – Atlantic Coast Day Trip', destination: 'Essaouira', duration: '1 Day', price: 65, rating: 4.6, reviews: 56, image: 'https://images.unsplash.com/photo-1548013146-72479768bada?w=800&q=80', gallery: [], category: 'excursion', featured: false, active: true, description: 'Visit the enchanting blue-and-white coastal town of Essaouira, a UNESCO World Heritage site.', itinerary: ['08:00 – Depart Marrakech', '11:00 – Arrive Essaouira', '11:30 – Medina & Ramparts walk', '13:00 – Fresh seafood lunch', '15:00 – Souks & artisan shops', '16:30 – Depart to Marrakech', '19:30 – Arrive Marrakech'], included: ['Transport', 'Guide'], excluded: ['Lunch', 'Entry fees'], maxPeople: 18, discount: 0, createdAt: '2026-02-10' },
@@ -168,6 +207,17 @@ Sitemap: https://yourdomain.com/sitemap.xml`,
       { id: 1, name: "Dacia Duster 4x4", type: "SUV", transmission: "Manual", fuel: "Diesel", doors: 4, seats: 5, pricePerDay: 45, image: "https://images.unsplash.com/photo-1533473359331-0135ef1b58bf?w=800&q=80", active: true, featured: true, description: "Highly reliable 4x4 SUV perfect for crossing mountain passes and desert roads in absolute comfort." },
       { id: 2, name: "Hyundai i10", type: "Economy", transmission: "Manual", fuel: "Gasoline", doors: 4, seats: 5, pricePerDay: 25, image: "https://images.unsplash.com/photo-1605559424843-9e4c228bf1c2?w=800&q=80", active: true, featured: true, description: "Compact and extremely fuel-efficient city car, ideal for navigating old streets and parking in tight spaces." },
       { id: 3, name: "Mercedes C-Class Sedan", type: "Luxury", transmission: "Automatic", fuel: "Diesel", doors: 4, seats: 5, pricePerDay: 85, image: "https://images.unsplash.com/photo-1549399542-7e3f8b79c341?w=800&q=80", active: true, featured: false, description: "Premium automatic sedan offering absolute luxury, smooth performance, and high-end highway cruising." }
+    ],
+    popups: [
+      {
+        id: 1,
+        title: "Discover Morocco's Imperial Cities and Atlas Wonders",
+        content: "Get an exclusive 15% discount on all bookings this week! Use coupon <strong>WELCOME20</strong> at checkout.",
+        image: "https://images.unsplash.com/photo-1539650116574-75c0c6d38a7a?w=800&q=80",
+        status: "Draft",
+        targetPage: "all",
+        createdAt: "2025-09-04"
+      }
     ],
   };
 

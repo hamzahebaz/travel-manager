@@ -50,6 +50,7 @@
 
     <div class="nav-section-label">Content</div>
     <a href="#" class="nav-item" data-page="reviews"><span class="nav-icon"><i class="fa-solid fa-star"></i></span><span class="nav-label">Reviews</span></a>
+    <a href="#" class="nav-item" data-page="popups"><span class="nav-icon"><i class="fa-solid fa-window-restore"></i></span><span class="nav-label">Popup</span></a>
     <a href="#" class="nav-item" data-page="media"><span class="nav-icon"><i class="fa-solid fa-images"></i></span><span class="nav-label">Media Library</span></a>
     <a href="#" class="nav-item" data-page="subscribers"><span class="nav-icon"><i class="fa-solid fa-envelope-open-text"></i></span><span class="nav-label">Email Submitters</span></a>
     <a href="#" class="nav-item" data-page="menu"><span class="nav-icon"><i class="fa-solid fa-bars-staggered"></i></span><span class="nav-label">Menu Editor</span></a>
@@ -323,6 +324,35 @@
         <table class="data-table full-table">
           <thead><tr><th>Author</th><th>Tour</th><th>Rating</th><th>Review</th><th>Date</th><th>Status</th><th>Actions</th></tr></thead>
           <tbody id="reviewsTbody"></tbody>
+        </table>
+      </div></div>
+    </section>
+ 
+    <!-- ═══ POPUPS ═══ -->
+    <section class="page hidden" id="page-popups">
+      <div class="page-header-row">
+        <div><h1 class="page-title">Toutes les popups</h1><p class="page-subtitle">Manage promotional modals and overlays</p></div>
+        <button class="btn btn-primary" onclick="openAddPopupModal()"><i class="fa-solid fa-plus"></i> Ajouter une nouvelle popup</button>
+      </div>
+      <div class="card filter-bar" style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:12px">
+        <div style="display:flex; gap:8px; align-items:center">
+          <select class="filter-select" id="popupGroupAction">
+            <option value="">Actions groupées</option>
+            <option value="publish">Publier</option>
+            <option value="draft">Mettre en brouillon</option>
+            <option value="delete">Supprimer</option>
+          </select>
+          <button class="btn btn-outline btn-sm" onclick="applyPopupGroupAction()">Appliquer</button>
+        </div>
+        <div style="display:flex; gap:8px; align-items:center">
+          <input type="text" class="form-input" id="searchPopups" placeholder="Rechercher par nom" style="max-width:200px; margin-bottom:0" oninput="renderPopups()" />
+          <button class="btn btn-primary btn-sm" onclick="renderPopups()">Rechercher</button>
+        </div>
+      </div>
+      <div class="card"><div class="table-wrapper">
+        <table class="data-table full-table">
+          <thead><tr><th style="width:40px"><input type="checkbox" id="selectAllPopups" onchange="toggleSelectAllPopups(this)" /></th><th>Nom</th><th>Statut</th><th>Date</th><th>Actions</th></tr></thead>
+          <tbody id="popupsTbody"></tbody>
         </table>
       </div></div>
     </section>
@@ -682,7 +712,10 @@
         <div class="form-group"><label>Category</label>
           <select id="tCategory" class="form-input"><option value="circuit">Circuit</option><option value="excursion">Excursion</option><option value="city-tour">City Tour</option></select>
         </div>
+        <div class="form-group"><label>Min People</label><input type="number" id="tMinPeople" class="form-input" value="1" min="1" /></div>
         <div class="form-group"><label>Max People</label><input type="number" id="tMaxPeople" class="form-input" value="12" min="1" /></div>
+        <div class="form-group"><label>Min Advance Reservation (Days)</label><input type="number" id="tMinAdvanceDays" class="form-input" value="0" min="0" /></div>
+        <div class="form-group"><label>YouTube Embed Link</label><input type="url" id="tYoutubeUrl" class="form-input" placeholder="https://www.youtube.com/embed/..." /></div>
         <div class="form-group full-width">
           <label>Featured Image</label>
           <div style="display:flex;gap:12px;align-items:center">
@@ -691,6 +724,15 @@
             <button type="button" class="btn btn-outline btn-sm" onclick="document.getElementById('tFeaturedImageFile').click()"><i class="fa-solid fa-cloud-arrow-up"></i> Upload</button>
           </div>
           <img id="tFeaturedImagePreview" class="img-upload-preview" />
+        </div>
+        <div class="form-group full-width">
+          <label>Banner Image (for Tour Detail Hero)</label>
+          <div style="display:flex;gap:12px;align-items:center">
+            <input type="url" id="tBannerImage" class="form-input" placeholder="https://images.unsplash.com/... or upload below" style="flex:1" />
+            <input type="file" id="tBannerImageFile" accept="image/*" style="display:none" onchange="uploadTourBannerImage(this)" />
+            <button type="button" class="btn btn-outline btn-sm" onclick="document.getElementById('tBannerImageFile').click()"><i class="fa-solid fa-cloud-arrow-up"></i> Upload</button>
+          </div>
+          <img id="tBannerImagePreview" class="img-upload-preview" />
         </div>
         <div class="form-group full-width">
           <label>Gallery Images</label>
@@ -702,9 +744,59 @@
           <div id="tGalleryPreviewGrid" class="gallery-upload-grid"></div>
         </div>
         <div class="form-group full-width"><label>Description</label><textarea id="tDesc" class="form-input" rows="3"></textarea></div>
-        <div class="form-group full-width"><label>Itinerary (one per line)</label><textarea id="tItinerary" class="form-input" rows="4" placeholder="Day 1: Marrakech...&#10;Day 2: ..."></textarea></div>
-        <div class="form-group full-width"><label>Included (one per line)</label><textarea id="tIncluded" class="form-input" rows="3" placeholder="Guide&#10;Transport&#10;Meals"></textarea></div>
-        <div class="form-group full-width"><label>Excluded (one per line)</label><textarea id="tExcluded" class="form-input" rows="3" placeholder="Flights&#10;Tips"></textarea></div>
+        
+        <!-- Advanced Itinerary Days -->
+        <div class="form-group full-width" style="border-top:1px solid var(--border);padding-top:16px;margin-top:10px">
+          <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px">
+            <h4 style="font-size:0.9rem;font-weight:700;color:var(--text-primary);margin:0"><i class="fa-solid fa-route" style="color:var(--primary)"></i> Itinerary Days</h4>
+            <button type="button" class="btn btn-outline btn-xs" onclick="addItineraryDayRow()"><i class="fa-solid fa-plus"></i> Add Day</button>
+          </div>
+          <div id="tItineraryList" style="display:flex;flex-direction:column;gap:12px;margin-top:8px"></div>
+          <!-- Fallback raw textarea hidden for backwards compatibility or data sync -->
+          <textarea id="tItinerary" style="display:none"></textarea>
+        </div>
+
+        <!-- Inclusions & Exclusions Builders -->
+        <div class="form-group full-width" style="display:grid;grid-template-columns:1fr 1fr;gap:16px;border-top:1px solid var(--border);padding-top:16px;margin-top:10px">
+          <div>
+            <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px">
+              <h4 style="font-size:0.9rem;font-weight:700;color:var(--text-primary);margin:0"><i class="fa-solid fa-check" style="color:var(--green)"></i> Included</h4>
+              <button type="button" class="btn btn-outline btn-xs" onclick="addInclusionRow()"><i class="fa-solid fa-plus"></i> Add Item</button>
+            </div>
+            <div id="tIncludedList" style="display:flex;flex-direction:column;gap:8px"></div>
+            <textarea id="tIncluded" style="display:none"></textarea>
+          </div>
+          <div>
+            <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px">
+              <h4 style="font-size:0.9rem;font-weight:700;color:var(--text-primary);margin:0"><i class="fa-solid fa-xmark" style="color:var(--red)"></i> Excluded</h4>
+              <button type="button" class="btn btn-outline btn-xs" onclick="addExclusionRow()"><i class="fa-solid fa-plus"></i> Add Item</button>
+            </div>
+            <div id="tExcludedList" style="display:flex;flex-direction:column;gap:8px"></div>
+            <textarea id="tExcluded" style="display:none"></textarea>
+          </div>
+        </div>
+
+        <!-- FAQs Accordion Builder -->
+        <div class="form-group full-width" style="border-top:1px solid var(--border);padding-top:16px;margin-top:10px">
+          <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px">
+            <h4 style="font-size:0.9rem;font-weight:700;color:var(--text-primary);margin:0"><i class="fa-solid fa-question-circle" style="color:var(--primary)"></i> FAQs</h4>
+            <button type="button" class="btn btn-outline btn-xs" onclick="addFaqRow()"><i class="fa-solid fa-plus"></i> Add FAQ</button>
+          </div>
+          <div id="tFaqList" style="display:flex;flex-direction:column;gap:8px;margin-top:8px"></div>
+        </div>
+
+        <!-- Attributes check list -->
+        <div class="form-group full-width" style="border-top:1px solid var(--border);padding-top:16px;margin-top:10px">
+          <h4 style="font-size:0.9rem;font-weight:700;color:var(--text-primary);margin-bottom:4px"><i class="fa-solid fa-tags" style="color:var(--primary)"></i> Tour Attributes</h4>
+        </div>
+        <div class="form-group full-width">
+          <label style="font-weight:600">Travel Styles</label>
+          <div id="tTravelStylesGrid" style="display:grid;grid-template-columns:repeat(auto-fill, minmax(180px, 1fr));gap:8px;margin-top:6px"></div>
+        </div>
+        <div class="form-group full-width">
+          <label style="font-weight:600">Facilities</label>
+          <div id="tFacilitiesGrid" style="display:grid;grid-template-columns:repeat(auto-fill, minmax(180px, 1fr));gap:8px;margin-top:6px"></div>
+        </div>
         <!-- Tour SEO Meta Elements -->
         <div class="form-group full-width" style="border-top:1px solid var(--border);padding-top:16px;margin-top:10px">
           <h4 style="font-size:0.9rem;font-weight:700;color:var(--text-primary);margin-bottom:4px"><i class="fa-solid fa-search" style="color:var(--primary)"></i> Tour SEO Meta Elements</h4>
@@ -740,6 +832,48 @@
     <div class="modal-footer">
       <button class="btn btn-outline" onclick="closeModal('addTourModal')">Cancel</button>
       <button class="btn btn-primary" onclick="saveTour()"><i class="fa-solid fa-save"></i> Save Tour</button>
+    </div>
+  </div>
+</div>
+
+<!-- Add Popup Modal -->
+<div class="modal-overlay hidden" id="addPopupModal">
+  <div class="modal" style="max-width:550px">
+    <div class="modal-header"><h3 id="popupModalTitle">Ajouter une nouvelle popup</h3><button class="modal-close" onclick="closeModal('addPopupModal')"><i class="fa-solid fa-xmark"></i></button></div>
+    <div class="modal-body" style="max-height:70vh;overflow-y:auto">
+      <input type="hidden" id="editPopupId" />
+      <div class="form-grid">
+        <div class="form-group full-width"><label>Nom de la popup *</label><input type="text" id="pTitle" class="form-input" placeholder="e.g. Offre Spéciale Printemps" required /></div>
+        <div class="form-group full-width"><label>Contenu de la popup (HTML supporté) *</label><textarea id="pContent" class="form-input" rows="4" placeholder="Entrez le contenu HTML..." required></textarea></div>
+        <div class="form-group full-width">
+          <label>Image de fond / Bannière</label>
+          <div style="display:flex;gap:12px;align-items:center">
+            <input type="url" id="pImage" class="form-input" placeholder="https://images.unsplash.com/... or upload below" style="flex:1" />
+            <input type="file" id="pPopupImageFile" accept="image/*" style="display:none" onchange="uploadPopupImage(this)" />
+            <button type="button" class="btn btn-outline btn-sm" onclick="document.getElementById('pPopupImageFile').click()"><i class="fa-solid fa-cloud-arrow-up"></i> Upload</button>
+          </div>
+          <div class="img-preview-wrap"><img id="pPopupImagePreview" class="img-upload-preview" /></div>
+        </div>
+        <div class="form-group"><label>Statut</label>
+          <select id="pStatus" class="form-input"><option value="Draft">Draft</option><option value="Published">Published</option></select>
+        </div>
+        <div class="form-group"><label>Target Page</label>
+          <select id="pTargetPage" class="form-input">
+            <option value="all">Toutes les pages</option>
+            <option value="index.html">Accueil (Home)</option>
+            <option value="tours.html">Tours</option>
+            <option value="destinations.html">Destinations</option>
+            <option value="hotels.html">Hotels</option>
+            <option value="cars.html">Voitures (Cars)</option>
+            <option value="about.html">A propos</option>
+            <option value="contact.html">Contact</option>
+          </select>
+        </div>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-outline" onclick="closeModal('addPopupModal')">Annuler</button>
+      <button class="btn btn-primary" onclick="savePopup()"><i class="fa-solid fa-save"></i> Enregistrer</button>
     </div>
   </div>
 </div>

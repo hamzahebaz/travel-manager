@@ -142,7 +142,7 @@ function navigateTo(page) {
     reservations:'Reservations', coupons:'Coupons', payments:'Payments', reviews:'Reviews',
     media:'Media Library', menu:'Menu Editor', 'seo-pages':'Page SEO', 'seo-sitemap':'Sitemap',
     'seo-robots':'Robots.txt', 'seo-redirects':'Redirects', users:'Users', reports:'Reports', settings:'Settings',
-    subscribers:'Email Submitters', cars: 'Car Rental', themes: 'Tous les thèmes',
+    subscribers:'Email Submitters', cars: 'Car Rental', themes: 'Tous les thèmes', popups: 'Popups',
   };
   document.getElementById('breadcrumbLabel').textContent = labels[page] || page;
 
@@ -157,6 +157,7 @@ function navigateTo(page) {
     coupons: renderCoupons,
     payments: renderPayments,
     reviews: renderReviews,
+    popups: renderPopups,
     media: renderMedia,
     menu: renderMenu,
     subscribers: renderSubscribers,
@@ -469,13 +470,15 @@ function clearTourGallery() {
 function openAddTourModal() {
   document.getElementById('tourModalTitle').textContent = 'Add New Tour';
   document.getElementById('editTourId').value = '';
-  ['tTitle','tDest','tDuration','tImage','tDesc','tItinerary','tIncluded','tExcluded','tSeoTitle','tSeoDesc'].forEach(id => {
+  ['tTitle','tDest','tDuration','tImage','tDesc','tItinerary','tIncluded','tExcluded','tSeoTitle','tSeoDesc','tYoutubeUrl','tBannerImage'].forEach(id => {
     const el = document.getElementById(id);
     if (el) el.value = '';
   });
   document.getElementById('tPrice').value = '';
   document.getElementById('tDiscount').value = '0';
+  document.getElementById('tMinPeople').value = '1';
   document.getElementById('tMaxPeople').value = '12';
+  document.getElementById('tMinAdvanceDays').value = '0';
   document.getElementById('tCategory').value = 'circuit';
   document.getElementById('tSeoRobots').value = 'index, follow';
   document.getElementById('tFeatured').checked = false;
@@ -484,11 +487,29 @@ function openAddTourModal() {
   // Clear image uploads
   tempTourGallery = [];
   renderTourGalleryPreviews();
+  
   const fPreview = document.getElementById('tFeaturedImagePreview');
   if (fPreview) {
     fPreview.src = '';
     fPreview.classList.remove('visible');
   }
+
+  const bPreview = document.getElementById('tBannerImagePreview');
+  if (bPreview) {
+    bPreview.src = '';
+    bPreview.classList.remove('visible');
+  }
+
+  // Clear list builders
+  const listIds = ['tItineraryList', 'tIncludedList', 'tExcludedList', 'tFaqList'];
+  listIds.forEach(id => {
+    const el = document.getElementById(id);
+    if (el) el.innerHTML = '';
+  });
+
+  // Render checklists
+  renderTravelStylesChecklist();
+  renderFacilitiesChecklist();
   
   openModal('addTourModal');
 }
@@ -503,14 +524,61 @@ function editTour(id) {
   document.getElementById('tDuration').value = t.duration || '';
   document.getElementById('tPrice').value = t.price || '';
   document.getElementById('tDiscount').value = t.discount || 0;
+  
+  // Advanced standard properties
+  document.getElementById('tMinPeople').value = t.minPeople || 1;
   document.getElementById('tMaxPeople').value = t.maxPeople || 12;
+  document.getElementById('tMinAdvanceDays').value = t.minAdvanceDays || 0;
+  document.getElementById('tYoutubeUrl').value = t.youtubeUrl || '';
+  document.getElementById('tBannerImage').value = t.bannerImage || '';
+
   document.getElementById('tCategory').value = t.category || 'circuit';
   document.getElementById('tImage').value = t.image || '';
   document.getElementById('tDesc').value = t.description || '';
-  document.getElementById('tItinerary').value = (t.itinerary || []).join('\n');
-  document.getElementById('tIncluded').value = (t.included || []).join('\n');
-  document.getElementById('tExcluded').value = (t.excluded || []).join('\n');
   
+  // Clean list builders
+  const listIds = ['tItineraryList', 'tIncludedList', 'tExcludedList', 'tFaqList'];
+  listIds.forEach(id => {
+    const el = document.getElementById(id);
+    if (el) el.innerHTML = '';
+  });
+
+  // Render checklists
+  renderTravelStylesChecklist();
+  renderFacilitiesChecklist();
+
+  // Populate dynamic builders
+  if (t.itineraryDays && t.itineraryDays.length > 0) {
+    t.itineraryDays.forEach(day => addItineraryDayRow(day));
+  } else if (t.itinerary && t.itinerary.length > 0) {
+    t.itinerary.forEach(str => {
+      const parts = str.split(':');
+      const title = parts[0] || '';
+      const content = parts.slice(1).join(':').trim() || '';
+      addItineraryDayRow({ title: title, desc: '', content: content, image: '' });
+    });
+  }
+
+  if (t.included && t.included.length > 0) {
+    t.included.forEach(item => addInclusionRow(item));
+  }
+  
+  if (t.excluded && t.excluded.length > 0) {
+    t.excluded.forEach(item => addExclusionRow(item));
+  }
+
+  if (t.faqs && t.faqs.length > 0) {
+    t.faqs.forEach(faq => addFaqRow(faq));
+  }
+
+  // Check checklist items
+  document.querySelectorAll('input[name="tTravelStyles"]').forEach(cb => {
+    cb.checked = (t.travelStyles || []).includes(cb.value);
+  });
+  document.querySelectorAll('input[name="tFacilities"]').forEach(cb => {
+    cb.checked = (t.facilities || []).includes(cb.value);
+  });
+
   // Populate SEO
   document.getElementById('tSeoTitle').value = t.seoTitle || '';
   document.getElementById('tSeoDesc').value = t.seoDesc || '';
@@ -522,6 +590,7 @@ function editTour(id) {
   // Populate image previews
   tempTourGallery = t.gallery || [];
   renderTourGalleryPreviews();
+
   const fPreview = document.getElementById('tFeaturedImagePreview');
   if (fPreview) {
     if (t.image) {
@@ -530,6 +599,17 @@ function editTour(id) {
     } else {
       fPreview.src = '';
       fPreview.classList.remove('visible');
+    }
+  }
+
+  const bPreview = document.getElementById('tBannerImagePreview');
+  if (bPreview) {
+    if (t.bannerImage) {
+      bPreview.src = t.bannerImage;
+      bPreview.classList.add('visible');
+    } else {
+      bPreview.src = '';
+      bPreview.classList.remove('visible');
     }
   }
   
@@ -551,19 +631,53 @@ function saveTour() {
     }
   }
 
+  // Extract advanced arrays/checklists
+  const itineraryDays = Array.from(document.querySelectorAll('#tItineraryList .itinerary-row')).map(row => {
+    return {
+      title: row.querySelector('.itinerary-day-title').value.trim(),
+      desc: row.querySelector('.itinerary-day-desc').value.trim(),
+      content: row.querySelector('.itinerary-day-content').value.trim(),
+      image: row.querySelector('.itinerary-day-image').value.trim()
+    };
+  });
+  
+  // Backward compatibility fallback for the simple itinerary list of strings
+  const itinerary = itineraryDays.map(d => `${d.title}${d.desc ? ' (' + d.desc + ')' : ''}: ${d.content}`);
+
+  const included = Array.from(document.querySelectorAll('#tIncludedList .inclusion-item')).map(el => el.value.trim()).filter(Boolean);
+  const excluded = Array.from(document.querySelectorAll('#tExcludedList .exclusion-item')).map(el => el.value.trim()).filter(Boolean);
+
+  const faqs = Array.from(document.querySelectorAll('#tFaqList > div')).map(row => {
+    return {
+      q: row.querySelector('.faq-q').value.trim(),
+      a: row.querySelector('.faq-a').value.trim()
+    };
+  }).filter(f => f.q && f.a);
+
+  const travelStyles = Array.from(document.querySelectorAll('input[name="tTravelStyles"]:checked')).map(cb => cb.value);
+  const facilities = Array.from(document.querySelectorAll('input[name="tFacilities"]:checked')).map(cb => cb.value);
+
   const data = {
     title,
     destination: document.getElementById('tDest').value.trim(),
     duration: document.getElementById('tDuration').value.trim(),
     price: parseFloat(document.getElementById('tPrice').value) || 0,
     discount: parseInt(document.getElementById('tDiscount').value) || 0,
+    minPeople: parseInt(document.getElementById('tMinPeople').value) || 1,
     maxPeople: parseInt(document.getElementById('tMaxPeople').value) || 12,
+    minAdvanceDays: parseInt(document.getElementById('tMinAdvanceDays').value) || 0,
+    youtubeUrl: document.getElementById('tYoutubeUrl').value.trim(),
+    bannerImage: document.getElementById('tBannerImage').value.trim(),
     category: document.getElementById('tCategory').value,
     image: document.getElementById('tImage').value.trim(),
     description: document.getElementById('tDesc').value.trim(),
-    itinerary: document.getElementById('tItinerary').value.split('\n').filter(s=>s.trim()),
-    included: document.getElementById('tIncluded').value.split('\n').filter(s=>s.trim()),
-    excluded: document.getElementById('tExcluded').value.split('\n').filter(s=>s.trim()),
+    itinerary,
+    itineraryDays,
+    included,
+    excluded,
+    faqs,
+    travelStyles,
+    facilities,
     seoTitle: document.getElementById('tSeoTitle').value.trim(),
     seoDesc: document.getElementById('tSeoDesc').value.trim(),
     seoRobots: document.getElementById('tSeoRobots').value,
@@ -2261,4 +2375,337 @@ window.activateTheme = function(themeId) {
 };
 
 window.renderThemes = renderThemes;
+
+// ─── POPUPS CRUD ─────────────────────────────────────────────────────────────
+function renderPopups() {
+  const tbody = document.getElementById('popupsTbody');
+  if (!tbody) return;
+  const q = document.getElementById('searchPopups')?.value.toLowerCase() || '';
+
+  let popups = TM.get('popups') || [];
+  
+  // Apply search query
+  if (q) {
+    popups = popups.filter(p => p.title.toLowerCase().includes(q) || p.content.toLowerCase().includes(q));
+  }
+
+  tbody.innerHTML = popups.map(p => `
+    <tr>
+      <td><input type="checkbox" class="popup-select" data-id="${p.id}" /></td>
+      <td>
+        <span style="font-weight:600;color:var(--text-primary)">${p.title}</span>
+        <br><small style="color:var(--text-muted)">Target: ${p.targetPage || 'all'}</small>
+      </td>
+      <td>
+        <span class="status-badge ${p.status === 'Published' ? 'confirmed' : 'cancelled'}">
+          ${p.status || 'Draft'}
+        </span>
+      </td>
+      <td>${p.createdAt || ''}</td>
+      <td><div class="action-btns">
+        <button class="act-btn" title="Modifier" onclick="editPopup(${p.id})"><i class="fa-solid fa-pen"></i></button>
+        <button class="act-btn" title="Changer statut" onclick="togglePopupStatus(${p.id})"><i class="fa-solid fa-toggle-on"></i></button>
+        <button class="act-btn delete" title="Supprimer" onclick="deletePopup(${p.id})"><i class="fa-solid fa-trash"></i></button>
+      </div></td>
+    </tr>
+  `).join('') || '<tr><td colspan="5" style="text-align:center;padding:30px;color:var(--text-muted)">Aucune popup trouvée</td></tr>';
+}
+
+function openAddPopupModal() {
+  document.getElementById('popupModalTitle').textContent = 'Ajouter une nouvelle popup';
+  document.getElementById('editPopupId').value = '';
+  document.getElementById('pTitle').value = '';
+  document.getElementById('pContent').value = '';
+  document.getElementById('pImage').value = '';
+  document.getElementById('pStatus').value = 'Draft';
+  document.getElementById('pTargetPage').value = 'all';
+
+  const preview = document.getElementById('pPopupImagePreview');
+  if (preview) {
+    preview.src = '';
+    preview.classList.remove('visible');
+  }
+
+  openModal('addPopupModal');
+}
+
+function editPopup(id) {
+  const popups = TM.get('popups') || [];
+  const p = popups.find(item => item.id == id);
+  if (!p) return;
+
+  document.getElementById('popupModalTitle').textContent = 'Modifier la popup';
+  document.getElementById('editPopupId').value = p.id;
+  document.getElementById('pTitle').value = p.title || '';
+  document.getElementById('pContent').value = p.content || '';
+  document.getElementById('pImage').value = p.image || '';
+  document.getElementById('pStatus').value = p.status || 'Draft';
+  document.getElementById('pTargetPage').value = p.targetPage || 'all';
+
+  const preview = document.getElementById('pPopupImagePreview');
+  if (preview) {
+    if (p.image) {
+      preview.src = p.image;
+      preview.classList.add('visible');
+    } else {
+      preview.src = '';
+      preview.classList.remove('visible');
+    }
+  }
+
+  openModal('addPopupModal');
+}
+
+function savePopup() {
+  const id = document.getElementById('editPopupId').value;
+  const title = document.getElementById('pTitle').value.trim();
+  const content = document.getElementById('pContent').value.trim();
+  const image = document.getElementById('pImage').value.trim();
+  const status = document.getElementById('pStatus').value;
+  const targetPage = document.getElementById('pTargetPage').value;
+
+  if (!title) { showToast('Le nom de la popup est requis', 'error'); return; }
+  if (!content) { showToast('Le contenu de la popup est requis', 'error'); return; }
+
+  const data = {
+    title,
+    content,
+    image,
+    status,
+    targetPage,
+    createdAt: new Date().toISOString().split('T')[0]
+  };
+
+  if (id) {
+    TM.updateItem('popups', id, data);
+    showToast('Popup modifiée avec succès !', 'success');
+  } else {
+    TM.addItem('popups', data);
+    showToast('Popup ajoutée avec succès !', 'success');
+  }
+
+  closeModal('addPopupModal');
+  renderPopups();
+}
+
+function togglePopupStatus(id) {
+  const popups = TM.get('popups') || [];
+  const p = popups.find(item => item.id == id);
+  if (!p) return;
+  
+  const newStatus = p.status === 'Published' ? 'Draft' : 'Published';
+  TM.updateItem('popups', id, { status: newStatus });
+  renderPopups();
+  showToast(`Popup ${newStatus === 'Published' ? 'publiée' : 'mise en brouillon'}`, 'success');
+}
+
+function deletePopup(id) {
+  confirm2('Supprimer cette popup ? Cette action est irréversible.', () => {
+    TM.deleteItem('popups', id);
+    renderPopups();
+    showToast('Popup supprimée', 'success');
+  });
+}
+
+function uploadPopupImage(input) {
+  if (input.files && input.files[0]) {
+    const reader = new FileReader();
+    reader.onload = function(e) {
+      const base64 = e.target.result;
+      document.getElementById('pImage').value = base64;
+      const preview = document.getElementById('pPopupImagePreview');
+      if (preview) {
+        preview.src = base64;
+        preview.classList.add('visible');
+      }
+    };
+    reader.readAsDataURL(input.files[0]);
+  }
+}
+
+function toggleSelectAllPopups(checkbox) {
+  const checked = checkbox.checked;
+  document.querySelectorAll('.popup-select').forEach(cb => cb.checked = checked);
+}
+
+function applyPopupGroupAction() {
+  const action = document.getElementById('popupGroupAction').value;
+  if (!action) { showToast('Veuillez sélectionner une action', 'warning'); return; }
+
+  const selectedIds = Array.from(document.querySelectorAll('.popup-select:checked')).map(cb => cb.getAttribute('data-id'));
+  if (selectedIds.length === 0) { showToast('Aucune popup sélectionnée', 'warning'); return; }
+
+  if (action === 'delete') {
+    confirm2(`Supprimer les ${selectedIds.length} popups sélectionnées ?`, () => {
+      selectedIds.forEach(id => TM.deleteItem('popups', id));
+      renderPopups();
+      showToast('Popups supprimées', 'success');
+      document.getElementById('selectAllPopups').checked = false;
+    });
+  } else {
+    const status = action === 'publish' ? 'Published' : 'Draft';
+    selectedIds.forEach(id => TM.updateItem('popups', id, { status }));
+    renderPopups();
+    showToast(`Statut des popups mis à jour`, 'success');
+    document.getElementById('selectAllPopups').checked = false;
+  }
+}
+
+// ─── TOUR FORM ADVANCED BUILDERS ─────────────────────────────────────────────
+const TRAVEL_STYLES = ['Cultural', 'Nature & Adventure', 'Marine', 'Independent', 'Activities', 'Festival & Events', 'Special Interest'];
+const FACILITIES = ['WiFi', 'Gymnasium', 'Mountain Bike', 'Satellite Office', 'Staff Lounge', 'Golf Course', 'Guest Rooms'];
+
+function renderTravelStylesChecklist() {
+  const grid = document.getElementById('tTravelStylesGrid');
+  if (!grid) return;
+  grid.innerHTML = TRAVEL_STYLES.map(style => `
+    <label style="display:flex;align-items:center;gap:6px;font-size:0.85rem">
+      <input type="checkbox" name="tTravelStyles" value="${style}" />
+      <span>${style}</span>
+    </label>
+  `).join('');
+}
+
+function renderFacilitiesChecklist() {
+  const grid = document.getElementById('tFacilitiesGrid');
+  if (!grid) return;
+  grid.innerHTML = FACILITIES.map(fac => `
+    <label style="display:flex;align-items:center;gap:6px;font-size:0.85rem">
+      <input type="checkbox" name="tFacilities" value="${fac}" />
+      <span>${fac}</span>
+    </label>
+  `).join('');
+}
+
+function uploadTourBannerImage(input) {
+  if (input.files && input.files[0]) {
+    const reader = new FileReader();
+    reader.onload = function(e) {
+      const base64 = e.target.result;
+      document.getElementById('tBannerImage').value = base64;
+      const preview = document.getElementById('tBannerImagePreview');
+      if (preview) {
+        preview.src = base64;
+        preview.classList.add('visible');
+      }
+    };
+    reader.readAsDataURL(input.files[0]);
+  }
+}
+
+function uploadItineraryDayImage(input, index) {
+  if (input.files && input.files[0]) {
+    const reader = new FileReader();
+    reader.onload = function(e) {
+      const base64 = e.target.result;
+      const urlInput = document.getElementById(`tItineraryImage_${index}`);
+      if (urlInput) urlInput.value = base64;
+      const preview = document.getElementById(`tItineraryImagePreview_${index}`);
+      if (preview) {
+        preview.src = base64;
+        preview.style.display = 'block';
+      }
+    };
+    reader.readAsDataURL(input.files[0]);
+  }
+}
+
+function addItineraryDayRow(data = {}) {
+  const list = document.getElementById('tItineraryList');
+  if (!list) return;
+  const index = list.children.length;
+  const row = document.createElement('div');
+  row.className = 'itinerary-row';
+  row.style = 'border:1px solid var(--border);padding:12px;border-radius:6px;background:var(--bg-light);position:relative;margin-bottom:8px';
+  row.innerHTML = `
+    <button type="button" class="btn-close" style="position:absolute;top:8px;right:8px;background:none;border:none;color:var(--red);cursor:pointer" onclick="this.parentElement.remove()"><i class="fa-solid fa-trash"></i></button>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:8px">
+      <div>
+        <label style="font-size:0.75rem;font-weight:600">Day Title</label>
+        <input type="text" class="form-input itinerary-day-title" placeholder="e.g. Day 1: Arrival" value="${data.title || ''}" />
+      </div>
+      <div>
+        <label style="font-size:0.75rem;font-weight:600">Short Description</label>
+        <input type="text" class="form-input itinerary-day-desc" placeholder="e.g. Transfer to riad" value="${data.desc || ''}" />
+      </div>
+    </div>
+    <div style="margin-bottom:8px">
+      <label style="font-size:0.75rem;font-weight:600">Day Content</label>
+      <textarea class="form-input itinerary-day-content" rows="2" placeholder="Describe the day's activities...">${data.content || ''}</textarea>
+    </div>
+    <div>
+      <label style="font-size:0.75rem;font-weight:600">Day Image</label>
+      <div style="display:flex;gap:8px;align-items:center">
+        <input type="url" id="tItineraryImage_${index}" class="form-input itinerary-day-image" placeholder="Image URL or upload" value="${data.image || ''}" style="flex:1;margin-bottom:0" />
+        <input type="file" id="tItineraryImageFile_${index}" accept="image/*" style="display:none" onchange="uploadItineraryDayImage(this, ${index})" />
+        <button type="button" class="btn btn-outline btn-sm" onclick="document.getElementById('tItineraryImageFile_${index}').click()"><i class="fa-solid fa-cloud-arrow-up"></i></button>
+      </div>
+      <img id="tItineraryImagePreview_${index}" src="${data.image || ''}" style="max-height:80px;border-radius:4px;margin-top:6px;display:${data.image ? 'block' : 'none'};object-fit:cover" />
+    </div>
+  `;
+  list.appendChild(row);
+}
+
+function addInclusionRow(text = '') {
+  const list = document.getElementById('tIncludedList');
+  if (!list) return;
+  const row = document.createElement('div');
+  row.style = 'display:flex;gap:6px;align-items:center;margin-bottom:6px';
+  row.innerHTML = `
+    <input type="text" class="form-input inclusion-item" placeholder="e.g. Professional guide" value="${text}" style="flex:1;margin-bottom:0" />
+    <button type="button" class="btn btn-outline btn-sm" style="color:var(--red);border-color:var(--red)" onclick="this.parentElement.remove()"><i class="fa-solid fa-trash"></i></button>
+  `;
+  list.appendChild(row);
+}
+
+function addExclusionRow(text = '') {
+  const list = document.getElementById('tExcludedList');
+  if (!list) return;
+  const row = document.createElement('div');
+  row.style = 'display:flex;gap:6px;align-items:center;margin-bottom:6px';
+  row.innerHTML = `
+    <input type="text" class="form-input exclusion-item" placeholder="e.g. Flight tickets" value="${text}" style="flex:1;margin-bottom:0" />
+    <button type="button" class="btn btn-outline btn-sm" style="color:var(--red);border-color:var(--red)" onclick="this.parentElement.remove()"><i class="fa-solid fa-trash"></i></button>
+  `;
+  list.appendChild(row);
+}
+
+function addFaqRow(data = {}) {
+  const list = document.getElementById('tFaqList');
+  if (!list) return;
+  const row = document.createElement('div');
+  row.style = 'border:1px solid var(--border);padding:10px;border-radius:6px;background:var(--bg-light);position:relative;margin-bottom:6px';
+  row.innerHTML = `
+    <button type="button" class="btn-close" style="position:absolute;top:6px;right:6px;background:none;border:none;color:var(--red);cursor:pointer" onclick="this.parentElement.remove()"><i class="fa-solid fa-trash"></i></button>
+    <div style="margin-bottom:6px">
+      <label style="font-size:0.75rem;font-weight:600">Question</label>
+      <input type="text" class="form-input faq-q" placeholder="e.g. What is included?" value="${data.q || ''}" style="margin-bottom:0" />
+    </div>
+    <div>
+      <label style="font-size:0.75rem;font-weight:600">Answer</label>
+      <textarea class="form-input faq-a" rows="2" placeholder="Provide answer detail...">${data.a || ''}</textarea>
+    </div>
+  `;
+  list.appendChild(row);
+}
+
+// Make all new handlers available globally
+window.renderPopups = renderPopups;
+window.openAddPopupModal = openAddPopupModal;
+window.editPopup = editPopup;
+window.savePopup = savePopup;
+window.togglePopupStatus = togglePopupStatus;
+window.deletePopup = deletePopup;
+window.uploadPopupImage = uploadPopupImage;
+window.toggleSelectAllPopups = toggleSelectAllPopups;
+window.applyPopupGroupAction = applyPopupGroupAction;
+
+window.renderTravelStylesChecklist = renderTravelStylesChecklist;
+window.renderFacilitiesChecklist = renderFacilitiesChecklist;
+window.uploadTourBannerImage = uploadTourBannerImage;
+window.uploadItineraryDayImage = uploadItineraryDayImage;
+window.addItineraryDayRow = addItineraryDayRow;
+window.addInclusionRow = addInclusionRow;
+window.addExclusionRow = addExclusionRow;
+window.addFaqRow = addFaqRow;
 
