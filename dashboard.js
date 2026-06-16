@@ -181,14 +181,25 @@ function loadDashboard() {
   const settings = TM.get('settings');
   const sym = settings.currencySymbol || '€';
 
-  // Update names
-  const adminName = TM.get('users').find(u => u.role === 'Administrator')?.name || 'Admin';
+  // Update names using currently logged-in user
+  let currentUser = null;
+  try {
+    currentUser = JSON.parse(localStorage.getItem('tm_logged_in'));
+  } catch (e) {}
+  if (!currentUser) {
+    currentUser = TM.get('users').find(u => u.role === 'Administrator') || { name: 'Admin', email: 'admin@tourvoyage.com', role: 'Administrator' };
+  }
+
+  const currentFirstName = currentUser.name ? currentUser.name.split(' ')[0] : 'Admin';
   ['welcomeName','sfName','profileName','pmName'].forEach(id => {
     const el = document.getElementById(id);
-    if (el) el.textContent = adminName.split(' ')[0];
+    if (el) el.textContent = currentFirstName;
   });
   const pmEmail = document.getElementById('pmEmail');
-  if (pmEmail) pmEmail.textContent = TM.get('users').find(u => u.role === 'Administrator')?.email || '';
+  if (pmEmail) pmEmail.textContent = currentUser.email || '';
+
+  const profileRoleEl = document.getElementById('profileRole');
+  if (profileRoleEl) profileRoleEl.textContent = currentUser.role || 'Administrator';
 
   // Stats cards
   const statsGrid = document.getElementById('statsGrid');

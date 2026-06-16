@@ -94,20 +94,20 @@
       <div class="topbar-notif dropdown-wrap" id="notifDropWrap">
         <button class="topbar-btn notif-btn" id="notifDropBtn"><i class="fa-solid fa-bell"></i><span class="notif-badge" id="notifCount">0</span></button>
         <div class="dropdown-menu notif-menu" id="notifMenu">
-          <div class="notif-header"><span>Notifications</span><a href="#" onclick="clearNotifs()">Clear all</a></div>
+          <div class="notif-header"><span>Notifications</span><a href="javascript:void(0)" onclick="clearNotifs()">Clear all</a></div>
           <div class="notif-list" id="notifList"></div>
         </div>
       </div>
       <div class="topbar-profile dropdown-wrap" id="profileDropWrap">
         <button class="topbar-btn profile-btn" id="profileDropBtn">
           <div class="profile-avatar"><i class="fa-solid fa-user-tie"></i></div>
-          <div class="profile-info"><span class="profile-name" id="profileName">Admin</span><span class="profile-role">Administrator</span></div>
+          <div class="profile-info"><span class="profile-name" id="profileName">Admin</span><span class="profile-role" id="profileRole">Administrator</span></div>
           <i class="fa-solid fa-chevron-down"></i>
         </button>
         <div class="dropdown-menu profile-menu" id="profileMenu">
           <div class="profile-menu-header"><div class="profile-menu-avatar"><i class="fa-solid fa-user-tie"></i></div><div><p class="profile-menu-name" id="pmName">Admin</p><p class="profile-menu-email" id="pmEmail">admin@tourvoyage.com</p></div></div>
           <div class="profile-menu-divider"></div>
-          <a class="dropdown-item" href="#" onclick="navigateTo('settings')"><i class="fa-solid fa-gear"></i> Settings</a>
+          <a class="dropdown-item" href="javascript:void(0)" onclick="navigateTo('settings')"><i class="fa-solid fa-gear"></i> Settings</a>
           <div class="profile-menu-divider"></div>
           <a class="dropdown-item danger" href="#"><i class="fa-solid fa-right-from-bracket"></i> Sign Out</a>
         </div>
@@ -148,7 +148,7 @@
         <div class="card bookings-card">
           <div class="card-header">
             <h3 class="card-title">Recent Reservations</h3>
-            <a href="#" class="card-link" onclick="navigateTo('reservations')">More <i class="fa-solid fa-chevron-right"></i></a>
+            <a href="javascript:void(0)" class="card-link" onclick="navigateTo('reservations')">More <i class="fa-solid fa-chevron-right"></i></a>
           </div>
           <div class="table-wrapper"><table class="data-table"><thead><tr><th>#</th><th>Tour</th><th>Customer</th><th>Total</th><th>Status</th></tr></thead><tbody id="recentResTbody"></tbody></table></div>
         </div>
