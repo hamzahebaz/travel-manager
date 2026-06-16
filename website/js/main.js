@@ -423,6 +423,9 @@ function initTourDetailPage() {
   const heroTitle = document.getElementById('detailTitle');
   if (heroTitle) heroTitle.textContent = tour.title;
 
+  const heroTitleH1 = document.getElementById('detailTitleH1');
+  if (heroTitleH1) heroTitleH1.textContent = tour.title;
+
   const heroDest = document.getElementById('detailDest');
   if (heroDest) heroDest.textContent = tour.destination;
 
