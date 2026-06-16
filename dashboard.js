@@ -142,7 +142,7 @@ function navigateTo(page) {
     reservations:'Reservations', coupons:'Coupons', payments:'Payments', reviews:'Reviews',
     media:'Media Library', menu:'Menu Editor', 'seo-pages':'Page SEO', 'seo-sitemap':'Sitemap',
     'seo-robots':'Robots.txt', 'seo-redirects':'Redirects', users:'Users', reports:'Reports', settings:'Settings',
-    subscribers:'Email Submitters', cars: 'Car Rental',
+    subscribers:'Email Submitters', cars: 'Car Rental', themes: 'Tous les thèmes',
   };
   document.getElementById('breadcrumbLabel').textContent = labels[page] || page;
 
@@ -160,6 +160,7 @@ function navigateTo(page) {
     media: renderMedia,
     menu: renderMenu,
     subscribers: renderSubscribers,
+    themes: renderThemes,
     'seo-pages': () => loadSEOPage(currentSEOPage),
     'seo-sitemap': generateSitemapPreview,
     'seo-robots': loadRobots,
@@ -1910,3 +1911,240 @@ function downloadSubscribersList() {
 
 window.deleteSubscriber = deleteSubscriber;
 window.downloadSubscribersList = downloadSubscribersList;
+
+// ─── THEME PRESETS & CHOICES ──────────────────────────────────────────────────
+const THEME_PRESETS = [
+  {
+    id: "moroccan-oasis",
+    name: "Moroccan Oasis",
+    version: "2.0.0",
+    description: "Authentic warm terracotta, cream, saffron gold, and deep coffee tones matching luxury Moroccan riads.",
+    colors: {
+      '--cream': '#FDF6EC',
+      '--sand-warm': '#FAEBD7',
+      '--sand-dark': '#F3E1C8',
+      '--terracotta': '#C05621',
+      '--gold': '#D4A017',
+      '--orange': '#E28743',
+      '--burgundy': '#8B2635',
+      '--card-bg': '#FFFFFF',
+      '--card2': '#FFFBF5',
+      '--coffee-dark': '#2C1810',
+      '--coffee-med': '#5C4033',
+      '--coffee-light': '#8C6D58',
+      '--border': 'rgba(44, 24, 16, 0.08)',
+      '--border2': 'rgba(44, 24, 16, 0.15)'
+    }
+  },
+  {
+    id: "luxury-navy",
+    name: "Luxury Navy",
+    version: "1.4.0",
+    description: "Sleek and professional travel agent design with deep navy blue, warm gold highlights, and clean silver backgrounds.",
+    colors: {
+      '--cream': '#F4F7FA',
+      '--sand-warm': '#E9EFF5',
+      '--sand-dark': '#D5E2EE',
+      '--terracotta': '#1A365D',
+      '--gold': '#D69E2E',
+      '--orange': '#DD6B20',
+      '--burgundy': '#9B2C2C',
+      '--card-bg': '#FFFFFF',
+      '--card2': '#FAFCFF',
+      '--coffee-dark': '#1A202C',
+      '--coffee-med': '#4A5568',
+      '--coffee-light': '#718096',
+      '--border': 'rgba(26, 54, 93, 0.08)',
+      '--border2': 'rgba(26, 54, 93, 0.15)'
+    }
+  },
+  {
+    id: "nordic-breeze",
+    name: "Nordic Breeze",
+    version: "1.1.0",
+    description: "Cool glacier blue, deep slate ocean, and sharp granite elements for sub-zero expeditions and clean arctic looks.",
+    colors: {
+      '--cream': '#F0F4F8',
+      '--sand-warm': '#D9E2EC',
+      '--sand-dark': '#BCCCDC',
+      '--terracotta': '#334E68',
+      '--gold': '#102A43',
+      '--orange': '#486581',
+      '--burgundy': '#627D98',
+      '--card-bg': '#FFFFFF',
+      '--card2': '#F5F7FA',
+      '--coffee-dark': '#0F172A',
+      '--coffee-med': '#334155',
+      '--coffee-light': '#64748B',
+      '--border': 'rgba(51, 78, 104, 0.08)',
+      '--border2': 'rgba(51, 78, 104, 0.15)'
+    }
+  },
+  {
+    id: "forest-nature",
+    name: "Forest Nature",
+    version: "1.0.5",
+    description: "Deep evergreen timber, organic wood details, warm leaf gold, and herbal tea tints for eco-nature tours.",
+    colors: {
+      '--cream': '#F4F6F0',
+      '--sand-warm': '#E2E8DD',
+      '--sand-dark': '#C8D3C0',
+      '--terracotta': '#2F5233',
+      '--gold': '#76A035',
+      '--orange': '#D97706',
+      '--burgundy': '#991B1B',
+      '--card-bg': '#FFFFFF',
+      '--card2': '#FAFBF9',
+      '--coffee-dark': '#1E291B',
+      '--coffee-med': '#3F4E3C',
+      '--coffee-light': '#6B7A68',
+      '--border': 'rgba(47, 82, 51, 0.08)',
+      '--border2': 'rgba(47, 82, 51, 0.15)'
+    }
+  },
+  {
+    id: "sunset-rose",
+    name: "Sunset Rose",
+    version: "1.2.0",
+    description: "Luxurious rose gold, rich cranberry burgundy, warm pearl backdrops, and aubergine highlights for premium boutique riads.",
+    colors: {
+      '--cream': '#FAF5F5',
+      '--sand-warm': '#F2E3E3',
+      '--sand-dark': '#E6CCCC',
+      '--terracotta': '#881337',
+      '--gold': '#BE123C',
+      '--orange': '#FB7185',
+      '--burgundy': '#4C0519',
+      '--card-bg': '#FFFFFF',
+      '--card2': '#FFF8F8',
+      '--coffee-dark': '#270812',
+      '--coffee-med': '#571E2F',
+      '--coffee-light': '#8A5161',
+      '--border': 'rgba(136, 19, 55, 0.08)',
+      '--border2': 'rgba(136, 19, 55, 0.15)'
+    }
+  },
+  {
+    id: "midnight-cyber",
+    name: "Midnight Cyber",
+    version: "1.5.0",
+    description: "Sleek and high-contrast dark mode explorer styling with slate charcoal, neon blue accents, and violet highlights.",
+    colors: {
+      '--cream': '#0D0E12',
+      '--sand-warm': '#171923',
+      '--sand-dark': '#2D3748',
+      '--terracotta': '#06B6D4',
+      '--gold': '#A855F7',
+      '--orange': '#3B82F6',
+      '--burgundy': '#EC4899',
+      '--card-bg': '#1A1D24',
+      '--card2': '#13161C',
+      '--coffee-dark': '#F8FAFC',
+      '--coffee-med': '#E2E8F0',
+      '--coffee-light': '#94A3B8',
+      '--border': 'rgba(255, 255, 255, 0.08)',
+      '--border2': 'rgba(255, 255, 255, 0.15)'
+    }
+  }
+];
+
+function renderThemes() {
+  const container = document.getElementById('themesGrid');
+  if (!container) return;
+
+  const settings = TM.get('settings') || {};
+  const activeThemeId = settings.activeTheme || 'moroccan-oasis';
+
+  container.innerHTML = THEME_PRESETS.map(theme => {
+    const isActive = theme.id === activeThemeId;
+    
+    // Create a color bar HTML with the first 5 colors
+    const previewColors = ['--cream', '--terracotta', '--gold', '--coffee-dark', '--sand-warm'];
+    const colorBarHtml = previewColors.map(c => {
+      const colorVal = theme.colors[c];
+      return `<div style="background:${colorVal}; width:24px; height:24px; border-radius:50%; border:1px solid rgba(0,0,0,0.1); margin-right:-6px; box-shadow: 0 2px 4px rgba(0,0,0,0.1)" title="${c}: ${colorVal}"></div>`;
+    }).join('');
+
+    // Previews mockup
+    const mockBg = theme.colors['--cream'];
+    const mockCard = theme.colors['--card-bg'];
+    const mockPrimary = theme.colors['--terracotta'];
+    const mockText = theme.colors['--coffee-dark'];
+    const mockMuted = theme.colors['--coffee-light'];
+    const mockSecBg = theme.colors['--sand-warm'];
+
+    const mockupHtml = `
+      <div style="background:${mockBg}; border:1px solid ${theme.colors['--border2']}; border-radius:8px; padding:10px; height:120px; display:flex; flex-direction:column; gap:8px; overflow:hidden; position:relative; margin-bottom:12px">
+        <!-- Mock Navbar -->
+        <div style="display:flex; justify-content:space-between; align-items:center; background:${mockCard}; padding:4px 8px; border-radius:4px; border-bottom:1px solid ${theme.colors['--border']}; font-size:9px; font-weight:bold; color:${mockText}">
+          <span style="color:${mockPrimary}">★ Brand</span>
+          <div style="display:flex; gap:6px; font-weight:normal; color:${mockMuted}">
+            <span>Home</span><span>Tours</span><span>Cars</span>
+          </div>
+        </div>
+        <!-- Mock Hero -->
+        <div style="background:linear-gradient(135deg, ${mockPrimary}, ${theme.colors['--orange'] || mockPrimary}); padding:12px 8px; border-radius:6px; text-align:center; color:#fff">
+          <div style="font-weight:700; font-size:10px">Discover Morocco</div>
+          <div style="font-size:7px; opacity:0.8">With Expert Local Guides</div>
+        </div>
+        <!-- Mock Content -->
+        <div style="display:flex; gap:8px">
+          <div style="background:${mockCard}; padding:6px; border-radius:6px; border:1px solid ${theme.colors['--border']}; flex:1; display:flex; flex-direction:column; gap:4px">
+            <div style="width:100%; height:20px; background:${mockSecBg}; border-radius:4px"></div>
+            <div style="font-weight:700; font-size:7px; color:${mockText}">Sahara Tour</div>
+            <div style="font-weight:bold; font-size:7px; color:${mockPrimary}">$499</div>
+          </div>
+          <div style="background:${mockCard}; padding:6px; border-radius:6px; border:1px solid ${theme.colors['--border']}; flex:1; display:flex; flex-direction:column; gap:4px">
+            <div style="width:100%; height:20px; background:${mockSecBg}; border-radius:4px"></div>
+            <div style="font-weight:700; font-size:7px; color:${mockText}">Agafay Quad</div>
+            <div style="font-weight:bold; font-size:7px; color:${mockPrimary}">$89</div>
+          </div>
+        </div>
+      </div>
+    `;
+
+    return `
+      <div class="card theme-card" style="padding:20px; display:flex; flex-direction:column; justify-content:space-between; position:relative; overflow:hidden; border: 2px solid ${isActive ? 'var(--terracotta)' : 'var(--border)'}; box-shadow: ${isActive ? 'var(--shadow-lg)' : 'none'}; border-radius:12px; background:var(--card-bg)">
+        <div>
+          <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:12px">
+            <h3 style="font-family:'Outfit',sans-serif; font-size:1.15rem; font-weight:700; color:var(--text-primary)">${theme.name}</h3>
+            <span style="font-size:0.7rem; background:var(--bg-dark); color:var(--text-muted); padding:3px 6px; border-radius:4px; font-weight:600">v${theme.version}</span>
+          </div>
+          
+          <!-- Mockup preview -->
+          ${mockupHtml}
+          
+          <p style="font-size:0.8rem; color:var(--text-muted); line-height:1.5; margin-bottom:16px; min-height:48px">${theme.description}</p>
+        </div>
+        
+        <div style="display:flex; align-items:center; justify-content:space-between; border-top:1px solid var(--border); padding-top:14px; margin-top:auto">
+          <div style="display:flex; align-items:center">
+            ${colorBarHtml}
+          </div>
+          ${isActive 
+            ? `<button class="btn btn-warning btn-sm" disabled style="background:#d97706; color:white; border:none; padding:6px 12px; font-weight:bold; opacity:1; cursor:default"><i class="fa-solid fa-circle-check"></i> Actif</button>` 
+            : `<button class="btn btn-primary btn-sm" onclick="activateTheme('${theme.id}')" style="padding:6px 12px"><i class="fa-solid fa-bolt"></i> Activer</button>`
+          }
+        </div>
+      </div>
+    `;
+  }).join('');
+}
+
+window.activateTheme = function(themeId) {
+  const theme = THEME_PRESETS.find(t => t.id === themeId);
+  if (!theme) return;
+
+  const settings = TM.get('settings') || {};
+  settings.activeTheme = themeId;
+  
+  if (!settings.theme) settings.theme = {};
+  settings.theme.colors = { ...theme.colors };
+
+  TM.set('settings', settings);
+  renderThemes();
+  showToast(`Thème "${theme.name}" activé avec succès !`, 'success');
+};
+
+window.renderThemes = renderThemes;
+
