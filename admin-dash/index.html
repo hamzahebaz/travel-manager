@@ -1161,7 +1161,13 @@
   // Handle reset query param to clear local storage
   if (new URLSearchParams(window.location.search).get('reset') === 'true') {
     localStorage.clear();
-    window.location.href = window.location.pathname; // redirect to clean URL
+    // Clean URL query parameters immediately using History API to prevent reload loops
+    try {
+      window.history.replaceState({}, '', window.location.pathname);
+    } catch (e) {
+      window.location.href = window.location.pathname;
+    }
+    location.reload();
   }
 
   // Auth Handler
