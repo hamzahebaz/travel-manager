@@ -1347,11 +1347,11 @@ function applyThemeCustomizations() {
     } else if (theme.headerStyle === 'glass') {
       css += `
         .navbar {
-          background: rgba(253, 246, 236, 0.8) !important;
+          background: var(--navbar-bg, rgba(253, 246, 236, 0.8)) !important;
           backdrop-filter: blur(20px) !important;
         }
         .navbar.scrolled {
-          background: rgba(253, 246, 236, 0.95) !important;
+          background: var(--navbar-bg, rgba(253, 246, 236, 0.95)) !important;
         }
       `;
     }

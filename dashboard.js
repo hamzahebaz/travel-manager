@@ -1703,8 +1703,10 @@ function saveSettings() {
   s.maintenanceMode = document.getElementById('setMaintenance')?.checked || false;
 
   // Save Theme Settings
+  const existingColors = s.theme?.colors || {};
   s.theme = {
     colors: {
+      ...existingColors,
       '--cream': document.getElementById('themeCream')?.value || '#FDF6EC',
       '--sand-warm': document.getElementById('themeSandWarm')?.value || '#FAEBD7',
       '--terracotta': document.getElementById('themePrimaryColor')?.value || '#C05621',
@@ -1919,6 +1921,16 @@ const THEME_PRESETS = [
     name: "Moroccan Oasis",
     version: "2.0.0",
     description: "Authentic warm terracotta, cream, saffron gold, and deep coffee tones matching luxury Moroccan riads.",
+    headerStyle: "glass",
+    sidebarSupport: true,
+    layoutOrder: [
+      { "id": "hero-section", "name": "Hero Section", "visible": true },
+      { "id": "why-section", "name": "Why Choose Us", "visible": true },
+      { "id": "tours-section", "name": "Featured Tours", "visible": true },
+      { "id": "destGrid-section", "name": "Popular Destinations", "visible": true },
+      { "id": "reviews-section", "name": "Traveler Reviews", "visible": true },
+      { "id": "newsletter-section", "name": "Newsletter Signup", "visible": true }
+    ],
     colors: {
       '--cream': '#FDF6EC',
       '--sand-warm': '#FAEBD7',
@@ -1933,7 +1945,14 @@ const THEME_PRESETS = [
       '--coffee-med': '#5C4033',
       '--coffee-light': '#8C6D58',
       '--border': 'rgba(44, 24, 16, 0.08)',
-      '--border2': 'rgba(44, 24, 16, 0.15)'
+      '--border2': 'rgba(44, 24, 16, 0.15)',
+      '--font-headings': "'Playfair Display', serif",
+      '--font-body': "'Inter', sans-serif",
+      '--radius-val': '16px',
+      '--radius-btn': '12px',
+      '--btn-case': 'none',
+      '--btn-shadow': '0 4px 14px rgba(192, 86, 33, 0.2)',
+      '--navbar-bg': 'rgba(253, 246, 236, 0.85)'
     }
   },
   {
@@ -1941,6 +1960,16 @@ const THEME_PRESETS = [
     name: "Luxury Navy",
     version: "1.4.0",
     description: "Sleek and professional travel agent design with deep navy blue, warm gold highlights, and clean silver backgrounds.",
+    headerStyle: "solid",
+    sidebarSupport: true,
+    layoutOrder: [
+      { "id": "hero-section", "name": "Hero Section", "visible": true },
+      { "id": "tours-section", "name": "Featured Tours", "visible": true },
+      { "id": "destGrid-section", "name": "Popular Destinations", "visible": true },
+      { "id": "reviews-section", "name": "Traveler Reviews", "visible": true },
+      { "id": "why-section", "name": "Why Choose Us", "visible": true },
+      { "id": "newsletter-section", "name": "Newsletter Signup", "visible": false }
+    ],
     colors: {
       '--cream': '#F4F7FA',
       '--sand-warm': '#E9EFF5',
@@ -1955,7 +1984,14 @@ const THEME_PRESETS = [
       '--coffee-med': '#4A5568',
       '--coffee-light': '#718096',
       '--border': 'rgba(26, 54, 93, 0.08)',
-      '--border2': 'rgba(26, 54, 93, 0.15)'
+      '--border2': 'rgba(26, 54, 93, 0.15)',
+      '--font-headings': "'Outfit', sans-serif",
+      '--font-body': "'Inter', sans-serif",
+      '--radius-val': '8px',
+      '--radius-btn': '6px',
+      '--btn-case': 'uppercase',
+      '--btn-shadow': 'none',
+      '--navbar-bg': '#F4F7FA'
     }
   },
   {
@@ -1963,6 +1999,16 @@ const THEME_PRESETS = [
     name: "Nordic Breeze",
     version: "1.1.0",
     description: "Cool glacier blue, deep slate ocean, and sharp granite elements for sub-zero expeditions and clean arctic looks.",
+    headerStyle: "solid",
+    sidebarSupport: false,
+    layoutOrder: [
+      { "id": "hero-section", "name": "Hero Section", "visible": true },
+      { "id": "destGrid-section", "name": "Popular Destinations", "visible": true },
+      { "id": "tours-section", "name": "Featured Tours", "visible": true },
+      { "id": "why-section", "name": "Why Choose Us", "visible": true },
+      { "id": "reviews-section", "name": "Traveler Reviews", "visible": true },
+      { "id": "newsletter-section", "name": "Newsletter Signup", "visible": true }
+    ],
     colors: {
       '--cream': '#F0F4F8',
       '--sand-warm': '#D9E2EC',
@@ -1977,7 +2023,14 @@ const THEME_PRESETS = [
       '--coffee-med': '#334155',
       '--coffee-light': '#64748B',
       '--border': 'rgba(51, 78, 104, 0.08)',
-      '--border2': 'rgba(51, 78, 104, 0.15)'
+      '--border2': 'rgba(51, 78, 104, 0.15)',
+      '--font-headings': "'Outfit', sans-serif",
+      '--font-body': "'Inter', sans-serif",
+      '--radius-val': '0px',
+      '--radius-btn': '0px',
+      '--btn-case': 'uppercase',
+      '--btn-shadow': 'none',
+      '--navbar-bg': '#F0F4F8'
     }
   },
   {
@@ -1985,6 +2038,16 @@ const THEME_PRESETS = [
     name: "Forest Nature",
     version: "1.0.5",
     description: "Deep evergreen timber, organic wood details, warm leaf gold, and herbal tea tints for eco-nature tours.",
+    headerStyle: "glass",
+    sidebarSupport: true,
+    layoutOrder: [
+      { "id": "hero-section", "name": "Hero Section", "visible": true },
+      { "id": "why-section", "name": "Why Choose Us", "visible": true },
+      { "id": "destGrid-section", "name": "Popular Destinations", "visible": true },
+      { "id": "tours-section", "name": "Featured Tours", "visible": true },
+      { "id": "reviews-section", "name": "Traveler Reviews", "visible": true },
+      { "id": "newsletter-section", "name": "Newsletter Signup", "visible": true }
+    ],
     colors: {
       '--cream': '#F4F6F0',
       '--sand-warm': '#E2E8DD',
@@ -1999,7 +2062,14 @@ const THEME_PRESETS = [
       '--coffee-med': '#3F4E3C',
       '--coffee-light': '#6B7A68',
       '--border': 'rgba(47, 82, 51, 0.08)',
-      '--border2': 'rgba(47, 82, 51, 0.15)'
+      '--border2': 'rgba(47, 82, 51, 0.15)',
+      '--font-headings': "'Inter', sans-serif",
+      '--font-body': "'Inter', sans-serif",
+      '--radius-val': '24px',
+      '--radius-btn': '50px',
+      '--btn-case': 'none',
+      '--btn-shadow': '0 2px 8px rgba(47, 82, 51, 0.1)',
+      '--navbar-bg': 'rgba(244, 246, 240, 0.85)'
     }
   },
   {
@@ -2007,6 +2077,16 @@ const THEME_PRESETS = [
     name: "Sunset Rose",
     version: "1.2.0",
     description: "Luxurious rose gold, rich cranberry burgundy, warm pearl backdrops, and aubergine highlights for premium boutique riads.",
+    headerStyle: "glass",
+    sidebarSupport: true,
+    layoutOrder: [
+      { "id": "hero-section", "name": "Hero Section", "visible": true },
+      { "id": "reviews-section", "name": "Traveler Reviews", "visible": true },
+      { "id": "tours-section", "name": "Featured Tours", "visible": true },
+      { "id": "destGrid-section", "name": "Popular Destinations", "visible": true },
+      { "id": "why-section", "name": "Why Choose Us", "visible": true },
+      { "id": "newsletter-section", "name": "Newsletter Signup", "visible": true }
+    ],
     colors: {
       '--cream': '#FAF5F5',
       '--sand-warm': '#F2E3E3',
@@ -2021,7 +2101,14 @@ const THEME_PRESETS = [
       '--coffee-med': '#571E2F',
       '--coffee-light': '#8A5161',
       '--border': 'rgba(136, 19, 55, 0.08)',
-      '--border2': 'rgba(136, 19, 55, 0.15)'
+      '--border2': 'rgba(136, 19, 55, 0.15)',
+      '--font-headings': "'Playfair Display', serif",
+      '--font-body': "'Inter', sans-serif",
+      '--radius-val': '12px',
+      '--radius-btn': '8px',
+      '--btn-case': 'none',
+      '--btn-shadow': 'none',
+      '--navbar-bg': 'rgba(250, 245, 245, 0.85)'
     }
   },
   {
@@ -2029,6 +2116,16 @@ const THEME_PRESETS = [
     name: "Midnight Cyber",
     version: "1.5.0",
     description: "Sleek and high-contrast dark mode explorer styling with slate charcoal, neon blue accents, and violet highlights.",
+    headerStyle: "glass",
+    sidebarSupport: false,
+    layoutOrder: [
+      { "id": "hero-section", "name": "Hero Section", "visible": true },
+      { "id": "tours-section", "name": "Featured Tours", "visible": true },
+      { "id": "why-section", "name": "Why Choose Us", "visible": true },
+      { "id": "destGrid-section", "name": "Popular Destinations", "visible": true },
+      { "id": "reviews-section", "name": "Traveler Reviews", "visible": true },
+      { "id": "newsletter-section", "name": "Newsletter Signup", "visible": true }
+    ],
     colors: {
       '--cream': '#0D0E12',
       '--sand-warm': '#171923',
@@ -2043,7 +2140,14 @@ const THEME_PRESETS = [
       '--coffee-med': '#E2E8F0',
       '--coffee-light': '#94A3B8',
       '--border': 'rgba(255, 255, 255, 0.08)',
-      '--border2': 'rgba(255, 255, 255, 0.15)'
+      '--border2': 'rgba(255, 255, 255, 0.15)',
+      '--font-headings': "'Outfit', sans-serif",
+      '--font-body': "'Inter', sans-serif",
+      '--radius-val': '14px',
+      '--radius-btn': '10px',
+      '--btn-case': 'none',
+      '--btn-shadow': '0 0 15px rgba(6, 182, 212, 0.4)',
+      '--navbar-bg': 'rgba(13, 14, 18, 0.85)'
     }
   }
 ];
@@ -2138,10 +2242,20 @@ window.activateTheme = function(themeId) {
   const settings = TM.get('settings') || {};
   settings.activeTheme = themeId;
   
-  if (!settings.theme) settings.theme = {};
-  settings.theme.colors = { ...theme.colors };
+  settings.theme = {
+    colors: { ...theme.colors },
+    headerStyle: theme.headerStyle,
+    layoutOrder: [ ...theme.layoutOrder ],
+    sidebarSupport: theme.sidebarSupport
+  };
 
   TM.set('settings', settings);
+  
+  // Synchronize visual customizer inputs in the Settings tab
+  if (typeof loadSettings === 'function') {
+    loadSettings();
+  }
+
   renderThemes();
   showToast(`Thème "${theme.name}" activé avec succès !`, 'success');
 };

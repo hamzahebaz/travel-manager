@@ -7,6 +7,15 @@
 
 /* ─── Variables ─── */
 :root {
+  /* Dynamic style defaults */
+  --font-headings: 'Playfair Display', serif;
+  --font-body:     'Inter', sans-serif;
+  --radius-val:    16px;
+  --radius-btn:    10px;
+  --btn-case:      none;
+  --btn-shadow:    none;
+  --navbar-bg:     rgba(253, 246, 236, 0.85);
+
   /* Warm Moroccan Palette */
   --cream:       #FDF6EC; /* Primary background */
   --sand-warm:   #FAEBD7; /* Secondary sections background */
@@ -40,14 +49,14 @@
   --transition-fast: 0.15s ease;
   --shadow-lg: 0 20px 60px rgba(44, 24, 16, 0.15);
   --shadow-card: 0 4px 24px rgba(44, 24, 16, 0.06);
-  --radius: 16px;
-  --radius-sm: 10px;
+  --radius: var(--radius-val, 16px);
+  --radius-sm: var(--radius-btn, 10px);
 }
 
 /* ─── Reset ─── */
 *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 html { font-size: 16px; scroll-behavior: smooth; }
-body { font-family: 'Inter', sans-serif; background: var(--cream); color: var(--coffee-dark); overflow-x: hidden; line-height: 1.6; }
+body { font-family: var(--font-body, 'Inter', sans-serif); background: var(--cream); color: var(--coffee-dark); overflow-x: hidden; line-height: 1.6; }
 a { text-decoration: none; color: inherit; }
 img { max-width: 100%; display: block; }
 button { cursor: pointer; font-family: inherit; }
@@ -76,7 +85,7 @@ ul { list-style: none; }
 }
 
 .section-title {
-  font-family: 'Playfair Display', serif;
+  font-family: var(--font-headings, 'Playfair Display', serif);
   font-size: clamp(2rem, 4vw, 3rem);
   font-weight: 700;
   color: var(--coffee-dark);
@@ -101,21 +110,22 @@ ul { list-style: none; }
   transition: all var(--transition);
   cursor: pointer;
   white-space: nowrap;
+  text-transform: var(--btn-case, none);
 }
 .btn-primary {
   background: linear-gradient(135deg, var(--terracotta), var(--terracotta2));
   color: white;
-  box-shadow: 0 6px 20px rgba(192,86,33,0.25);
+  box-shadow: var(--btn-shadow, 0 6px 20px rgba(192,86,33,0.25));
 }
-.btn-primary:hover { transform: translateY(-2px); box-shadow: 0 10px 30px rgba(192,86,33,0.4); }
+.btn-primary:hover { transform: translateY(-2px); box-shadow: var(--btn-shadow, 0 10px 30px rgba(192,86,33,0.4)); }
 
 .btn-gold {
   background: linear-gradient(135deg, var(--gold), var(--gold2));
   color: white;
   font-weight: 700;
-  box-shadow: 0 6px 20px rgba(212,160,23,0.25);
+  box-shadow: var(--btn-shadow, 0 6px 20px rgba(212,160,23,0.25));
 }
-.btn-gold:hover { transform: translateY(-2px); box-shadow: 0 10px 30px rgba(212,160,23,0.4); }
+.btn-gold:hover { transform: translateY(-2px); box-shadow: var(--btn-shadow, 0 10px 30px rgba(212,160,23,0.4)); }
 
 .btn-outline {
   background: transparent;
@@ -173,7 +183,7 @@ ul { list-style: none; }
 
 .navbar-brand {
   display: flex; align-items: center; gap: 10px;
-  font-family: 'Playfair Display', serif;
+  font-family: var(--font-headings, 'Playfair Display', serif);
   font-size: 1.5rem; font-weight: 700;
   color: var(--coffee-dark);
   flex-shrink: 0;
@@ -442,7 +452,7 @@ ul { list-style: none; }
 .hero-badge i { font-size: 0.7rem; }
 
 .hero-title {
-  font-family: 'Playfair Display', serif;
+  font-family: var(--font-headings, 'Playfair Display', serif);
   font-size: clamp(2.8rem, 6vw, 5rem);
   font-weight: 800;
   line-height: 1.1;
@@ -471,7 +481,7 @@ ul { list-style: none; }
   border-top: 1px solid var(--border2);
 }
 .hero-stat-val {
-  font-family: 'Playfair Display', serif;
+  font-family: var(--font-headings, 'Playfair Display', serif);
   font-size: 1.8rem; font-weight: 700;
   color: var(--coffee-dark);
 }
@@ -614,8 +624,8 @@ ul { list-style: none; }
 }
 .tour-price-from { font-size: 0.72rem; color: var(--coffee-light); }
 .tour-price-old  { font-size: 0.82rem; color: var(--coffee-light); text-decoration: line-through; }
-.tour-price-val  { font-family: 'Playfair Display', serif; font-size: 1.4rem; font-weight: 700; color: var(--terracotta); }
-.tour-price-val small { font-size: 0.75rem; font-family: 'Inter', sans-serif; }
+.tour-price-val  { font-family: var(--font-headings, 'Playfair Display', serif); font-size: 1.4rem; font-weight: 700; color: var(--terracotta); }
+.tour-price-val small { font-size: 0.75rem; font-family: var(--font-body, 'Inter', sans-serif); }
 
 /* ════════════════════════════════════════════════════
    DESTINATIONS
@@ -655,7 +665,7 @@ ul { list-style: none; }
   z-index: 2;
 }
 .dest-card-name {
-  font-family: 'Playfair Display', serif;
+  font-family: var(--font-headings, 'Playfair Display', serif);
   font-size: 1.1rem; font-weight: 700;
   color: white;
 }
@@ -689,8 +699,8 @@ ul { list-style: none; }
 .hotel-amenities { display: flex; gap: 6px; flex-wrap: wrap; margin-bottom: 14px; }
 .amenity-tag { padding: 3px 10px; background: rgba(192,86,33,0.08); border: 1px solid rgba(192,86,33,0.15); border-radius: 20px; font-size: 0.7rem; color: var(--terracotta); }
 .hotel-card-footer { display: flex; align-items: center; justify-content: space-between; padding-top: 14px; border-top: 1px solid var(--border); }
-.hotel-price { font-family: 'Playfair Display', serif; font-size: 1.3rem; font-weight: 700; color: var(--terracotta); }
-.hotel-price small { font-size: 0.72rem; font-family: 'Inter', sans-serif; color: var(--coffee-light); }
+.hotel-price { font-family: var(--font-headings, 'Playfair Display', serif); font-size: 1.3rem; font-weight: 700; color: var(--terracotta); }
+.hotel-price small { font-size: 0.72rem; font-family: var(--font-body, 'Inter', sans-serif); color: var(--coffee-light); }
 
 /* ─── Why Choose Us ─── */
 .why-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(230px, 1fr)); gap: 20px; }
@@ -863,8 +873,8 @@ ul { list-style: none; }
 }
 .booking-card-price { margin-bottom: 22px; }
 .booking-price-label { font-size: 0.75rem; color: var(--coffee-light); }
-.booking-price-val { font-family: 'Playfair Display', serif; font-size: 2.2rem; font-weight: 800; color: var(--terracotta); }
-.booking-price-val small { font-size: 0.85rem; font-family: 'Inter', sans-serif; color: var(--coffee-light); }
+.booking-price-val { font-family: var(--font-headings, 'Playfair Display', serif); font-size: 2.2rem; font-weight: 800; color: var(--terracotta); }
+.booking-price-val small { font-size: 0.85rem; font-family: var(--font-body, 'Inter', sans-serif); color: var(--coffee-light); }
 
 .booking-form { display: flex; flex-direction: column; gap: 14px; }
 .form-group { display: flex; flex-direction: column; gap: 6px; }
@@ -906,7 +916,7 @@ ul { list-style: none; }
   flex-wrap: wrap;
 }
 .newsletter-text { flex: 1; min-width: 280px; }
-.newsletter-title { font-family: 'Playfair Display', serif; font-size: 1.6rem; font-weight: 700; color: var(--coffee-dark); margin-bottom: 8px; }
+.newsletter-title { font-family: var(--font-headings, 'Playfair Display', serif); font-size: 1.6rem; font-weight: 700; color: var(--coffee-dark); margin-bottom: 8px; }
 .newsletter-subtitle { font-size: 0.88rem; color: var(--coffee-med); }
 
 .newsletter-form { display: flex; gap: 10px; flex-shrink: 0; }
@@ -942,7 +952,7 @@ footer {
 }
 
 .footer-brand { }
-.footer-brand-name { font-family: 'Playfair Display', serif; font-size: 1.5rem; font-weight: 800; margin-bottom: 14px; color: white; }
+.footer-brand-name { font-family: var(--font-headings, 'Playfair Display', serif); font-size: 1.5rem; font-weight: 800; margin-bottom: 14px; color: white; }
 .footer-brand-name span { color: var(--terracotta); }
 .footer-brand-name img {
   height: 56px !important;
@@ -1009,7 +1019,7 @@ footer {
     url('https://images.unsplash.com/photo-1539650116574-75c0c6d38a7a?w=1920&q=70') center/cover no-repeat;
   position: relative;
 }
-.page-hero-title { font-family: 'Playfair Display', serif; font-size: clamp(2rem, 4vw, 3.5rem); font-weight: 800; color: var(--coffee-dark); margin-bottom: 12px; }
+.page-hero-title { font-family: var(--font-headings, 'Playfair Display', serif); font-size: clamp(2rem, 4vw, 3.5rem); font-weight: 800; color: var(--coffee-dark); margin-bottom: 12px; }
 .page-hero-sub { font-size: 1rem; color: var(--coffee-med); max-width: 500px; margin: 0 auto; }
 .page-hero-breadcrumb { display: flex; align-items: center; justify-content: center; gap: 8px; font-size: 0.8rem; color: var(--coffee-light); margin-bottom: 16px; }
 .page-hero-breadcrumb a { color: var(--terracotta); }
@@ -1029,7 +1039,7 @@ footer {
   text-align: center;
   box-shadow: var(--shadow-lg);
 }
-.about-badge-val { font-family: 'Playfair Display', serif; font-size: 2rem; font-weight: 800; color: white; }
+.about-badge-val { font-family: var(--font-headings, 'Playfair Display', serif); font-size: 2rem; font-weight: 800; color: white; }
 .about-badge-label { font-size: 0.75rem; color: rgba(255,255,255,0.9); }
 
 .about-list { display: flex; flex-direction: column; gap: 14px; margin: 24px 0; }
@@ -1294,7 +1304,7 @@ footer {
   padding: 40px 0 0;
 }
 .gallery-section h3 {
-  font-family: 'Playfair Display', serif;
+  font-family: var(--font-headings, 'Playfair Display', serif);
   font-size: 1.35rem;
   font-weight: 700;
   color: var(--coffee-dark);

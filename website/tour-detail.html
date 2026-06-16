@@ -40,7 +40,7 @@
         <a href="tours.html">Tours</a><i class="fa-solid fa-chevron-right"></i>
         <span id="detailTitle">Tour</span>
       </div>
-      <h1 style="font-family:'Playfair Display',serif;font-size:2rem;font-weight:800;color:white;margin-bottom:12px" id="detailTitleH1">Loading...</h1>
+      <h1 style="font-family:var(--font-headings);font-size:2rem;font-weight:800;color:white;margin-bottom:12px" id="detailTitleH1">Loading...</h1>
       <div style="display:flex;gap:20px;flex-wrap:wrap;align-items:center">
         <span style="color:rgba(255,255,255,0.8);font-size:0.88rem"><i class="fa-solid fa-location-dot" style="color:var(--teal)"></i> <span id="detailDest"></span></span>
         <span style="color:rgba(255,255,255,0.8);font-size:0.88rem"><i class="fa-solid fa-clock" style="color:var(--teal)"></i> <span id="detailDuration"></span></span>
@@ -61,7 +61,7 @@
       
       <!-- Tour Reviews Section -->
       <div id="tourReviewsSection" class="reviews-section" style="margin-top:40px; border-top:1px solid var(--border); padding-top:30px">
-        <h3 style="font-family:'Playfair Display',serif;font-size:1.35rem;font-weight:700;color:var(--coffee-dark);margin-bottom:20px;display:flex;align-items:center;gap:8px">
+        <h3 style="font-family:var(--font-headings);font-size:1.35rem;font-weight:700;color:var(--coffee-dark);margin-bottom:20px;display:flex;align-items:center;gap:8px">
           <i class="fa-solid fa-star" style="color:var(--teal)"></i> Customer Reviews (<span id="reviewsCount">0</span>)
         </h3>
         
@@ -72,7 +72,7 @@
 
         <!-- Leave a Review Form -->
         <div class="review-form-container" style="background:var(--cream); padding:24px; border-radius:var(--radius-sm); border:1px solid var(--border2)">
-          <h4 style="font-family:'Playfair Display',serif;font-size:1.1rem;font-weight:700;color:var(--coffee-dark);margin-bottom:16px">Leave a Review</h4>
+          <h4 style="font-family:var(--font-headings);font-size:1.1rem;font-weight:700;color:var(--coffee-dark);margin-bottom:16px">Leave a Review</h4>
           <form id="reviewForm" onsubmit="submitReview(event)">
             <div style="display:grid; grid-template-columns:1fr 1fr; gap:16px; margin-bottom:16px">
               <div>
@@ -112,7 +112,7 @@
 
   <!-- Related Tours -->
   <div style="padding-bottom:64px">
-    <h3 style="font-family:'Playfair Display',serif;font-size:1.4rem;font-weight:700;margin-bottom:24px">You Might Also Like</h3>
+    <h3 style="font-family:var(--font-headings);font-size:1.4rem;font-weight:700;margin-bottom:24px">You Might Also Like</h3>
     <div class="tours-grid" id="relatedToursGrid"></div>
   </div>
 </div>
