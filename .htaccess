@@ -21,4 +21,9 @@ RewriteRule ^about$ website/about.html [L]
 RewriteRule ^contact$ website/contact.html [L]
 RewriteRule ^destinations$ website/destinations.html [L]
 RewriteRule ^hotels$ website/hotels.html [L]
+RewriteRule ^cars$ website/cars.html [L]
+RewriteCond %{REQUEST_FILENAME} !-f
+RewriteCond %{REQUEST_FILENAME} !-d
+RewriteRule ^tours/([^/]+)$ website/tour-detail.html [L]
 RewriteRule ^tour-detail$ website/tour-detail.html [L]
+

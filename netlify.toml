@@ -29,6 +29,12 @@
   status = 200
 
 [[redirects]]
+  from = "/tours/*"
+  to = "/website/tour-detail.html"
+  status = 200
+
+
+[[redirects]]
   from = "/about"
   to = "/website/about.html"
   status = 200
@@ -46,6 +52,11 @@
 [[redirects]]
   from = "/hotels"
   to = "/website/hotels.html"
+  status = 200
+
+[[redirects]]
+  from = "/cars"
+  to = "/website/cars.html"
   status = 200
 
 [[redirects]]

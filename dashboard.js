@@ -9,6 +9,7 @@ const RES_PER_PAGE = 8;
 let currentSEOPage = 'home';
 let charts = {};
 let notifs = [];
+let activeLayoutOrder = [];
 
 // ─── Init ─────────────────────────────────────────────────────────────────────
 document.addEventListener('DOMContentLoaded', () => {
@@ -141,7 +142,7 @@ function navigateTo(page) {
     reservations:'Reservations', coupons:'Coupons', payments:'Payments', reviews:'Reviews',
     media:'Media Library', menu:'Menu Editor', 'seo-pages':'Page SEO', 'seo-sitemap':'Sitemap',
     'seo-robots':'Robots.txt', 'seo-redirects':'Redirects', users:'Users', reports:'Reports', settings:'Settings',
-    subscribers:'Email Submitters',
+    subscribers:'Email Submitters', cars: 'Car Rental',
   };
   document.getElementById('breadcrumbLabel').textContent = labels[page] || page;
 
@@ -151,6 +152,7 @@ function navigateTo(page) {
     tours: renderTours,
     hotels: renderHotels,
     destinations: renderDestinations,
+    cars: renderCars,
     reservations: renderReservations,
     coupons: renderCoupons,
     payments: renderPayments,
@@ -291,7 +293,7 @@ function renderRecentRes() {
   tbody.innerHTML = res.map(r => `
     <tr>
       <td style="font-weight:700;color:var(--text-primary)">#${r.id}</td>
-      <td><span style="color:var(--blue);max-width:160px;display:block;white-space:nowrap;overflow:hidden;text-overflow:ellipsis" title="${r.tourName}">${r.tourName}</span></td>
+      <td><span style="color:var(--blue);max-width:160px;display:block;white-space:nowrap;overflow:hidden;text-overflow:ellipsis" title="${r.tourName || r.carName || '–'}">${r.tourName || r.carName || '–'}</span></td>
       <td>${r.customer}</td>
       <td>${sym}${(r.total||0).toLocaleString()}</td>
       <td><span class="status-badge ${statusCls(r.status)}">${r.status}</span></td>
@@ -400,7 +402,7 @@ function renderTours() {
       <td><span class="status-badge ${t.active ? 'confirmed' : 'cancelled'}">${t.active ? 'Active' : 'Inactive'}</span></td>
       <td>${t.featured ? '<span class="status-badge in-progress">⭐ Yes</span>' : '<span style="color:var(--text-muted)">No</span>'}</td>
       <td><div class="action-btns">
-        <a href="website/tour-detail.html?id=${t.id}" target="_blank" class="act-btn" title="View on Site"><i class="fa-solid fa-eye"></i></a>
+        <a href="${t.slug ? `tours/${t.slug}` : `website/tour-detail.html?id=${t.id}`}" target="_blank" class="act-btn" title="View on Site"><i class="fa-solid fa-eye"></i></a>
         <button class="act-btn" title="Edit" onclick="editTour(${t.id})"><i class="fa-solid fa-pen"></i></button>
         <button class="act-btn" title="Toggle Active" onclick="toggleTourActive(${t.id})"><i class="fa-solid fa-toggle-on"></i></button>
         <button class="act-btn delete" title="Delete" onclick="deleteTour(${t.id})"><i class="fa-solid fa-trash"></i></button>
@@ -718,6 +720,154 @@ function deleteDest(id) {
   confirm2('Delete this destination?', () => { TM.deleteItem('destinations', id); renderDestinations(); showToast('Deleted', 'error'); });
 }
 
+// ─── CAR FLEET CRUD ───────────────────────────────────────────────────────────
+function renderCars() {
+  const tbody = document.getElementById('carsTbody');
+  if (!tbody) return;
+  const sym = TM.get('settings').currencySymbol || '€';
+  const cars = TM.get('cars') || [];
+
+  tbody.innerHTML = cars.map(c => `
+    <tr>
+      <td><div style="display:flex;align-items:center;gap:10px">
+        <img src="${c.image}" style="width:50px;height:35px;border-radius:4px;object-fit:cover" onerror="this.src='https://images.unsplash.com/photo-1533473359331-0135ef1b58bf?w=80&q=80'" />
+        <span style="font-weight:600;color:var(--text-primary)">${c.name}</span>
+      </div></td>
+      <td>${c.type}</td>
+      <td><span class="role-badge role-agent">${c.transmission}</span></td>
+      <td><span class="role-badge role-manager">${c.fuel}</span></td>
+      <td style="font-size:0.8rem">${c.doors} Doors, ${c.seats} Seats</td>
+      <td style="font-weight:600">${sym}${c.pricePerDay}</td>
+      <td>${c.featured ? '<span class="status-badge in-progress">⭐ Yes</span>' : '<span style="color:var(--text-muted)">No</span>'}</td>
+      <td><span class="status-badge ${c.active ? 'confirmed' : 'cancelled'}">${c.active ? 'Active' : 'Inactive'}</span></td>
+      <td><div class="action-btns">
+        <button class="act-btn" title="Edit" onclick="editCar(${c.id})"><i class="fa-solid fa-pen"></i></button>
+        <button class="act-btn" title="Toggle Active" onclick="toggleCarActive(${c.id})"><i class="fa-solid fa-toggle-on"></i></button>
+        <button class="act-btn delete" title="Delete" onclick="deleteCar(${c.id})"><i class="fa-solid fa-trash"></i></button>
+      </div></td>
+    </tr>
+  `).join('') || '<tr><td colspan="9" style="text-align:center;padding:30px;color:var(--text-muted)">No vehicles found</td></tr>';
+}
+
+function openAddCarModal() {
+  document.getElementById('editCarId').value = '';
+  document.getElementById('carModalTitle').textContent = 'Add Vehicle';
+  document.getElementById('cName').value = '';
+  document.getElementById('cType').value = 'SUV';
+  document.getElementById('cTransmission').value = 'Manual';
+  document.getElementById('cFuel').value = 'Diesel';
+  document.getElementById('cPricePerDay').value = '';
+  document.getElementById('cDoors').value = '4';
+  document.getElementById('cSeats').value = '5';
+  document.getElementById('cImage').value = '';
+  document.getElementById('cDescription').value = '';
+  document.getElementById('cFeatured').checked = false;
+  document.getElementById('cActive').checked = true;
+
+  const preview = document.getElementById('carImagePreview');
+  if (preview) { preview.src = ''; preview.style.display = 'none'; }
+
+  openModal('addCarModal');
+}
+
+function saveCar() {
+  const id = document.getElementById('editCarId').value;
+  const name = document.getElementById('cName').value.trim();
+  const pricePerDay = parseFloat(document.getElementById('cPricePerDay').value);
+  const description = document.getElementById('cDescription').value.trim();
+
+  if (!name || isNaN(pricePerDay) || !description) {
+    showToast('Name, price per day and description are required', 'error');
+    return;
+  }
+
+  const data = {
+    name,
+    type: document.getElementById('cType').value,
+    transmission: document.getElementById('cTransmission').value,
+    fuel: document.getElementById('cFuel').value,
+    pricePerDay,
+    doors: parseInt(document.getElementById('cDoors').value) || 4,
+    seats: parseInt(document.getElementById('cSeats').value) || 5,
+    image: document.getElementById('cImage').value.trim() || 'https://images.unsplash.com/photo-1533473359331-0135ef1b58bf?w=800&q=80',
+    description,
+    featured: document.getElementById('cFeatured').checked,
+    active: document.getElementById('cActive').checked
+  };
+
+  if (id) {
+    TM.updateItem('cars', id, data);
+    showToast('Vehicle updated successfully!', 'success');
+  } else {
+    TM.addItem('cars', data);
+    showToast('Vehicle added successfully!', 'success');
+  }
+
+  closeModal('addCarModal');
+  renderCars();
+}
+
+function editCar(id) {
+  const c = TM.getItem('cars', id);
+  if (!c) return;
+
+  document.getElementById('editCarId').value = c.id;
+  document.getElementById('carModalTitle').textContent = 'Edit Vehicle';
+  document.getElementById('cName').value = c.name || '';
+  document.getElementById('cType').value = c.type || 'SUV';
+  document.getElementById('cTransmission').value = c.transmission || 'Manual';
+  document.getElementById('cFuel').value = c.fuel || 'Diesel';
+  document.getElementById('cPricePerDay').value = c.pricePerDay || '';
+  document.getElementById('cDoors').value = c.doors || '4';
+  document.getElementById('cSeats').value = c.seats || '5';
+  document.getElementById('cImage').value = c.image || '';
+  document.getElementById('cDescription').value = c.description || '';
+  document.getElementById('cFeatured').checked = c.featured || false;
+  document.getElementById('cActive').checked = c.active !== false;
+
+  const preview = document.getElementById('carImagePreview');
+  if (preview && c.image) {
+    preview.src = c.image;
+    preview.style.display = 'block';
+  } else if (preview) {
+    preview.style.display = 'none';
+  }
+
+  openModal('addCarModal');
+}
+
+function toggleCarActive(id) {
+  const c = TM.getItem('cars', id);
+  if (!c) return;
+  TM.updateItem('cars', id, { active: c.active === false ? true : false });
+  renderCars();
+  showToast('Vehicle status updated', 'success');
+}
+
+function deleteCar(id) {
+  confirm2('Are you sure you want to delete this vehicle from the fleet?', () => {
+    TM.deleteItem('cars', id);
+    renderCars();
+    showToast('Vehicle deleted', 'error');
+  });
+}
+
+function uploadCarImage(input) {
+  if (input.files && input.files[0]) {
+    const reader = new FileReader();
+    reader.onload = function(e) {
+      const base64 = e.target.result;
+      document.getElementById('cImage').value = base64;
+      const preview = document.getElementById('carImagePreview');
+      if (preview) {
+        preview.src = base64;
+        preview.style.display = 'block';
+      }
+    };
+    reader.readAsDataURL(input.files[0]);
+  }
+}
+
 // ─── RESERVATIONS CRUD ────────────────────────────────────────────────────────
 function renderReservations() {
   const tbody = document.getElementById('resTbody');
@@ -728,7 +878,7 @@ function renderReservations() {
   const sort = document.getElementById('resSortFilter')?.value || 'newest';
 
   let list = TM.get('reservations').filter(r =>
-    (!q || r.customer?.toLowerCase().includes(q) || r.tourName?.toLowerCase().includes(q) || String(r.id).includes(q))
+    (!q || r.customer?.toLowerCase().includes(q) || (r.tourName || r.carName || '').toLowerCase().includes(q) || String(r.id).includes(q))
     && (!status || r.status === status)
   );
   if (sort === 'highest') list.sort((a,b) => b.total - a.total);
@@ -741,7 +891,7 @@ function renderReservations() {
   tbody.innerHTML = slice.map(r => `
     <tr>
       <td style="font-weight:700;color:var(--text-primary)">#${r.id}</td>
-      <td><span style="max-width:140px;display:block;white-space:nowrap;overflow:hidden;text-overflow:ellipsis" title="${r.tourName}">${r.tourName}</span></td>
+      <td><span style="max-width:140px;display:block;white-space:nowrap;overflow:hidden;text-overflow:ellipsis" title="${r.tourName || r.carName || '–'}">${r.tourName || r.carName || '–'}</span></td>
       <td style="font-weight:500;color:var(--text-primary)">${r.customer}</td>
       <td><a href="mailto:${r.email}" style="color:var(--blue);font-size:0.8rem">${r.email}</a></td>
       <td>${r.people || 1}</td>
@@ -1265,9 +1415,12 @@ function generateSchema() {
       "@context": "https://schema.org",
       "@type": "ItemList",
       "name": "Morocco Tours",
-      "itemListElement": tours.slice(0,5).map((t, i) => ({
-        "@type": "ListItem", "position": i+1, "name": t.title, "url": `website/tour-detail.html?id=${t.id}`,
-      })),
+      "itemListElement": tours.map((t, i) => ({
+        "@type": "ListItem",
+        "position": i + 1,
+        "name": t.title,
+        "url": t.slug ? `tours/${t.slug}` : `website/tour-detail.html?id=${t.id}`
+      }))
     };
   } else {
     schema = { "@context": "https://schema.org", "@type": "WebPage", "name": TM.getSEO(page).title, "description": TM.getSEO(page).description };
@@ -1401,6 +1554,50 @@ function loadSettings() {
 
   const maint = document.getElementById('setMaintenance');
   if (maint) maint.checked = s.maintenanceMode || false;
+
+  // Load Visual Theme Settings
+  const theme = s.theme || {
+    colors: {
+      '--cream': '#FDF6EC',
+      '--sand-warm': '#FAEBD7',
+      '--terracotta': '#C05621',
+      '--gold': '#D4A017',
+      '--coffee-dark': '#2C1810',
+      '--coffee-med': '#5C4033'
+    },
+    headerStyle: 'glass',
+    layoutOrder: [
+      { "id": "hero-section", "name": "Hero Section", "visible": true },
+      { "id": "why-section", "name": "Why Choose Us", "visible": true },
+      { "id": "tours-section", "name": "Featured Tours", "visible": true },
+      { "id": "destGrid-section", "name": "Popular Destinations", "visible": true },
+      { "id": "reviews-section", "name": "Traveler Reviews", "visible": true },
+      { "id": "newsletter-section", "name": "Newsletter Signup", "visible": true }
+    ],
+    sidebarSupport: true
+  };
+
+  const colorsMap = {
+    themePrimaryColor: '--terracotta',
+    themeCream: '--cream',
+    themeSandWarm: '--sand-warm',
+    themeGold: '--gold',
+    themeCoffeeDark: '--coffee-dark',
+    themeCoffeeMed: '--coffee-med'
+  };
+  Object.entries(colorsMap).forEach(([id, varName]) => {
+    const el = document.getElementById(id);
+    if (el) el.value = theme.colors?.[varName] || '';
+  });
+
+  const headerStyleEl = document.getElementById('themeHeaderStyle');
+  if (headerStyleEl) headerStyleEl.value = theme.headerStyle || 'glass';
+
+  const sidebarSupportEl = document.getElementById('themeSidebarSupport');
+  if (sidebarSupportEl) sidebarSupportEl.checked = theme.sidebarSupport !== false;
+
+  activeLayoutOrder = theme.layoutOrder || [];
+  renderThemeLayoutSettings();
 }
 
 function saveSettings() {
@@ -1419,8 +1616,63 @@ function saveSettings() {
     if (el) s[key] = el.value;
   });
   s.maintenanceMode = document.getElementById('setMaintenance')?.checked || false;
+
+  // Save Theme Settings
+  s.theme = {
+    colors: {
+      '--cream': document.getElementById('themeCream')?.value || '#FDF6EC',
+      '--sand-warm': document.getElementById('themeSandWarm')?.value || '#FAEBD7',
+      '--terracotta': document.getElementById('themePrimaryColor')?.value || '#C05621',
+      '--gold': document.getElementById('themeGold')?.value || '#D4A017',
+      '--coffee-dark': document.getElementById('themeCoffeeDark')?.value || '#2C1810',
+      '--coffee-med': document.getElementById('themeCoffeeMed')?.value || '#5C4033'
+    },
+    headerStyle: document.getElementById('themeHeaderStyle')?.value || 'glass',
+    layoutOrder: activeLayoutOrder,
+    sidebarSupport: document.getElementById('themeSidebarSupport')?.checked !== false
+  };
+
   TM.set('settings', s);
   showToast('Settings saved! Changes apply on next website visit.', 'success');
+}
+
+function renderThemeLayoutSettings() {
+  const container = document.getElementById('themeLayoutBlocks');
+  if (!container) return;
+
+  container.innerHTML = activeLayoutOrder.map((block, idx) => `
+    <div class="layout-block-item" data-id="${block.id}" style="display:flex;align-items:center;justify-content:space-between;background:var(--bg-dark);padding:10px 14px;border-radius:10px;border:1px solid var(--border);gap:10px;margin-bottom:8px">
+      <div style="display:flex;align-items:center;gap:12px;flex:1">
+        <label class="toggle-switch" style="font-size:0.8rem">
+          <input type="checkbox" class="block-visible" ${block.visible ? 'checked' : ''} onchange="toggleThemeBlock(${idx}, this.checked)" />
+          <span class="toggle-slider"></span>
+        </label>
+        <span style="font-size:0.85rem;font-weight:600;color:var(--text-primary)">${block.name}</span>
+      </div>
+      <div style="display:flex;gap:6px">
+        <button type="button" class="btn btn-outline btn-sm" onclick="moveThemeBlock(${idx}, -1)" style="padding:4px 8px;min-height:unset;height:28px;width:28px;display:flex;align-items:center;justify-content:center" ${idx === 0 ? 'disabled' : ''}><i class="fa-solid fa-arrow-up" style="font-size:0.75rem"></i></button>
+        <button type="button" class="btn btn-outline btn-sm" onclick="moveThemeBlock(${idx}, 1)" style="padding:4px 8px;min-height:unset;height:28px;width:28px;display:flex;align-items:center;justify-content:center" ${idx === activeLayoutOrder.length - 1 ? 'disabled' : ''}><i class="fa-solid fa-arrow-down" style="font-size:0.75rem"></i></button>
+      </div>
+    </div>
+  `).join('');
+}
+
+function toggleThemeBlock(index, checked) {
+  if (activeLayoutOrder[index]) {
+    activeLayoutOrder[index].visible = checked;
+  }
+}
+
+function moveThemeBlock(index, direction) {
+  const targetIndex = index + direction;
+  if (targetIndex < 0 || targetIndex >= activeLayoutOrder.length) return;
+
+  // Swap elements
+  const temp = activeLayoutOrder[index];
+  activeLayoutOrder[index] = activeLayoutOrder[targetIndex];
+  activeLayoutOrder[targetIndex] = temp;
+
+  renderThemeLayoutSettings();
 }
 
 function uploadSettingImage(inputId, previewId, input) {

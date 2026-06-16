@@ -41,6 +41,7 @@
     <a href="#" class="nav-item" data-page="tours"><span class="nav-icon"><i class="fa-solid fa-route"></i></span><span class="nav-label">Tours</span></a>
     <a href="#" class="nav-item" data-page="hotels"><span class="nav-icon"><i class="fa-solid fa-hotel"></i></span><span class="nav-label">Hotels</span></a>
     <a href="#" class="nav-item" data-page="destinations"><span class="nav-icon"><i class="fa-solid fa-map-location-dot"></i></span><span class="nav-label">Destinations</span></a>
+    <a href="#" class="nav-item" data-page="cars"><span class="nav-icon"><i class="fa-solid fa-car"></i></span><span class="nav-label">Car Rental</span></a>
 
     <div class="nav-section-label">Bookings</div>
     <a href="#" class="nav-item" data-page="reservations"><span class="nav-icon"><i class="fa-solid fa-calendar-check"></i></span><span class="nav-label">Reservations</span><span class="nav-badge" id="resBadge">0</span></a>
@@ -222,6 +223,20 @@
         <table class="data-table full-table">
           <thead><tr><th>ID</th><th>Name</th><th>Country</th><th>Tours</th><th>Featured</th><th>Status</th><th>Actions</th></tr></thead>
           <tbody id="destsTbody"></tbody>
+        </table>
+      </div></div>
+    </section>
+
+    <!-- ═══ CAR RENTAL ═══ -->
+    <section class="page hidden" id="page-cars">
+      <div class="page-header-row">
+        <div><h1 class="page-title">Car Rental Fleet</h1><p class="page-subtitle">Manage rental vehicles and specifications</p></div>
+        <button class="btn btn-primary" onclick="openAddCarModal()"><i class="fa-solid fa-plus"></i> Add Vehicle</button>
+      </div>
+      <div class="card"><div class="table-wrapper">
+        <table class="data-table full-table">
+          <thead><tr><th>Vehicle</th><th>Type</th><th>Transmission</th><th>Fuel</th><th>Specs</th><th>Price/Day</th><th>Featured</th><th>Status</th><th>Actions</th></tr></thead>
+          <tbody id="carsTbody"></tbody>
         </table>
       </div></div>
     </section>
@@ -598,6 +613,33 @@
           </div>
         </div>
         <div class="card" style="padding:28px">
+          <h3 style="font-size:0.95rem;font-weight:700;margin-bottom:18px;padding-bottom:10px;border-bottom:1px solid var(--border)"><i class="fa-solid fa-palette" style="color:var(--primary)"></i> Visual Theme Editor</h3>
+          <div class="form-grid">
+            <div class="form-group"><label>Primary Brand (Terracotta)</label><input type="color" id="themePrimaryColor" class="form-input" style="height:42px;padding:4px;cursor:pointer" /></div>
+            <div class="form-group"><label>Background Cream</label><input type="color" id="themeCream" class="form-input" style="height:42px;padding:4px;cursor:pointer" /></div>
+            <div class="form-group"><label>Secondary Sand Warm</label><input type="color" id="themeSandWarm" class="form-input" style="height:42px;padding:4px;cursor:pointer" /></div>
+            <div class="form-group"><label>Accent Gold/Saffron</label><input type="color" id="themeGold" class="form-input" style="height:42px;padding:4px;cursor:pointer" /></div>
+            <div class="form-group"><label>Main Dark Text</label><input type="color" id="themeCoffeeDark" class="form-input" style="height:42px;padding:4px;cursor:pointer" /></div>
+            <div class="form-group"><label>Secondary Med Text</label><input type="color" id="themeCoffeeMed" class="form-input" style="height:42px;padding:4px;cursor:pointer" /></div>
+
+            <div class="form-group"><label>Header Style</label>
+              <select id="themeHeaderStyle" class="form-input">
+                <option value="glass">Glassmorphism Overlay</option>
+                <option value="solid">Solid Color Background</option>
+              </select>
+            </div>
+            <div class="form-group" style="display:flex;align-items:center;gap:10px">
+              <label class="toggle-switch"><input type="checkbox" id="themeSidebarSupport" /><span class="toggle-slider"></span></label>
+              <div><div style="font-size:0.85rem;font-weight:600">Support Chat Widget</div><div style="font-size:0.75rem;color:var(--text-muted)">Show floating client support widget</div></div>
+            </div>
+
+            <div class="form-group full-width" style="margin-top:12px">
+              <label style="font-weight:600;margin-bottom:8px;display:block">Homepage Sections Order & Visibility</label>
+              <div id="themeLayoutBlocks" style="display:flex;flex-direction:column;gap:8px"></div>
+            </div>
+          </div>
+        </div>
+        <div class="card" style="padding:28px">
           <h3 style="font-size:0.95rem;font-weight:700;margin-bottom:18px;padding-bottom:10px;border-bottom:1px solid var(--border)"><i class="fa-solid fa-database" style="color:var(--primary)"></i> Data Management</h3>
           <div style="display:flex;flex-direction:column;gap:12px">
             <button class="btn btn-outline" onclick="exportAllData()"><i class="fa-solid fa-file-export"></i> Export All Data (JSON)</button>
@@ -816,6 +858,56 @@
     <div class="modal-footer">
       <button class="btn btn-outline" onclick="closeModal('addUserModal')">Cancel</button>
       <button class="btn btn-primary" onclick="saveUser()"><i class="fa-solid fa-user-plus"></i> Invite</button>
+    </div>
+  </div>
+</div>
+
+<!-- Add/Edit Car Modal -->
+<div class="modal-overlay hidden" id="addCarModal">
+  <div class="modal" style="max-width:620px">
+    <div class="modal-header"><h3 id="carModalTitle">Add Vehicle</h3><button class="modal-close" onclick="closeModal('addCarModal')"><i class="fa-solid fa-xmark"></i></button></div>
+    <div class="modal-body" style="max-height:70vh;overflow-y:auto">
+      <input type="hidden" id="editCarId" />
+      <div class="form-grid">
+        <div class="form-group full-width"><label>Vehicle Name *</label><input type="text" id="cName" class="form-input" placeholder="e.g. Dacia Duster 4x4" /></div>
+        <div class="form-group"><label>Vehicle Type *</label>
+          <select id="cType" class="form-input"><option>SUV</option><option>Economy</option><option>Sedan</option><option>Compact</option><option>Luxury</option></select>
+        </div>
+        <div class="form-group"><label>Transmission *</label>
+          <select id="cTransmission" class="form-input"><option>Manual</option><option>Automatic</option></select>
+        </div>
+        <div class="form-group"><label>Fuel Type *</label>
+          <select id="cFuel" class="form-input"><option>Diesel</option><option>Gasoline</option><option>Hybrid</option><option>Electric</option></select>
+        </div>
+        <div class="form-group"><label>Price per Day (€) *</label><input type="number" id="cPricePerDay" class="form-input" placeholder="e.g. 45" /></div>
+        <div class="form-group"><label>Number of Doors</label><input type="number" id="cDoors" class="form-input" value="4" /></div>
+        <div class="form-group"><label>Number of Seats</label><input type="number" id="cSeats" class="form-input" value="5" /></div>
+
+        <div class="form-group full-width">
+          <label>Vehicle Photo</label>
+          <div style="display:flex;gap:12px;align-items:center">
+            <input type="url" id="cImage" class="form-input" placeholder="Photo URL or upload local file" style="flex:1" />
+            <input type="file" id="cImageFile" accept="image/*" style="display:none" onchange="uploadCarImage(this)" />
+            <button type="button" class="btn btn-outline btn-sm" onclick="document.getElementById('cImageFile').click()"><i class="fa-solid fa-cloud-arrow-up"></i> Upload</button>
+          </div>
+          <img id="carImagePreview" class="img-upload-preview" style="max-height:120px;margin-top:8px;border-radius:8px;object-fit:cover;display:none" />
+        </div>
+
+        <div class="form-group full-width"><label>Description *</label><textarea id="cDescription" class="form-input" rows="3" placeholder="Enter vehicle description..."></textarea></div>
+
+        <div class="form-group" style="display:flex;align-items:center;gap:10px">
+          <label class="toggle-switch"><input type="checkbox" id="cFeatured" /><span class="toggle-slider"></span></label>
+          <span style="font-size:0.85rem">Featured on Site</span>
+        </div>
+        <div class="form-group" style="display:flex;align-items:center;gap:10px">
+          <label class="toggle-switch"><input type="checkbox" id="cActive" checked /><span class="toggle-slider"></span></label>
+          <span style="font-size:0.85rem">Active Status</span>
+        </div>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-outline" onclick="closeModal('addCarModal')">Cancel</button>
+      <button class="btn btn-primary" onclick="saveCar()"><i class="fa-solid fa-save"></i> Save Vehicle</button>
     </div>
   </div>
 </div>

@@ -22,6 +22,7 @@ const TM = (() => {
     redirects:    'tm_redirects',
     robots:       'tm_robots',
     subscribers:  'tm_subscribers',
+    cars:         'tm_cars',
   };
 
   // ─── Default Data ────────────────────────────────────────────────────────
@@ -88,6 +89,7 @@ const TM = (() => {
       'tours':        { title: 'All Tours & Circuits | TourVoyage Morocco', description: 'Browse our complete collection of Morocco tours, circuits, excursions and day trips. Filter by destination, duration and price.', keywords: 'Morocco tours, circuits, excursions, day trips, Marrakech tours', ogTitle: 'Morocco Tours & Circuits', ogDescription: 'Find your perfect Morocco tour.', ogImage: '', canonical: '', noindex: false, schema: '{"@context":"https://schema.org","@type":"ItemList","name":"Morocco Tours & Circuits","description":"Browse our complete collection of Morocco tours, circuits, excursions and day trips."}' },
       'destinations': { title: 'Top Destinations in Morocco | TourVoyage', description: 'Explore the most beautiful destinations in Morocco: Marrakech, Sahara, Fes, Essaouira, Chefchaouen and more.', keywords: 'Morocco destinations, Marrakech, Sahara, Fes, Essaouira, Chefchaouen', ogTitle: 'Morocco Top Destinations', ogDescription: 'Discover Morocco\'s most iconic destinations.', ogImage: '', canonical: '', noindex: false, schema: '{"@context":"https://schema.org","@type":"WebPage","name":"Top Destinations in Morocco | TourVoyage","description":"Explore the most beautiful destinations in Morocco: Marrakech, Sahara, Fes, Essaouira, Chefchaouen and more."}' },
       'hotels':       { title: 'Best Hotels & Riads in Morocco | TourVoyage', description: 'Stay in Morocco\'s finest riads, desert camps and mountain lodges. Hand-picked accommodations for every budget.', keywords: 'Morocco hotels, riads, desert camps, Marrakech accommodation', ogTitle: 'Morocco Hotels & Riads', ogDescription: 'Find the perfect place to stay in Morocco.', ogImage: '', canonical: '', noindex: false, schema: '{"@context":"https://schema.org","@type":"WebPage","name":"Best Hotels & Riads in Morocco | TourVoyage","description":"Stay in Morocco\'s finest riads, desert camps and mountain lodges."}' },
+      'cars':         { title: 'Premium Car Rental & 4x4 Fleet | TourVoyage Morocco', description: 'Rent a car in Morocco at the best price. Explore Marrakech, Atlas Mountains and desert roads in our reliable 4x4 and economy fleet.', keywords: 'car rental Morocco, 4x4 rent, Marrakech car hire, SUV rental', ogTitle: 'Morocco Premium Car Rental', ogDescription: 'Explore Morocco at your own pace with our reliable fleet.', ogImage: '', canonical: '', noindex: false, schema: '{"@context":"https://schema.org","@type":"WebPage","name":"Premium Car Rental & 4x4 Fleet | TourVoyage Morocco","description":"Explore Morocco at your own pace with our reliable fleet."}' },
       'about':        { title: 'About TourVoyage – Your Morocco Travel Experts', description: 'Learn about TourVoyage, our team of passionate local experts, and our commitment to authentic Morocco travel experiences.', keywords: 'about us, travel agency Morocco, local guides, authentic travel', ogTitle: 'About TourVoyage', ogDescription: 'Your trusted Morocco travel experts.', ogImage: '', canonical: '', noindex: false, schema: '{"@context":"https://schema.org","@type":"AboutPage","name":"About TourVoyage – Your Morocco Travel Experts","description":"Learn about TourVoyage, our team of passionate local experts, and our commitment to authentic Morocco travel experiences."}' },
       'contact':      { title: 'Contact TourVoyage – Book Your Morocco Adventure', description: 'Get in touch with our travel experts. Book your Morocco tour, ask questions, or request a custom itinerary.', keywords: 'contact, book tour Morocco, travel inquiry, custom itinerary', ogTitle: 'Contact TourVoyage', ogDescription: 'Book your Morocco adventure today.', ogImage: '', canonical: '', noindex: false, schema: '{"@context":"https://schema.org","@type":"ContactPage","name":"Contact TourVoyage – Book Your Morocco Adventure","description":"Get in touch with our travel experts. Book your Morocco tour, ask questions, or request a custom itinerary."}' },
     },
@@ -113,15 +115,36 @@ const TM = (() => {
       maintenanceMode: false,
       logo: 'website/images/logo.png',
       favicon: 'website/images/favicon.png',
+      theme: {
+        colors: {
+          '--cream': '#FDF6EC',
+          '--sand-warm': '#FAEBD7',
+          '--terracotta': '#C05621',
+          '--gold': '#D4A017',
+          '--coffee-dark': '#2C1810',
+          '--coffee-med': '#5C4033'
+        },
+        headerStyle: 'glass',
+        layoutOrder: [
+          { "id": "hero-section", "name": "Hero Section", "visible": true },
+          { "id": "why-section", "name": "Why Choose Us", "visible": true },
+          { "id": "tours-section", "name": "Featured Tours", "visible": true },
+          { "id": "destGrid-section", "name": "Popular Destinations", "visible": true },
+          { "id": "reviews-section", "name": "Traveler Reviews", "visible": true },
+          { "id": "newsletter-section", "name": "Newsletter Signup", "visible": true }
+        ],
+        sidebarSupport: true
+      }
     },
 
     menu: [
       { id: 1, label: 'Home', url: 'index.html', order: 1, active: true },
       { id: 2, label: 'Tours', url: 'tours.html', order: 2, active: true },
-      { id: 3, label: 'Destinations', url: 'destinations.html', order: 3, active: true },
-      { id: 4, label: 'Hotels', url: 'hotels.html', order: 4, active: true },
-      { id: 5, label: 'About', url: 'about.html', order: 5, active: true },
-      { id: 6, label: 'Contact', url: 'contact.html', order: 6, active: true },
+      { id: 3, label: 'Car Rental', url: 'cars.html', order: 3, active: true },
+      { id: 4, label: 'Destinations', url: 'destinations.html', order: 4, active: true },
+      { id: 5, label: 'Hotels', url: 'hotels.html', order: 5, active: true },
+      { id: 6, label: 'About', url: 'about.html', order: 6, active: true },
+      { id: 7, label: 'Contact', url: 'contact.html', order: 7, active: true },
     ],
 
     redirects: [
@@ -140,6 +163,11 @@ Sitemap: https://yourdomain.com/sitemap.xml`,
       { email: 'traveler1@gmail.com', createdAt: '2026-06-12 10:22' },
       { email: 'desertfan@yahoo.com', createdAt: '2026-06-13 14:05' },
       { email: 'riadseeker@outlook.com', createdAt: '2026-06-14 09:12' }
+    ],
+    cars: [
+      { id: 1, name: "Dacia Duster 4x4", type: "SUV", transmission: "Manual", fuel: "Diesel", doors: 4, seats: 5, pricePerDay: 45, image: "https://images.unsplash.com/photo-1533473359331-0135ef1b58bf?w=800&q=80", active: true, featured: true, description: "Highly reliable 4x4 SUV perfect for crossing mountain passes and desert roads in absolute comfort." },
+      { id: 2, name: "Hyundai i10", type: "Economy", transmission: "Manual", fuel: "Gasoline", doors: 4, seats: 5, pricePerDay: 25, image: "https://images.unsplash.com/photo-1605559424843-9e4c228bf1c2?w=800&q=80", active: true, featured: true, description: "Compact and extremely fuel-efficient city car, ideal for navigating old streets and parking in tight spaces." },
+      { id: 3, name: "Mercedes C-Class Sedan", type: "Luxury", transmission: "Automatic", fuel: "Diesel", doors: 4, seats: 5, pricePerDay: 85, image: "https://images.unsplash.com/photo-1549399542-7e3f8b79c341?w=800&q=80", active: true, featured: false, description: "Premium automatic sedan offering absolute luxury, smooth performance, and high-end highway cruising." }
     ],
   };
 
@@ -304,7 +332,7 @@ Sitemap: https://yourdomain.com/sitemap.xml`,
       { loc: `${baseUrl}/website/hotels.html`,       changefreq: 'weekly',  priority: '0.8' },
       { loc: `${baseUrl}/website/about.html`,        changefreq: 'monthly', priority: '0.6' },
       { loc: `${baseUrl}/website/contact.html`,      changefreq: 'monthly', priority: '0.7' },
-      ...tours.map(t => ({ loc: `${baseUrl}/website/tour-detail.html?id=${t.id}`, changefreq: 'weekly', priority: '0.85' })),
+      ...tours.map(t => ({ loc: t.slug ? `${baseUrl}/tours/${t.slug}` : `${baseUrl}/website/tour-detail.html?id=${t.id}`, changefreq: 'weekly', priority: '0.85' })),
     ];
     const today = new Date().toISOString().split('T')[0];
     return `<?xml version="1.0" encoding="UTF-8"?>

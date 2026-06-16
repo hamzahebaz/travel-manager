@@ -1,0 +1,146 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Premium Car Rental & 4x4 Fleet | TourVoyage Morocco</title>
+  <meta name="description" content="Rent a car in Morocco at the best price. Explore Marrakech, Atlas Mountains and desert roads in our reliable 4x4 and economy fleet." />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;600;700;800&family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" />
+  <link rel="stylesheet" href="css/style.css" />
+  <link rel="icon" type="image/png" href="images/favicon.png" />
+</head>
+<body>
+
+<nav class="navbar" id="mainNavbar">
+  <div class="container">
+    <div class="navbar-inner">
+      <a href="index.html" class="navbar-brand"><img src="images/logo.png" alt="TourVoyage Logo" style="height: 38px;"></a>
+      <div class="navbar-nav nav-menu-dynamic"></div>
+      <div class="navbar-actions">
+        <a href="contact.html" class="btn btn-primary btn-sm">Book Now</a>
+        <button class="navbar-toggle" id="navToggle"><i class="fa-solid fa-bars"></i></button>
+      </div>
+    </div>
+  </div>
+</nav>
+<div class="mobile-menu" id="mobileMenu">
+  <div class="nav-menu-dynamic"></div>
+  <div class="navbar-actions"><a href="contact.html" class="btn btn-primary btn-sm">Book Now</a></div>
+</div>
+
+<div class="page-hero">
+  <div class="container">
+    <div class="page-hero-breadcrumb"><a href="index.html">Home</a><i class="fa-solid fa-chevron-right"></i><span>Car Rental</span></div>
+    <h1 class="page-hero-title">Our Premium Fleet</h1>
+    <p class="page-hero-sub">Explore Morocco at your own pace with our reliable SUV and economy vehicles</p>
+  </div>
+</div>
+
+<section class="section">
+  <div class="container">
+    <div class="filters-bar">
+      <div class="filter-group">
+        <label class="filter-label">Search</label>
+        <input type="text" id="carsSearch" class="filter-input search-wide" placeholder="Search vehicles..." />
+      </div>
+      <div class="filter-group">
+        <label class="filter-label">Type</label>
+        <select id="carsTypeFilter" class="filter-select">
+          <option value="">All Types</option>
+          <option value="SUV">SUV / 4x4</option>
+          <option value="Economy">Economy</option>
+          <option value="Sedan">Sedan</option>
+          <option value="Compact">Compact</option>
+          <option value="Luxury">Luxury</option>
+        </select>
+      </div>
+      <div class="filter-group">
+        <label class="filter-label">Transmission</label>
+        <select id="carsTransFilter" class="filter-select">
+          <option value="">Any Transmission</option>
+          <option value="Manual">Manual</option>
+          <option value="Automatic">Automatic</option>
+        </select>
+      </div>
+      <div class="filter-count" id="carsCount">Loading...</div>
+    </div>
+    <div class="tours-grid" id="carsGrid"><!-- Populated by JS --></div>
+  </div>
+</section>
+
+<!-- Car Rental Booking Modal -->
+<div class="modal-overlay hidden" id="carBookModal" style="position:fixed;inset:0;background:rgba(0,0,0,0.6);display:flex;align-items:center;justify-content:center;z-index:2000">
+  <div class="modal" style="max-width:500px;background:var(--card-bg);border-radius:16px;box-shadow:var(--shadow-lg);border:1px solid var(--border)">
+    <div class="modal-header" style="display:flex;justify-content:space-between;align-items:center;padding:18px 24px;border-bottom:1px solid var(--border)">
+      <h3 id="carBookTitle" style="font-family:'Outfit',sans-serif;font-size:1.2rem;font-weight:700">Rent Vehicle</h3>
+      <button class="modal-close" onclick="closeCarBookModal()" style="background:none;border:none;font-size:1.2rem;cursor:pointer;color:var(--coffee-light)"><i class="fa-solid fa-xmark"></i></button>
+    </div>
+    <div class="modal-body" style="padding:24px;max-height:70vh;overflow-y:auto">
+      <input type="hidden" id="bookCarId" />
+      <div style="display:flex;flex-direction:column;gap:16px">
+        <div style="display:flex;align-items:center;gap:12px;background:var(--sand-warm);padding:12px;border-radius:10px;border:1px solid var(--border)">
+          <img id="bookCarImg" style="width:70px;height:45px;border-radius:6px;object-fit:cover" />
+          <div>
+            <div id="bookCarName" style="font-weight:700;font-size:0.95rem;color:var(--coffee-dark)"></div>
+            <div id="bookCarPrice" style="font-size:0.82rem;font-weight:600;color:var(--terracotta)"></div>
+          </div>
+        </div>
+        <div class="form-group"><label style="font-size:0.8rem;font-weight:600;margin-bottom:6px;display:block">Your Name *</label><input type="text" id="bcCust" class="form-input" required style="width:100%;padding:10px;border-radius:8px;border:1px solid var(--border);background:var(--cream)" /></div>
+        <div class="form-group"><label style="font-size:0.8rem;font-weight:600;margin-bottom:6px;display:block">Your Email *</label><input type="email" id="bcEmail" class="form-input" required style="width:100%;padding:10px;border-radius:8px;border:1px solid var(--border);background:var(--cream)" /></div>
+        <div class="form-group"><label style="font-size:0.8rem;font-weight:600;margin-bottom:6px;display:block">Your Phone (WhatsApp) *</label><input type="tel" id="bcPhone" class="form-input" required style="width:100%;padding:10px;border-radius:8px;border:1px solid var(--border);background:var(--cream)" /></div>
+        <div style="display:flex;gap:12px">
+          <div class="form-group" style="flex:1"><label style="font-size:0.8rem;font-weight:600;margin-bottom:6px;display:block">Pickup Date *</label><input type="date" id="bcStartDate" class="form-input" required style="width:100%;padding:10px;border-radius:8px;border:1px solid var(--border);background:var(--cream)" /></div>
+          <div class="form-group" style="flex:1"><label style="font-size:0.8rem;font-weight:600;margin-bottom:6px;display:block">Rental Days *</label><input type="number" id="bcDays" class="form-input" value="1" min="1" required style="width:100%;padding:10px;border-radius:8px;border:1px solid var(--border);background:var(--cream)" /></div>
+        </div>
+        <div class="form-group"><label style="font-size:0.8rem;font-weight:600;margin-bottom:6px;display:block">Special Requests / Notes</label><textarea id="bcNotes" class="form-input" rows="2" style="width:100%;padding:10px;border-radius:8px;border:1px solid var(--border);background:var(--cream)"></textarea></div>
+      </div>
+    </div>
+    <div class="modal-footer" style="padding:18px 24px;border-top:1px solid var(--border);display:flex;justify-content:flex-end;gap:12px">
+      <button class="btn btn-outline" onclick="closeCarBookModal()">Cancel</button>
+      <button class="btn btn-primary" onclick="submitCarBooking()"><i class="fa-solid fa-paper-plane"></i> Book Rental</button>
+    </div>
+  </div>
+</div>
+
+<section class="newsletter-section section-sm">
+  <div class="container">
+    <div class="newsletter-inner">
+      <div class="newsletter-text">
+        <h3 class="newsletter-title">Get Exclusive Travel Deals ✈️</h3>
+        <p class="newsletter-subtitle">Subscribe and receive special offers and early access to new tours.</p>
+      </div>
+      <form class="newsletter-form" onsubmit="return false">
+        <input type="email" class="newsletter-input" placeholder="Enter your email address" />
+        <button type="submit" class="btn btn-primary">Subscribe</button>
+      </form>
+    </div>
+  </div>
+</section>
+
+<footer>
+  <div class="container">
+    <div class="footer-grid">
+      <div class="footer-brand">
+        <div class="footer-brand-name"><img src="images/logo.png" alt="TourVoyage Logo" style="height: 34px;"></div>
+        <p class="footer-desc footer-desc-text">Your trusted partner for authentic Morocco travel experiences.</p>
+        <div class="footer-socials footer-socials-dynamic"></div>
+      </div>
+      <div><h5 class="footer-col-title">Quick Links</h5><div class="footer-links"><a href="tours.html" class="footer-link">All Tours</a><a href="destinations.html" class="footer-link">Destinations</a><a href="hotels.html" class="footer-link">Hotels</a><a href="about.html" class="footer-link">About</a><a href="contact.html" class="footer-link">Contact</a></div></div>
+      <div><h5 class="footer-col-title">Tour Types</h5><div class="footer-links"><a href="tours.html?cat=circuit" class="footer-link">Circuits</a><a href="tours.html?cat=excursion" class="footer-link">Excursions</a><a href="tours.html?cat=city-tour" class="footer-link">City Tours</a><a href="tours.html?dest=Sahara" class="footer-link">Desert Tours</a></div></div>
+      <div><h5 class="footer-col-title">Contact</h5><div class="footer-contact-item"><i class="fa-solid fa-phone"></i><span class="footer-phone"></span></div><div class="footer-contact-item"><i class="fa-solid fa-envelope"></i><span class="footer-email"></span></div><div class="footer-contact-item"><i class="fa-solid fa-location-dot"></i><span class="footer-address"></span></div></div>
+    </div>
+  </div>
+  <div class="container"><div class="footer-bottom"><span class="footer-copy">© <span id="footerYear"></span> <span class="footer-site-name">TourVoyage</span>. All rights reserved.</span></div></div>
+</footer>
+<button class="back-to-top"><i class="fa-solid fa-arrow-up"></i></button>
+<div id="siteToastContainer" class="toast-container"></div>
+<script src="../shared/data.js"></script>
+<script src="js/main.js"></script>
+<script>
+  document.getElementById('footerYear').textContent = new Date().getFullYear();
+</script>
+</body>
+</html>

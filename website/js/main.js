@@ -381,11 +381,37 @@ function initToursPage() {
 
 // ─── TOUR DETAIL PAGE ────────────────────────────────────────────────────────
 function initTourDetailPage() {
-  const id = getParam('id');
-  if (!id || !document.getElementById('detailContent')) return;
+  if (!document.getElementById('detailContent')) return;
 
-  const tour = TM.getItem('tours', id);
-  if (!tour) { document.getElementById('detailContent').innerHTML = '<div style="text-align:center;padding:80px 0;color:var(--text-muted)">Tour not found.</div>'; return; }
+  let tour = null;
+  const id = getParam('id');
+
+  if (id) {
+    tour = TM.getItem('tours', id);
+    // Dynamic history replace to new slug structure if accessed via ID query parameter
+    if (tour && tour.slug && window.location.protocol !== 'file:') {
+      try {
+        window.history.replaceState({}, '', `/tours/${tour.slug}`);
+      } catch (e) {
+        console.warn('History API replaceState failed', e);
+      }
+    }
+  } else {
+    // Attempt to extract slug from pathname (e.g. /tours/circuit-atlas-5-days)
+    const path = window.location.pathname;
+    const match = path.match(/\/tours\/([^/]+)/);
+    if (match && match[1]) {
+      const slug = match[1];
+      if (slug !== 'index.html' && slug !== 'tours.html' && slug !== 'tour-detail.html') {
+        tour = TM.getBySlug('tours', slug);
+      }
+    }
+  }
+
+  if (!tour) {
+    document.getElementById('detailContent').innerHTML = '<div style="text-align:center;padding:80px 0;color:var(--text-muted)">Tour not found.</div>';
+    return;
+  }
 
   const settings = TM.get('settings');
   const sym = settings.currencySymbol || '€';
@@ -972,6 +998,7 @@ function initCleanUrls() {
   const mapping = {
     'index.html': '/',
     'tours.html': '/tours',
+    'cars.html': '/cars',
     'about.html': '/about',
     'contact.html': '/contact',
     'destinations.html': '/destinations',
@@ -1009,8 +1036,14 @@ function initCleanUrls() {
       window.location.href = newUrl + query;
     } else if (href.startsWith('tour-detail.html?')) {
       e.preventDefault();
-      const query = href.substring(href.indexOf('?'));
-      window.location.href = '/tour-detail' + query;
+      const urlParams = new URLSearchParams(href.substring(href.indexOf('?')));
+      const tourId = urlParams.get('id');
+      const tour = TM.getItem('tours', tourId);
+      if (tour && tour.slug) {
+        window.location.href = '/tours/' + tour.slug;
+      } else {
+        window.location.href = '/tour-detail' + href.substring(href.indexOf('?'));
+      }
     }
   });
 }
@@ -1029,15 +1062,19 @@ document.addEventListener('DOMContentLoaded', () => {
   initFooter();
   initNewsletter();
   initFloatingWidget();
+  applyThemeCustomizations();
 
   // Apply SEO
   const pageMap = {
     'index.html': 'home', 'tours.html': 'tours', 'tour-detail.html': 'tours',
+    'cars.html': 'cars',
     'destinations.html': 'destinations', 'hotels.html': 'hotels',
     'about.html': 'about', 'contact.html': 'contact',
   };
   let currentPage = window.location.pathname.split('/').pop() || 'index.html';
-  if (currentPage && !currentPage.includes('.')) {
+  if (window.location.pathname.includes('/tours/')) {
+    currentPage = 'tour-detail.html';
+  } else if (currentPage && !currentPage.includes('.')) {
     currentPage = currentPage + '.html';
   }
   TM.applySEO(pageMap[currentPage] || 'home');
@@ -1050,6 +1087,7 @@ document.addEventListener('DOMContentLoaded', () => {
   initHotelsPage();
   initAboutPage();
   initContactPage();
+  initCarsPage();
 });
 
 // Floating Support Chat Widget (with Chat, FAQ, Channels tabs)
@@ -1272,3 +1310,287 @@ window.openLightbox = openLightbox;
 window.closeLightbox = closeLightbox;
 window.prevLightbox = prevLightbox;
 window.nextLightbox = nextLightbox;
+
+function applyThemeCustomizations() {
+  const settings = TM.get('settings') || {};
+  const theme = settings.theme;
+  if (!theme) return;
+
+  // 1. Colors override
+  if (theme.colors) {
+    let css = ':root {\n';
+    Object.entries(theme.colors).forEach(([variable, value]) => {
+      if (value) {
+        css += `  ${variable}: ${value} !important;\n`;
+        // Handle hover shades automatically
+        if (variable === '--terracotta') {
+          css += `  --terracotta2: ${adjustThemeColor(value, -12)} !important;\n`;
+        }
+        if (variable === '--gold') {
+          css += `  --gold2: ${adjustThemeColor(value, -12)} !important;\n`;
+        }
+      }
+    });
+    css += '}';
+
+    // Add extra overrides for header styles if needed
+    if (theme.headerStyle === 'solid') {
+      css += `
+        .navbar {
+          background: var(--cream) !important;
+          backdrop-filter: none !important;
+        }
+        .navbar.scrolled {
+          background: var(--cream) !important;
+        }
+      `;
+    } else if (theme.headerStyle === 'glass') {
+      css += `
+        .navbar {
+          background: rgba(253, 246, 236, 0.8) !important;
+          backdrop-filter: blur(20px) !important;
+        }
+        .navbar.scrolled {
+          background: rgba(253, 246, 236, 0.95) !important;
+        }
+      `;
+    }
+
+    let styleEl = document.getElementById('tm-theme-colors');
+    if (!styleEl) {
+      styleEl = document.createElement('style');
+      styleEl.id = 'tm-theme-colors';
+      document.head.appendChild(styleEl);
+    }
+    styleEl.textContent = css;
+  }
+
+  // 2. Homepage Sections Ordering & Visibility
+  if (theme.layoutOrder && Array.isArray(theme.layoutOrder)) {
+    const layoutContainer = document.getElementById('homepage-layout');
+    if (layoutContainer) {
+      theme.layoutOrder.forEach((block, idx) => {
+        const el = document.getElementById(block.id);
+        if (el) {
+          el.style.order = idx;
+          if (block.visible === false) {
+            el.style.display = 'none';
+          } else {
+            el.style.display = '';
+          }
+        }
+      });
+    }
+  }
+
+  // 3. Widget Toggle
+  if (theme.sidebarSupport === false) {
+    const launcher = document.getElementById('widgetLauncher');
+    if (launcher) launcher.style.display = 'none';
+    const widgetBox = document.getElementById('widgetBox');
+    if (widgetBox) widgetBox.style.display = 'none';
+  }
+}
+
+function adjustThemeColor(hex, percent) {
+  let num = parseInt(hex.replace("#",""), 16),
+      amt = Math.round(2.55 * percent),
+      R = (num >> 16) + amt,
+      G = (num >> 8 & 0x00FF) + amt,
+      B = (num & 0x0000FF) + amt;
+  return "#" + (0x1000000 + (R<255?R<0?0:R:255)*0x10000 + (G<255?G<0?0:G:255)*0x100 + (B<255?B<0?0:B:255)).toString(16).slice(1);
+}
+
+// ─── CAR RENTAL PAGE ─────────────────────────────────────────────────────────
+function carCard(c, sym = '€') {
+  return `
+  <div class="tour-card car-card" data-car-id="${c.id}">
+    <div class="tour-card-img">
+      <img src="${c.image}" alt="${c.name}" loading="lazy" onerror="this.src='https://images.unsplash.com/photo-1533473359331-0135ef1b58bf?w=600&q=70'" />
+      <div class="tour-card-badges">
+        <span class="badge badge-cat">${c.type || 'Car'}</span>
+        ${c.featured ? `<span class="badge badge-featured">⭐ Popular</span>` : ''}
+      </div>
+    </div>
+    <div class="tour-card-body">
+      <h3 class="tour-card-title">${c.name}</h3>
+      <p style="font-size: 0.85rem; color: var(--text-secondary); line-height: 1.5; margin-bottom: 15px; height: 4.5em; overflow: hidden; display: -webkit-box; -webkit-line-clamp: 3; -webkit-box-orient: vertical;">
+        ${c.description || 'Enjoy a comfortable drive in Morocco.'}
+      </p>
+      <div class="tour-card-meta" style="display: grid; grid-template-columns: repeat(2, 1fr); gap: 8px; margin-bottom: 15px;">
+        <span class="tour-meta-item"><i class="fa-solid fa-gears"></i> ${c.transmission}</span>
+        <span class="tour-meta-item"><i class="fa-solid fa-gas-pump"></i> ${c.fuel}</span>
+        <span class="tour-meta-item"><i class="fa-solid fa-door-closed"></i> ${c.doors || 4} Doors</span>
+        <span class="tour-meta-item"><i class="fa-solid fa-user-group"></i> ${c.seats || 5} Seats</span>
+      </div>
+      <div class="tour-card-footer">
+        <div>
+          <div class="tour-price-from">Per Day</div>
+          <div class="tour-price-val">${sym}${c.pricePerDay}<small>/day</small></div>
+        </div>
+        <button onclick="openCarBookModal(${c.id})" class="btn btn-primary btn-sm">Rent Now</button>
+      </div>
+    </div>
+  </div>`;
+}
+
+function initCarsPage() {
+  const grid = document.getElementById('carsGrid');
+  if (!grid) return;
+
+  const settings = TM.get('settings');
+  const sym = settings.currencySymbol || '€';
+
+  const searchInput = document.getElementById('carsSearch');
+  const typeFilter = document.getElementById('carsTypeFilter');
+  const transFilter = document.getElementById('carsTransFilter');
+  const countEl = document.getElementById('carsCount');
+
+  function render() {
+    const cars = TM.get('cars') || [];
+    const q = searchInput?.value.toLowerCase() || '';
+    const type = typeFilter?.value || '';
+    const trans = transFilter?.value || '';
+
+    const filtered = cars.filter(c => {
+      if (!c.active) return false;
+      const matchesQ = !q || c.name.toLowerCase().includes(q) || (c.description || '').toLowerCase().includes(q);
+      const matchesType = !type || c.type === type;
+      const matchesTrans = !trans || c.transmission === trans;
+      return matchesQ && matchesType && matchesTrans;
+    });
+
+    if (countEl) {
+      countEl.textContent = `${filtered.length} vehicles found`;
+    }
+
+    if (filtered.length === 0) {
+      grid.innerHTML = '<div style="grid-column:1/-1;text-align:center;padding:60px 0;color:var(--text-muted)"><i class="fa-solid fa-car" style="font-size:2.5rem;margin-bottom:16px;display:block"></i>No vehicles match your criteria.</div>';
+    } else {
+      grid.innerHTML = filtered.map(c => carCard(c, sym)).join('');
+    }
+  }
+
+  [searchInput, typeFilter, transFilter].forEach(el => {
+    el?.addEventListener('input', render);
+  });
+
+  render();
+}
+
+window.openCarBookModal = function(id) {
+  const car = TM.getItem('cars', id);
+  if (!car) return;
+  const modal = document.getElementById('carBookModal');
+  if (!modal) return;
+
+  const settings = TM.get('settings');
+  const sym = settings.currencySymbol || '€';
+
+  document.getElementById('bookCarId').value = car.id;
+  document.getElementById('bookCarName').textContent = car.name;
+  document.getElementById('bookCarPrice').textContent = `${sym}${car.pricePerDay}/day`;
+  
+  const imgEl = document.getElementById('bookCarImg');
+  if (imgEl) {
+    imgEl.src = car.image;
+    imgEl.onerror = () => { imgEl.src = 'https://images.unsplash.com/photo-1533473359331-0135ef1b58bf?w=600&q=70'; };
+  }
+
+  // Pre-fill dates
+  const today = new Date().toISOString().split('T')[0];
+  document.getElementById('bcStartDate').value = today;
+  document.getElementById('bcStartDate').min = today;
+  document.getElementById('bcDays').value = '1';
+
+  modal.classList.remove('hidden');
+};
+
+window.closeCarBookModal = function() {
+  const modal = document.getElementById('carBookModal');
+  if (modal) {
+    modal.classList.add('hidden');
+  }
+};
+
+window.submitCarBooking = function() {
+  const carId = document.getElementById('bookCarId').value;
+  const car = TM.getItem('cars', carId);
+  if (!car) return;
+
+  const custName = document.getElementById('bcCust').value.trim();
+  const custEmail = document.getElementById('bcEmail').value.trim();
+  const custPhone = document.getElementById('bcPhone').value.trim();
+  const startDate = document.getElementById('bcStartDate').value;
+  const days = parseInt(document.getElementById('bcDays').value) || 1;
+  const notes = document.getElementById('bcNotes').value.trim();
+
+  if (!custName || !custEmail || !custPhone || !startDate || days < 1) {
+    showToast('Please fill in all required fields.', 'error');
+    return;
+  }
+
+  const settings = TM.get('settings');
+  const sym = settings.currencySymbol || '€';
+  const total = car.pricePerDay * days;
+
+  // Save reservation
+  const reservation = {
+    tourId: 0,
+    carId: car.id,
+    carName: car.name,
+    tourName: `Car: ${car.name}`, // fallback
+    customer: custName,
+    email: custEmail,
+    phone: custPhone,
+    people: 1,
+    date: startDate,
+    total: total,
+    paid: 0,
+    coupon: '',
+    status: 'Pending',
+    notes: `Rental Days: ${days}. Notes: ${notes}`,
+    createdAt: new Date().toLocaleString()
+  };
+
+  TM.addItem('reservations', reservation);
+
+  // Send WhatsApp pre-filled message
+  const waNum = settings.whatsapp || '+212600000000';
+  const cleanedNum = waNum.replace(/[^0-9]/g, '');
+  const formattedTotal = `${sym}${total}`;
+
+  const message = `*New Car Rental Inquiry*
+
+*Customer Details:*
+Name: ${custName}
+Email: ${custEmail}
+Phone: ${custPhone}
+Notes: ${notes}
+
+*Rental Summary:*
+- Vehicle: ${car.name} (${car.type})
+- Transmission: ${car.transmission}
+- Pickup Date: ${startDate}
+- Duration: ${days} day(s)
+
+*Total Estimated:* ${formattedTotal}`;
+
+  // Close modal and show toast
+  window.closeCarBookModal();
+  showToast('Booking saved! Redirecting to WhatsApp...', 'success');
+
+  // Clear fields
+  document.getElementById('bcCust').value = '';
+  document.getElementById('bcEmail').value = '';
+  document.getElementById('bcPhone').value = '';
+  document.getElementById('bcDays').value = '1';
+  document.getElementById('bcNotes').value = '';
+
+  // WhatsApp redirection
+  setTimeout(() => {
+    window.open(`https://wa.me/${cleanedNum}?text=${encodeURIComponent(message)}`, '_blank');
+  }, 1000);
+};
+
+
