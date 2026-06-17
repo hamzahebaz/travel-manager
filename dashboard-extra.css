@@ -185,3 +185,7 @@
   display: none !important;
 }
 
+.nav-item-disabled-hidden {
+  display: none !important;
+}
+

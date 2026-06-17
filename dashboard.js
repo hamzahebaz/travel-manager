@@ -20,10 +20,12 @@ document.addEventListener('DOMContentLoaded', () => {
   loadDashboard();
   loadNotifications();
   updateResBadge();
+  applySidebarVisibility();
 
   // Listen for data changes from website
   window.addEventListener('tm_data_change', () => {
     updateResBadge();
+    applySidebarVisibility();
     if (document.getElementById('page-dashboard').classList.contains('page') && !document.getElementById('page-dashboard').classList.contains('hidden')) {
       loadDashboard();
     }
@@ -32,6 +34,7 @@ document.addEventListener('DOMContentLoaded', () => {
   // Listen for auto-restoration from Google Sheets
   window.addEventListener('tm_data_restored', () => {
     updateResBadge();
+    applySidebarVisibility();
     loadDashboard();
     const activePage = document.querySelector('.page:not(.hidden)');
     if (activePage) {
@@ -144,6 +147,12 @@ function initNavigation() {
 }
 
 function navigateTo(page) {
+  const settings = TM.get('settings') || {};
+  const disabled = settings.disabledSidebarSections || [];
+  if (disabled.includes(page)) {
+    page = 'dashboard';
+  }
+
   document.querySelectorAll('.page').forEach(p => p.classList.add('hidden'));
   const target = document.getElementById(`page-${page}`);
   if (!target) return;
@@ -1826,6 +1835,7 @@ function loadSettings() {
 
   activeLayoutOrder = theme.layoutOrder || [];
   renderThemeLayoutSettings();
+  renderSidebarSectionsSettings();
 }
 
 function saveSettings() {
@@ -1865,7 +1875,17 @@ function saveSettings() {
     sidebarSupport: document.getElementById('themeSidebarSupport')?.checked !== false
   };
 
+  // Save Sidebar Sections Visibility
+  const disabledSections = [];
+  document.querySelectorAll('.sidebar-section-checkbox').forEach(cb => {
+    if (!cb.checked) {
+      disabledSections.push(cb.getAttribute('data-key'));
+    }
+  });
+  s.disabledSidebarSections = disabledSections;
+
   TM.set('settings', s);
+  applySidebarVisibility();
   showToast('Settings saved! Changes apply on next website visit.', 'success');
 }
 
@@ -1906,6 +1926,102 @@ function moveThemeBlock(index, direction) {
   activeLayoutOrder[targetIndex] = temp;
 
   renderThemeLayoutSettings();
+}
+
+const SIDEBAR_SECTIONS = [
+  { key: 'tours', label: 'Tours', icon: 'fa-route' },
+  { key: 'hotels', label: 'Hotels', icon: 'fa-hotel' },
+  { key: 'destinations', label: 'Destinations', icon: 'fa-map-location-dot' },
+  { key: 'cars', label: 'Car Rental', icon: 'fa-car' },
+  { key: 'reservations', label: 'Reservations', icon: 'fa-calendar-check' },
+  { key: 'coupons', label: 'Coupons', icon: 'fa-ticket' },
+  { key: 'payments', label: 'Payments', icon: 'fa-credit-card' },
+  { key: 'reviews', label: 'Reviews', icon: 'fa-star' },
+  { key: 'popups', label: 'Popup Manager', icon: 'fa-window-restore' },
+  { key: 'media', label: 'Media Library', icon: 'fa-images' },
+  { key: 'subscribers', label: 'Email Submitters', icon: 'fa-envelope-open-text' },
+  { key: 'menu', label: 'Menu Editor', icon: 'fa-bars-staggered' },
+  { key: 'themes', label: 'Themes Manager', icon: 'fa-palette' },
+  { key: 'seo-pages', label: 'Page SEO', icon: 'fa-magnifying-glass-chart' },
+  { key: 'seo-sitemap', label: 'Sitemap Tools', icon: 'fa-sitemap' },
+  { key: 'seo-robots', label: 'Robots.txt Editor', icon: 'fa-robot' },
+  { key: 'seo-redirects', label: 'Redirects Manager', icon: 'fa-code-branch' },
+  { key: 'users', label: 'Users & Roles', icon: 'fa-users' },
+  { key: 'reports', label: 'Reports & Stats', icon: 'fa-chart-bar' }
+];
+
+function renderSidebarSectionsSettings() {
+  const container = document.getElementById('sidebarSectionsToggleList');
+  if (!container) return;
+
+  const settings = TM.get('settings') || {};
+  const disabled = settings.disabledSidebarSections || [];
+
+  container.innerHTML = SIDEBAR_SECTIONS.map(sec => {
+    const isChecked = !disabled.includes(sec.key);
+    return `
+      <div style="display:flex;align-items:center;gap:8px;padding:8px;background:var(--bg-dark);border-radius:8px;border:1px solid var(--border);user-select:none">
+        <label class="toggle-switch" style="font-size:0.75rem">
+          <input type="checkbox" class="sidebar-section-checkbox" data-key="${sec.key}" ${isChecked ? 'checked' : ''} />
+          <span class="toggle-slider"></span>
+        </label>
+        <span style="font-size:0.8rem;font-weight:600;color:var(--text-primary);display:flex;align-items:center;gap:6px">
+          <i class="fa-solid ${sec.icon}" style="width:14px;color:var(--primary)"></i>
+          ${sec.label}
+        </span>
+      </div>
+    `;
+  }).join('');
+}
+
+function applySidebarVisibility() {
+  const settings = TM.get('settings') || {};
+  const disabled = settings.disabledSidebarSections || [];
+
+  // Toggle visibility of individual nav items
+  const navItems = document.querySelectorAll('.sidebar-nav .nav-item');
+  navItems.forEach(item => {
+    const page = item.getAttribute('data-page');
+    if (page) {
+      if (disabled.includes(page)) {
+        item.classList.add('nav-item-disabled-hidden');
+      } else {
+        item.classList.remove('nav-item-disabled-hidden');
+      }
+    }
+  });
+
+  // Hide section labels if all their items are hidden
+  const navContainer = document.querySelector('.sidebar-nav');
+  if (!navContainer) return;
+
+  const children = Array.from(navContainer.children);
+  let currentLabel = null;
+  let activeItemsInSection = 0;
+
+  children.forEach(child => {
+    if (child.classList.contains('nav-section-label')) {
+      if (currentLabel && activeItemsInSection === 0) {
+        currentLabel.classList.add('nav-item-disabled-hidden');
+      } else if (currentLabel) {
+        currentLabel.classList.remove('nav-item-disabled-hidden');
+      }
+      currentLabel = child;
+      activeItemsInSection = 0;
+    } else if (child.classList.contains('nav-item')) {
+      const page = child.getAttribute('data-page');
+      if (page && !disabled.includes(page)) {
+        activeItemsInSection++;
+      }
+    }
+  });
+
+  // Handle the last section
+  if (currentLabel && activeItemsInSection === 0) {
+    currentLabel.classList.add('nav-item-disabled-hidden');
+  } else if (currentLabel) {
+    currentLabel.classList.remove('nav-item-disabled-hidden');
+  }
 }
 
 function uploadSettingImage(inputId, previewId, input) {

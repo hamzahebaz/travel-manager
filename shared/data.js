@@ -162,6 +162,7 @@ const TM = (() => {
       maintenanceMode: false,
       logo: 'website/images/logo.png',
       favicon: 'website/images/favicon.png',
+      disabledSidebarSections: [],
       theme: {
         colors: {
           '--cream': '#FDF6EC',
