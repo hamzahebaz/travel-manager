@@ -26,9 +26,10 @@ const TM = (() => {
     subscribers:  'tm_subscribers',
     cars:         'tm_cars',
     popups:       'tm_popups',
+    news:         'tm_news',
   };
 
-  const SYNC_LIST_KEYS = ['tours', 'hotels', 'destinations', 'reservations', 'reviews', 'coupons', 'users', 'media', 'menu', 'redirects', 'subscribers', 'cars', 'popups'];
+  const SYNC_LIST_KEYS = ['tours', 'hotels', 'destinations', 'reservations', 'reviews', 'coupons', 'users', 'media', 'menu', 'redirects', 'subscribers', 'cars', 'popups', 'news'];
   const SYNC_CONFIG_KEYS = ['settings', 'seo', 'robots'];
 
   // ─── Default Data ────────────────────────────────────────────────────────
@@ -163,6 +164,17 @@ const TM = (() => {
       logo: 'website/images/logo.png',
       favicon: 'website/images/favicon.png',
       disabledSidebarSections: [],
+      emailDriver: 'SMTP',
+      emailHost: 'smtp.agencevoyage-maroc.com',
+      emailPort: '465',
+      emailEncryption: 'SSL',
+      emailUsername: 'reservation@agencevoyage-maroc.com',
+      emailPassword: '••••••••••••••••',
+      emailAdminEmail: 'reservation@agencevoyage-maroc.com',
+      emailFormName: 'Pampa Travel Agency',
+      emailFormAddress: 'reservation@agencevoyage-maroc.com',
+      emailHeaderHtml: '<div style="background:#2C1810;padding:25px;text-align:center;border-bottom:3px solid #C05621;"><h2 style="color:#FDF6EC;margin:0;font-family:sans-serif;letter-spacing:1px;">TourVoyage</h2></div>',
+      emailFooterHtml: '<div style="background:#2C1810;padding:25px;text-align:center;color:#FAEBD7;font-size:12px;font-family:sans-serif;border-top:1px solid #5C4033;"><p style="margin:0;margin-bottom:8px;">Need support? Contact us at contact@tourvoyage.com</p><p style="margin:0;color:#D4A017;">&copy; 2026 TourVoyage. All rights reserved.</p></div>',
       theme: {
         colors: {
           '--cream': '#FDF6EC',
@@ -193,6 +205,7 @@ const TM = (() => {
       { id: 5, label: 'Hotels', url: 'hotels.html', order: 5, active: true },
       { id: 6, label: 'About', url: 'about.html', order: 6, active: true },
       { id: 7, label: 'Contact', url: 'contact.html', order: 7, active: true },
+      { id: 8, label: 'Blog', url: 'blog.html', order: 8, active: true },
     ],
 
     redirects: [
@@ -228,6 +241,15 @@ Sitemap: https://yourdomain.com/sitemap.xml`,
         createdAt: "2025-09-04"
       }
     ],
+    news: [
+      { id: 1, title: '10 European ski destinations you should visit this winter', slug: '10-european-ski-destinations', category: 'Hosted Tour', author: 'Hamza', date: '2026-06-16', status: 'Publish', content: 'Explore the absolute best ski resorts across Europe, from the towering slopes of Chamonix to the family-friendly runs of Zermatt. Discover peak season rates, trail recommendations, and cozy alpine chalets to make your next winter excursion unforgettable.', image: 'https://images.unsplash.com/photo-1551698618-1dfe5d97d256?w=800&q=80', tags: 'ski, winter, travel' },
+      { id: 2, title: 'Booking travel during Corona: good advice in an uncertain time', slug: 'booking-travel-corona-advice', category: 'Ecotourism', author: 'Ayoub', date: '2026-06-16', status: 'Publish', content: 'Navigating travel rules, testing protocols, and cancellation policies can be complex. In this guide, our local guides share expert recommendations on travel insurance, choosing flexible bookings, and selecting eco-friendly outdoor destinations.', image: 'https://images.unsplash.com/photo-1584118624012-df056829fba0?w=800&q=80', tags: 'safety, booking, travel' },
+      { id: 3, title: 'Where can I go? 5 amazing countries that are open right now', slug: 'where-can-i-go-5-open-countries', category: 'Hosted Tour', author: 'Kamal', date: '2026-06-16', status: 'Publish', content: 'From the sunny coasts of Portugal to the historic medinas of Morocco, these five destinations are welcoming travelers with open arms and simple entry guidelines. Explore what to see, where to eat, and how to plan your itineraries.', image: 'https://images.unsplash.com/photo-1488646953014-85cb44e25828?w=800&q=80', tags: 'explore, guides, summer' },
+      { id: 4, title: 'The best times & places to see the Northern Lights in Iceland', slug: 'best-times-northern-lights-iceland', category: 'Adventure Travel', author: 'Zakaria', date: '2026-06-16', status: 'Publish', content: 'Witnessing the Aurora Borealis is a bucket-list dream. Read our comprehensive guide on solar cycles, weather forecasts, and the top photography locations around Iceland (like Thingvellir and Kirkjufell) to capture the perfect light show.', image: 'https://images.unsplash.com/photo-1529963183134-61a90db47eaf?w=800&q=80', tags: 'aurora, adventure, iceland' },
+      { id: 5, title: 'Morning in the Northern sea', slug: 'morning-northern-sea', category: 'Hosted Tour', author: 'Hamza', date: '2026-06-16', status: 'Publish', content: 'There is something incredibly serene about watching the sunrise over cold northern waters. Join our virtual walk along the coastal fjords, listing the best remote cottages, local seafood joints, and scenic hiking paths.', image: 'https://images.unsplash.com/photo-1507525428034-b723cf961d3e?w=800&q=80', tags: 'sea, morning, nature' },
+      { id: 6, title: 'America National Parks with Denver', slug: 'america-national-parks-denver', category: 'Hosted Tour', author: 'Ayoub', date: '2026-06-16', status: 'Publish', content: 'Denver serves as the perfect base camp for exploring the majestic Rocky Mountains, Yellowstone, and the red rock canyons. Get a full 10-day road trip itinerary covering vehicle selection, camping gear, and scenic detours.', image: 'https://images.unsplash.com/photo-1501555088652-021faa106b9b?w=800&q=80', tags: 'usa, parks, hiking' },
+      { id: 7, title: 'A Seaside Reset in Laguna Beach', slug: 'seaside-reset-laguna-beach', category: 'Sea Travel', author: 'Kamal', date: '2026-06-16', status: 'Publish', content: 'Unwind along the golden tidepools and artistic shores of Southern California. We list the top boutique hotels, oceanfront restaurants, and hidden coves to escape the crowds and enjoy a refreshing seaside weekend.', image: 'https://images.unsplash.com/photo-1505118380757-91f5f5632de0?w=800&q=80', tags: 'california, beach, relax' }
+    ],
   };
 
   // ─── Core API ─────────────────────────────────────────────────────────────
@@ -248,7 +270,12 @@ Sitemap: https://yourdomain.com/sitemap.xml`,
 
   function get(key) {
     const stored = _load(KEYS[key]);
-    if (stored !== null) return stored;
+    if (stored !== null) {
+      if (key === 'settings') {
+        return { ...DEFAULTS.settings, ...stored };
+      }
+      return stored;
+    }
     // First run: seed defaults
     _save(KEYS[key], DEFAULTS[key]);
     return DEFAULTS[key];

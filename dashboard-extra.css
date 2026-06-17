@@ -189,3 +189,31 @@
   display: none !important;
 }
 
+.btn-sim-tab {
+  flex: 1;
+  padding: 12px;
+  border: none;
+  background: transparent;
+  color: var(--text-muted);
+  font-size: 0.8rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s;
+  border-bottom: 2px solid transparent;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+}
+.btn-sim-tab.active {
+  color: var(--primary);
+  background: var(--card-bg);
+  border-bottom-color: var(--primary);
+}
+.sim-tab-content {
+  display: block;
+}
+.sim-tab-content.hidden {
+  display: none !important;
+}
+

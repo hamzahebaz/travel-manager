@@ -1110,7 +1110,8 @@ function initCleanUrls() {
     'about.html': '/about',
     'contact.html': '/contact',
     'destinations.html': '/destinations',
-    'hotels.html': '/hotels'
+    'hotels.html': '/hotels',
+    'blog.html': '/blog',
   };
 
   // Rewrite address bar to clean URL (removes .html and website/)
@@ -1152,6 +1153,19 @@ function initCleanUrls() {
       } else {
         window.location.href = '/tour-detail' + href.substring(href.indexOf('?'));
       }
+    } else if (href.startsWith('blog-detail.html?')) {
+      e.preventDefault();
+      const urlParams = new URLSearchParams(href.substring(href.indexOf('?')));
+      const slug = urlParams.get('slug');
+      const id = urlParams.get('id');
+      let blogItem = null;
+      if (slug) blogItem = TM.getBySlug('news', slug);
+      else if (id) blogItem = TM.getItem('news', id);
+      if (blogItem && blogItem.slug) {
+        window.location.href = '/blog/' + blogItem.slug;
+      } else {
+        window.location.href = '/blog-detail' + href.substring(href.indexOf('?'));
+      }
     }
   });
 }
@@ -1178,10 +1192,13 @@ document.addEventListener('DOMContentLoaded', () => {
     'cars.html': 'cars',
     'destinations.html': 'destinations', 'hotels.html': 'hotels',
     'about.html': 'about', 'contact.html': 'contact',
+    'blog.html': 'home', 'blog-detail.html': 'home'
   };
   let currentPage = window.location.pathname.split('/').pop() || 'index.html';
   if (window.location.pathname.includes('/tours/')) {
     currentPage = 'tour-detail.html';
+  } else if (window.location.pathname.includes('/blog/')) {
+    currentPage = 'blog-detail.html';
   } else if (currentPage && !currentPage.includes('.')) {
     currentPage = currentPage + '.html';
   }
@@ -1196,6 +1213,8 @@ document.addEventListener('DOMContentLoaded', () => {
   initAboutPage();
   initContactPage();
   initCarsPage();
+  initBlogPage();
+  initBlogDetailPage();
   initPopupSystem();
 });
 
@@ -1838,4 +1857,280 @@ function toggleFaqAccordion(btn) {
 window.toggleFaqAccordion = toggleFaqAccordion;
 window.initPopupSystem = initPopupSystem;
 
+// ─── BLOG PAGE ────────────────────────────────────────────────────────────────
+function initBlogPage() {
+  const grid = document.getElementById('blogGrid');
+  if (!grid) return;
 
+  const searchInput = document.getElementById('blogSearch');
+  const categoriesList = document.getElementById('blogCategoriesWidget');
+  const recentList = document.getElementById('blogRecentWidget');
+  const countEl = document.getElementById('blogCount');
+
+  let activeCategory = getParam('cat') || '';
+  let searchQuery = getParam('q') || '';
+
+  if (searchInput && searchQuery) {
+    searchInput.value = searchQuery;
+  }
+
+  const posts = TM.get('news') || [];
+
+  function render() {
+    const query = searchInput ? searchInput.value.toLowerCase().trim() : '';
+    const filtered = posts.filter(item => {
+      if (item.status !== 'Publish') return false;
+      
+      const matchesSearch = !query || 
+        item.title.toLowerCase().includes(query) || 
+        (item.content && item.content.toLowerCase().includes(query));
+      
+      const matchesCategory = !activeCategory || 
+        item.category.toLowerCase() === activeCategory.toLowerCase();
+
+      return matchesSearch && matchesCategory;
+    });
+
+    if (countEl) {
+      countEl.textContent = `${filtered.length} article${filtered.length === 1 ? '' : 's'} found`;
+    }
+
+    if (filtered.length === 0) {
+      grid.innerHTML = '<div style="text-align:center;grid-column:1/-1;padding:80px 0;color:var(--text-muted)">No articles found.</div>';
+      return;
+    }
+
+    grid.innerHTML = filtered.map(item => {
+      let link = `blog-detail.html?slug=${item.slug}`;
+      if (window.location.protocol !== 'file:') {
+        link = `/blog/${item.slug}`;
+      }
+      return `
+        <article class="blog-card">
+          <div class="blog-card-img-wrap">
+            <a href="${link}">
+              <img src="${item.image || 'images/blog-default.jpg'}" alt="${item.title}" class="blog-card-img" />
+            </a>
+            <span class="blog-card-tag">${item.category}</span>
+          </div>
+          <div class="blog-card-body">
+            <div class="blog-card-meta">
+              <span><i class="fa-regular fa-calendar"></i> ${item.date}</span>
+              <span><i class="fa-regular fa-user"></i> By ${item.author || 'Admin'}</span>
+            </div>
+            <h3 class="blog-card-title"><a href="${link}">${item.title}</a></h3>
+            <p class="blog-card-desc">${truncate(item.content || '', 120)}</p>
+            <div class="blog-card-footer">
+              <a href="${link}" class="blog-read-more">Read More <i class="fa-solid fa-arrow-right"></i></a>
+            </div>
+          </div>
+        </article>
+      `;
+    }).join('');
+  }
+
+  if (searchInput) {
+    searchInput.addEventListener('input', () => render());
+  }
+
+  // Render Sidebar Categories widget
+  if (categoriesList) {
+    const counts = {};
+    posts.forEach(p => {
+      if (p.status === 'Publish') {
+        counts[p.category] = (counts[p.category] || 0) + 1;
+      }
+    });
+
+    const categoriesHtml = Object.entries(counts).map(([cat, count]) => {
+      const activeClass = activeCategory.toLowerCase() === cat.toLowerCase() ? 'active' : '';
+      return `
+        <li>
+          <a href="#" class="widget-category-link ${activeClass}" data-category="${cat}">
+            <span>${cat}</span>
+            <span class="widget-category-count">${count}</span>
+          </a>
+        </li>
+      `;
+    }).join('');
+
+    categoriesList.innerHTML = `
+      <li>
+        <a href="#" class="widget-category-link ${!activeCategory ? 'active' : ''}" data-category="">
+          <span>All Categories</span>
+          <span class="widget-category-count">${posts.filter(p => p.status === 'Publish').length}</span>
+        </a>
+      </li>
+      ${categoriesHtml}
+    `;
+
+    categoriesList.querySelectorAll('.widget-category-link').forEach(link => {
+      link.addEventListener('click', (e) => {
+        e.preventDefault();
+        categoriesList.querySelectorAll('.widget-category-link').forEach(l => l.classList.remove('active'));
+        link.classList.add('active');
+        activeCategory = link.getAttribute('data-category') || '';
+        render();
+      });
+    });
+  }
+
+  // Render Sidebar Recent Posts widget
+  if (recentList) {
+    const recent = posts
+      .filter(p => p.status === 'Publish')
+      .sort((a, b) => new Date(b.date) - new Date(a.date))
+      .slice(0, 5);
+
+    recentList.innerHTML = recent.map(item => {
+      let link = `blog-detail.html?slug=${item.slug}`;
+      if (window.location.protocol !== 'file:') {
+        link = `/blog/${item.slug}`;
+      }
+      return `
+        <a href="${link}" class="recent-post-item">
+          <div class="recent-post-img-wrap">
+            <img src="${item.image || 'images/blog-default.jpg'}" alt="${item.title}" class="recent-post-img" />
+          </div>
+          <div class="recent-post-info">
+            <h4 class="recent-post-title">${item.title}</h4>
+            <span class="recent-post-date">${item.date}</span>
+          </div>
+        </a>
+      `;
+    }).join('');
+  }
+
+  render();
+}
+
+// ─── BLOG DETAIL PAGE ─────────────────────────────────────────────────────────
+function initBlogDetailPage() {
+  const container = document.getElementById('blogDetailContent');
+  if (!container) return;
+
+  let post = null;
+  const slugParam = getParam('slug');
+  const idParam = getParam('id');
+
+  if (slugParam) {
+    post = TM.getBySlug('news', slugParam);
+  } else if (idParam) {
+    post = TM.getItem('news', idParam);
+  } else {
+    const path = window.location.pathname;
+    const match = path.match(/\/blog\/([^/]+)/);
+    if (match && match[1]) {
+      const slug = match[1];
+      if (slug !== 'index.html' && slug !== 'blog.html' && slug !== 'blog-detail.html') {
+        post = TM.getBySlug('news', slug);
+      }
+    }
+  }
+
+  if (!post) {
+    container.innerHTML = '<div style="text-align:center;padding:80px 0;color:var(--text-muted)">Article not found.</div>';
+    return;
+  }
+
+  document.title = `${post.title} | Blog | TourVoyage Morocco`;
+  const metaDesc = document.querySelector('meta[name="description"]');
+  if (metaDesc) {
+    metaDesc.setAttribute('content', truncate(post.content || '', 150));
+  }
+
+  container.innerHTML = `
+    <div class="blog-detail-content">
+      <h1 class="page-hero-title" style="font-family: 'Playfair Display', serif; font-size: 2.2rem; color: var(--coffee-dark); margin-bottom: 15px;">${post.title}</h1>
+      <div class="blog-detail-meta">
+        <span><i class="fa-regular fa-calendar"></i> Published: ${post.date}</span>
+        <span><i class="fa-regular fa-user"></i> Written by: ${post.author || 'Admin'}</span>
+        <span><i class="fa-regular fa-folder"></i> Category: ${post.category}</span>
+      </div>
+      <img src="${post.image || 'images/blog-default.jpg'}" alt="${post.title}" class="blog-detail-featured-img" />
+      <div class="blog-detail-body">
+        ${post.content ? (post.content.includes('<p>') ? post.content : post.content.split('\n').map(p => `<p>${p}</p>`).join('')) : ''}
+      </div>
+      ${post.tags ? `
+        <div class="blog-detail-tags">
+          <span class="blog-detail-tags-label">Tags:</span>
+          ${post.tags.split(',').map(tag => `<a href="blog.html?q=${tag.trim()}" class="blog-tag">${tag.trim()}</a>`).join('')}
+        </div>
+      ` : ''}
+    </div>
+
+    <div class="blog-comments-area" style="margin-top: 40px;">
+      <h3 class="comments-title">Leave a Comment</h3>
+      <form class="comment-form" onsubmit="event.preventDefault(); showToast('Comment submitted for moderation!', 'success'); this.reset();">
+        <div class="comment-form-grid">
+          <input type="text" placeholder="Your Name" class="comment-form-input" required />
+          <input type="email" placeholder="Your Email" class="comment-form-input" required />
+        </div>
+        <textarea placeholder="Write your comment here..." class="comment-form-textarea" rows="5" required></textarea>
+        <button type="submit" class="comment-submit-btn">Submit Comment</button>
+      </form>
+    </div>
+  `;
+
+  const recentList = document.getElementById('blogRecentWidget');
+  if (recentList) {
+    const posts = TM.get('news') || [];
+    const recent = posts
+      .filter(p => p.status === 'Publish' && p.id !== post.id)
+      .sort((a, b) => new Date(b.date) - new Date(a.date))
+      .slice(0, 5);
+
+    recentList.innerHTML = recent.map(item => {
+      let link = `blog-detail.html?slug=${item.slug}`;
+      if (window.location.protocol !== 'file:') {
+        link = `/blog/${item.slug}`;
+      }
+      return `
+        <a href="${link}" class="recent-post-item">
+          <div class="recent-post-img-wrap">
+            <img src="${item.image || 'images/blog-default.jpg'}" alt="${item.title}" class="recent-post-img" />
+          </div>
+          <div class="recent-post-info">
+            <h4 class="recent-post-title">${item.title}</h4>
+            <span class="recent-post-date">${item.date}</span>
+          </div>
+        </a>
+      `;
+    }).join('');
+  }
+
+  const categoriesList = document.getElementById('blogCategoriesWidget');
+  if (categoriesList) {
+    const posts = TM.get('news') || [];
+    const counts = {};
+    posts.forEach(p => {
+      if (p.status === 'Publish') {
+        counts[p.category] = (counts[p.category] || 0) + 1;
+      }
+    });
+
+    const categoriesHtml = Object.entries(counts).map(([cat, count]) => {
+      return `
+        <li>
+          <a href="blog.html?cat=${encodeURIComponent(cat)}" class="widget-category-link">
+            <span>${cat}</span>
+            <span class="widget-category-count">${count}</span>
+          </a>
+        </li>
+      `;
+    }).join('');
+
+    categoriesList.innerHTML = `
+      <li>
+        <a href="blog.html" class="widget-category-link">
+          <span>All Categories</span>
+          <span class="widget-category-count">${posts.filter(p => p.status === 'Publish').length}</span>
+        </a>
+      </li>
+      ${categoriesHtml}
+    `;
+  }
+}
+
+window.initBlogPage = initBlogPage;
+window.initBlogDetailPage = initBlogDetailPage;

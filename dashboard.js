@@ -193,6 +193,8 @@ function navigateTo(page) {
     users: renderUsers,
     reports: loadReports,
     settings: loadSettings,
+    news: renderNews,
+    'email-settings': loadEmailSettings,
   };
   if (loaders[page]) setTimeout(loaders[page], 50);
   document.getElementById('pageContent').scrollTo({ top: 0, behavior: 'smooth' });
@@ -1761,6 +1763,17 @@ function loadSettings() {
     setGoogleSheetUrl: 'googleSheetUrl',
     setSupabaseUrl: 'supabaseUrl',
     setSupabaseKey: 'supabaseKey',
+    setEmailDriver: 'emailDriver',
+    setEmailHost: 'emailHost',
+    setEmailPort: 'emailPort',
+    setEmailEncryption: 'emailEncryption',
+    setEmailUsername: 'emailUsername',
+    setEmailPassword: 'emailPassword',
+    setEmailAdminEmail: 'emailAdminEmail',
+    setEmailFormName: 'emailFormName',
+    setEmailFormAddress: 'emailFormAddress',
+    setEmailHeaderHtml: 'emailHeaderHtml',
+    setEmailFooterHtml: 'emailFooterHtml',
   };
   Object.entries(map).forEach(([id, key]) => {
     const el = document.getElementById(id);
@@ -1850,6 +1863,17 @@ function saveSettings() {
     setGoogleSheetUrl: 'googleSheetUrl',
     setSupabaseUrl: 'supabaseUrl',
     setSupabaseKey: 'supabaseKey',
+    setEmailDriver: 'emailDriver',
+    setEmailHost: 'emailHost',
+    setEmailPort: 'emailPort',
+    setEmailEncryption: 'emailEncryption',
+    setEmailUsername: 'emailUsername',
+    setEmailPassword: 'emailPassword',
+    setEmailAdminEmail: 'emailAdminEmail',
+    setEmailFormName: 'emailFormName',
+    setEmailFormAddress: 'emailFormAddress',
+    setEmailHeaderHtml: 'emailHeaderHtml',
+    setEmailFooterHtml: 'emailFooterHtml',
   };
   const s = TM.get('settings');
   Object.entries(map).forEach(([id, key]) => {
@@ -1947,7 +1971,9 @@ const SIDEBAR_SECTIONS = [
   { key: 'seo-robots', label: 'Robots.txt Editor', icon: 'fa-robot' },
   { key: 'seo-redirects', label: 'Redirects Manager', icon: 'fa-code-branch' },
   { key: 'users', label: 'Users & Roles', icon: 'fa-users' },
-  { key: 'reports', label: 'Reports & Stats', icon: 'fa-chart-bar' }
+  { key: 'reports', label: 'Reports & Stats', icon: 'fa-chart-bar' },
+  { key: 'news', label: 'News/Blogs', icon: 'fa-newspaper' },
+  { key: 'email-settings', label: 'Email Settings', icon: 'fa-envelope' }
 ];
 
 function renderSidebarSectionsSettings() {
@@ -1979,7 +2005,7 @@ function applySidebarVisibility() {
   const disabled = settings.disabledSidebarSections || [];
 
   // Toggle visibility of individual nav items
-  const navItems = document.querySelectorAll('.sidebar-nav .nav-item');
+  const navItems = document.querySelectorAll('.sidebar-nav .nav-item, .sidebar-nav .nav-item-group');
   navItems.forEach(item => {
     const page = item.getAttribute('data-page');
     if (page) {
@@ -2957,4 +2983,331 @@ function syncAllToSupabase() {
   }
 }
 window.syncAllToSupabase = syncAllToSupabase;
+
+// ─── Collapsible Menu Toggle Helper ───
+function toggleSubNav(event, id) {
+  if (event) {
+    event.preventDefault();
+    event.stopPropagation();
+  }
+  const el = document.getElementById(id);
+  if (!el) return;
+  el.classList.toggle('hidden');
+  const arrow = el.previousElementSibling.querySelector('.nav-arrow');
+  if (arrow) {
+    const isHidden = el.classList.contains('hidden');
+    arrow.style.transform = isHidden ? 'rotate(0deg)' : 'rotate(180deg)';
+  }
+}
+window.toggleSubNav = toggleSubNav;
+
+// ─── News CRUD logic ───
+function renderNews() {
+  const tbody = document.getElementById('newsTbody');
+  if (!tbody) return;
+
+  const list = TM.get('news') || [];
+  const search = document.getElementById('searchNews')?.value.toLowerCase().trim() || '';
+  const category = document.getElementById('newsCategoryFilter')?.value || '';
+
+  const filtered = list.filter(item => {
+    const matchesSearch = !search || item.title.toLowerCase().includes(search);
+    const matchesCategory = !category || item.category === category;
+    return matchesSearch && matchesCategory;
+  });
+
+  tbody.innerHTML = filtered.length === 0 
+    ? `<tr><td colspan="7" style="text-align:center;color:var(--text-muted)">No news items found</td></tr>`
+    : filtered.map(item => `
+      <tr data-id="${item.id}">
+        <td><input type="checkbox" class="news-select" data-id="${item.id}" /></td>
+        <td style="font-weight:600;color:var(--primary);cursor:pointer" onclick="editPost(${item.id})">${item.title}</td>
+        <td>${item.category}</td>
+        <td>${item.author || ''}</td>
+        <td>${item.date || ''}</td>
+        <td><span class="badge" style="background:${item.status === 'Publish' ? '#22c55e' : '#64748b'};color:#fff;padding:4px 8px;border-radius:4px;font-size:0.75rem;font-weight:600">${item.status}</span></td>
+        <td>
+          <div style="display:flex;gap:6px">
+            <button class="btn btn-outline btn-sm" onclick="editPost(${item.id})" style="padding:4px 8px;height:auto;font-size:0.78rem"><i class="fa-solid fa-edit"></i> Edit</button>
+            <button class="btn btn-outline btn-sm" onclick="deletePost(${item.id})" style="border-color:var(--red);color:var(--red);padding:4px 8px;height:auto;font-size:0.78rem"><i class="fa-solid fa-trash"></i> Delete</button>
+          </div>
+        </td>
+      </tr>
+    `).join('');
+
+  document.getElementById('selectAllNews').checked = false;
+}
+
+function openAddPostModal(event) {
+  if (event) {
+    event.preventDefault();
+    event.stopPropagation();
+  }
+  document.getElementById('editPostId').value = '';
+  document.getElementById('postTitle').value = '';
+  document.getElementById('postCategory').value = 'Hosted Tour';
+  document.getElementById('postStatus').value = 'Publish';
+  document.getElementById('postAuthor').value = TM.get('users')?.[0]?.name || 'Admin';
+  document.getElementById('postTags').value = '';
+  document.getElementById('postImage').value = '';
+  document.getElementById('postImagePreview').src = '';
+  document.getElementById('postImagePreview').style.display = 'none';
+  document.getElementById('postContent').value = '';
+  
+  document.getElementById('postModalTitle').textContent = 'Add New Post';
+  openModal('addPostModal');
+}
+
+function editPost(id) {
+  const item = TM.getItem('news', id);
+  if (!item) return;
+
+  document.getElementById('editPostId').value = item.id;
+  document.getElementById('postTitle').value = item.title || '';
+  document.getElementById('postCategory').value = item.category || 'Hosted Tour';
+  document.getElementById('postStatus').value = item.status || 'Publish';
+  document.getElementById('postAuthor').value = item.author || '';
+  document.getElementById('postTags').value = item.tags || '';
+  document.getElementById('postImage').value = item.image || '';
+  
+  const preview = document.getElementById('postImagePreview');
+  if (item.image) {
+    preview.src = item.image;
+    preview.style.display = 'block';
+  } else {
+    preview.style.display = 'none';
+  }
+  
+  document.getElementById('postContent').value = item.content || '';
+
+  document.getElementById('postModalTitle').textContent = 'Edit Post';
+  openModal('addPostModal');
+}
+
+function savePost() {
+  const id = document.getElementById('editPostId').value;
+  const title = document.getElementById('postTitle').value.trim();
+  const category = document.getElementById('postCategory').value;
+  const status = document.getElementById('postStatus').value;
+  const author = document.getElementById('postAuthor').value.trim();
+  const tags = document.getElementById('postTags').value.trim();
+  const image = document.getElementById('postImage').value.trim();
+  const content = document.getElementById('postContent').value.trim();
+
+  if (!title || !content) {
+    showToast('Title and Content are required fields', 'error');
+    return;
+  }
+
+  const slug = title.toLowerCase()
+    .replace(/[^a-z0-9\s-]/g, '')
+    .replace(/\s+/g, '-')
+    .replace(/-+/g, '-');
+
+  const postData = {
+    title,
+    slug,
+    category,
+    status,
+    author,
+    tags,
+    image,
+    content,
+    date: new Date().toISOString().split('T')[0]
+  };
+
+  if (id) {
+    TM.updateItem('news', Number(id), postData);
+    showToast('Post updated successfully!', 'success');
+  } else {
+    TM.addItem('news', postData);
+    showToast('Post created successfully!', 'success');
+  }
+
+  closeModal('addPostModal');
+  renderNews();
+}
+
+function deletePost(id) {
+  if (confirm('Are you sure you want to delete this post?')) {
+    TM.deleteItem('news', id);
+    showToast('Post deleted successfully!', 'success');
+    renderNews();
+  }
+}
+
+function uploadPostImage(input) {
+  if (input.files && input.files[0]) {
+    const reader = new FileReader();
+    reader.onload = (e) => {
+      document.getElementById('postImage').value = e.target.result;
+      const preview = document.getElementById('postImagePreview');
+      preview.src = e.target.result;
+      preview.style.display = 'block';
+    };
+    reader.readAsDataURL(input.files[0]);
+  }
+}
+
+function toggleSelectAllNews(checkbox) {
+  document.querySelectorAll('.news-select').forEach(cb => {
+    cb.checked = checkbox.checked;
+  });
+}
+
+function applyNewsGroupAction() {
+  const action = document.getElementById('newsGroupAction').value;
+  if (!action) return;
+
+  const selectedIds = Array.from(document.querySelectorAll('.news-select:checked'))
+    .map(cb => Number(cb.getAttribute('data-id')));
+
+  if (selectedIds.length === 0) {
+    showToast('Please select at least one post', 'warning');
+    return;
+  }
+
+  if (confirm(`Apply bulk action "${action}" to ${selectedIds.length} posts?`)) {
+    selectedIds.forEach(id => {
+      if (action === 'delete') {
+        TM.deleteItem('news', id);
+      } else if (action === 'publish') {
+        TM.updateItem('news', id, { status: 'Publish' });
+      } else if (action === 'draft') {
+        TM.updateItem('news', id, { status: 'Draft' });
+      }
+    });
+    showToast(`Bulk action "${action}" completed!`, 'success');
+    renderNews();
+  }
+}
+
+// ─── Email Settings test simulation logic ───
+function loadEmailSettings() {
+  loadSettings();
+}
+
+let simInterval = null;
+
+function triggerTestEmailSimulation() {
+  const testAddress = document.getElementById('setEmailTestAddress').value.trim();
+  if (!testAddress) {
+    showToast('Please enter a valid test email address', 'error');
+    return;
+  }
+
+  const driver = document.getElementById('setEmailDriver').value;
+  const host = document.getElementById('setEmailHost').value.trim();
+  const port = document.getElementById('setEmailPort').value.trim();
+  const encryption = document.getElementById('setEmailEncryption').value;
+  const username = document.getElementById('setEmailUsername').value.trim();
+  const fromName = document.getElementById('setEmailFormName').value.trim();
+  const fromAddress = document.getElementById('setEmailFormAddress').value.trim();
+  const headerHtml = document.getElementById('setEmailHeaderHtml').value;
+  const footerHtml = document.getElementById('setEmailFooterHtml').value;
+
+  const logs = [
+    `[INFO] Initializing ${driver} client...`,
+    `[INFO] Resolving SMTP server ${host}...`,
+    `[INFO] Server resolved. Connecting to ${host}:${port} (${encryption} mode)...`,
+    `[OK] Connected. Exchanging SMTP handshakes...`,
+    `[INFO] Authenticating user: ${username}...`,
+    `[OK] Authentication successful!`,
+    `[INFO] Preparing email payload:`,
+    `       From: "${fromName}" <${fromAddress}>`,
+    `       To: <${testAddress}>`,
+    `       Subject: SMTP Delivery Test Connection`,
+    `[INFO] Injecting Header Template...`,
+    `[INFO] Injecting Footer Template...`,
+    `[INFO] Rendering visual HTML compilation...`,
+    `[INFO] Transmitting payload packets (12.4 KB)...`,
+    `[OK] 250 2.0.0 OK Queue Delivery ID 9821389281`,
+    `[SUCCESS] Test email successfully delivered to <${testAddress}>!`
+  ];
+
+  const logList = document.getElementById('terminalLogList');
+  logList.innerHTML = '';
+  switchSimTab('terminal');
+  openModal('emailTestModal');
+
+  const previewFrame = document.getElementById('emailPreviewFrame');
+  const siteName = TM.get('settings')?.siteName || 'TourVoyage';
+  const compiledHeader = headerHtml.replace(/{site_name}/g, siteName);
+  const compiledFooter = footerHtml.replace(/{site_name}/g, siteName).replace(/{contact_email}/g, fromAddress);
+
+  previewFrame.innerHTML = `
+    ${compiledHeader}
+    <div style="padding: 30px; font-family: sans-serif; color: #333333; line-height: 1.6;">
+      <h3 style="margin-top: 0; color: #C05621;">SMTP Configuration Successful!</h3>
+      <p>Hello,</p>
+      <p>This is a test email sent from the <strong>${siteName}</strong> administration panel to confirm that your SMTP connection settings are working properly.</p>
+      <p>Here are the connection parameters utilized:</p>
+      <table style="width: 100%; border-collapse: collapse; margin: 15px 0; font-size: 0.88rem;">
+        <tr style="background: #f7f7f7;"><td style="padding: 8px; border: 1px solid #ddd; font-weight: bold;">Driver</td><td style="padding: 8px; border: 1px solid #ddd;">${driver}</td></tr>
+        <tr><td style="padding: 8px; border: 1px solid #ddd; font-weight: bold;">SMTP Host</td><td style="padding: 8px; border: 1px solid #ddd;">${host}</td></tr>
+        <tr style="background: #f7f7f7;"><td style="padding: 8px; border: 1px solid #ddd; font-weight: bold;">Port</td><td style="padding: 8px; border: 1px solid #ddd;">${port} (${encryption})</td></tr>
+        <tr><td style="padding: 8px; border: 1px solid #ddd; font-weight: bold;">Sender Profile</td><td style="padding: 8px; border: 1px solid #ddd;">"${fromName}" &lt;${fromAddress}&gt;</td></tr>
+      </table>
+      <p>If you received this email, your notification configuration is fully functional and ready to deliver booking confirmations and newsletters automatically!</p>
+      <p>Best regards,<br>The System Automaton</p>
+    </div>
+    ${compiledFooter}
+  `;
+
+  if (simInterval) clearInterval(simInterval);
+  let logIdx = 0;
+
+  simInterval = setInterval(() => {
+    if (logIdx < logs.length) {
+      const div = document.createElement('div');
+      const text = logs[logIdx];
+      if (text.startsWith('[OK]')) {
+        div.innerHTML = `<span style="color:#22c55e">${text}</span>`;
+      } else if (text.startsWith('[SUCCESS]')) {
+        div.innerHTML = `<span style="color:#eab308;font-weight:bold">${text}</span>`;
+      } else if (text.startsWith('[ERROR]')) {
+        div.innerHTML = `<span style="color:#ef4444">${text}</span>`;
+      } else {
+        div.textContent = text;
+      }
+      logList.appendChild(div);
+      logList.scrollTop = logList.scrollHeight;
+      logIdx++;
+    } else {
+      clearInterval(simInterval);
+    }
+  }, 400);
+}
+
+function switchSimTab(tab) {
+  const btnTerm = document.getElementById('btnSimTerminal');
+  const btnPrev = document.getElementById('btnSimPreview');
+  const tabTerm = document.getElementById('simTabTerminal');
+  const tabPrev = document.getElementById('simTabPreview');
+
+  if (tab === 'terminal') {
+    btnTerm?.classList.add('active');
+    btnPrev?.classList.remove('active');
+    tabTerm?.classList.remove('hidden');
+    tabPrev?.classList.add('hidden');
+  } else {
+    btnTerm?.classList.remove('active');
+    btnPrev?.classList.add('active');
+    tabTerm?.classList.add('hidden');
+    tabPrev?.classList.remove('hidden');
+  }
+}
+
+window.openAddPostModal = openAddPostModal;
+window.editPost = editPost;
+window.savePost = savePost;
+window.deletePost = deletePost;
+window.uploadPostImage = uploadPostImage;
+window.toggleSelectAllNews = toggleSelectAllNews;
+window.applyNewsGroupAction = applyNewsGroupAction;
+window.triggerTestEmailSimulation = triggerTestEmailSimulation;
+window.switchSimTab = switchSimTab;
+window.renderNews = renderNews;
+window.loadEmailSettings = loadEmailSettings;
+
 

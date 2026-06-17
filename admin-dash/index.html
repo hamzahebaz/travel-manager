@@ -49,6 +49,18 @@
     <a href="#" class="nav-item" data-page="payments"><span class="nav-icon"><i class="fa-solid fa-credit-card"></i></span><span class="nav-label">Payments</span></a>
 
     <div class="nav-section-label">Content</div>
+    <!-- Collapsible News Menu Group -->
+    <div class="nav-item-group" id="group-news" data-page="news">
+      <a href="#" class="nav-item" onclick="toggleSubNav(event, 'sub-news')">
+        <span class="nav-icon"><i class="fa-solid fa-newspaper"></i></span>
+        <span class="nav-label">News</span>
+        <span class="nav-arrow" style="margin-left:auto;font-size:0.75rem;transition:transform 0.2s"><i class="fa-solid fa-chevron-down"></i></span>
+      </a>
+      <div class="sub-nav hidden" id="sub-news" style="padding-left: 20px; display: flex; flex-direction: column; gap: 4px; margin-top: 4px;">
+        <a href="#" class="nav-item" data-page="news" style="font-size:0.82rem;padding:8px 12px;height:auto"><span class="nav-icon" style="font-size:0.8rem"><i class="fa-solid fa-list"></i></span><span class="nav-label">All News</span></a>
+        <a href="#" class="nav-item" data-page="news-add" onclick="openAddPostModal(event)" style="font-size:0.82rem;padding:8px 12px;height:auto"><span class="nav-icon" style="font-size:0.8rem"><i class="fa-solid fa-circle-plus"></i></span><span class="nav-label">Add News</span></a>
+      </div>
+    </div>
     <a href="#" class="nav-item" data-page="reviews"><span class="nav-icon"><i class="fa-solid fa-star"></i></span><span class="nav-label">Reviews</span></a>
     <a href="#" class="nav-item" data-page="popups"><span class="nav-icon"><i class="fa-solid fa-window-restore"></i></span><span class="nav-label">Popup</span></a>
     <a href="#" class="nav-item" data-page="media"><span class="nav-icon"><i class="fa-solid fa-images"></i></span><span class="nav-label">Media Library</span></a>
@@ -64,6 +76,7 @@
 
     <div class="nav-section-label">System</div>
     <a href="#" class="nav-item" data-page="users"><span class="nav-icon"><i class="fa-solid fa-users"></i></span><span class="nav-label">Users</span></a>
+    <a href="#" class="nav-item" data-page="email-settings"><span class="nav-icon"><i class="fa-solid fa-envelope"></i></span><span class="nav-label">Email Settings</span></a>
     <a href="#" class="nav-item" data-page="reports"><span class="nav-icon"><i class="fa-solid fa-chart-bar"></i></span><span class="nav-label">Reports</span></a>
     <a href="#" class="nav-item" data-page="settings"><span class="nav-icon"><i class="fa-solid fa-gear"></i></span><span class="nav-label">Settings</span></a>
   </nav>
@@ -355,6 +368,169 @@
           <tbody id="popupsTbody"></tbody>
         </table>
       </div></div>
+    </section>
+
+    <!-- ═══ NEWS / BLOGS ═══ -->
+    <section class="page hidden" id="page-news">
+      <div class="page-header-row">
+        <div><h1 class="page-title">All news</h1><p class="page-subtitle">Manage blog and news articles</p></div>
+        <button class="btn btn-primary" onclick="openAddPostModal(event)"><i class="fa-solid fa-plus"></i> Add new Post</button>
+      </div>
+      <div class="card filter-bar" style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:12px">
+        <div style="display:flex; gap:8px; align-items:center">
+          <select class="filter-select" id="newsGroupAction">
+            <option value="">Bulk Actions</option>
+            <option value="publish">Publish</option>
+            <option value="draft">Brouillon</option>
+            <option value="delete">Delete</option>
+          </select>
+          <button class="btn btn-outline btn-sm" onclick="applyNewsGroupAction()">Apply</button>
+        </div>
+        <div style="display:flex; gap:8px; align-items:center; flex-wrap:wrap">
+          <input type="text" class="form-input" id="searchNews" placeholder="Search by name" style="max-width:180px; margin-bottom:0" oninput="renderNews()" />
+          <select class="filter-select" id="newsCategoryFilter" style="margin-bottom:0" onchange="renderNews()">
+            <option value="">--All Category--</option>
+            <option value="Hosted Tour">Hosted Tour</option>
+            <option value="Ecotourism">Ecotourism</option>
+            <option value="Adventure Travel">Adventure Travel</option>
+            <option value="Sea Travel">Sea Travel</option>
+          </select>
+          <button class="btn btn-primary btn-sm" onclick="renderNews()">Search News</button>
+        </div>
+      </div>
+      <div class="card"><div class="table-wrapper">
+        <table class="data-table full-table">
+          <thead>
+            <tr>
+              <th style="width:40px"><input type="checkbox" id="selectAllNews" onchange="toggleSelectAllNews(this)" /></th>
+              <th>Name</th>
+              <th>Category</th>
+              <th>Author</th>
+              <th>Date</th>
+              <th>Status</th>
+              <th>Actions</th>
+            </tr>
+          </thead>
+          <tbody id="newsTbody"></tbody>
+        </table>
+      </div></div>
+    </section>
+
+    <!-- ═══ EMAIL SETTINGS ═══ -->
+    <section class="page hidden" id="page-email-settings">
+      <div class="page-header-row">
+        <div><h1 class="page-title">Email Settings</h1><p class="page-subtitle">Configure email templates and delivery servers</p></div>
+        <button class="btn btn-primary" onclick="saveSettings()"><i class="fa-solid fa-save"></i> Save All</button>
+      </div>
+
+      <!-- Language selector tabs matching screenshot 2 -->
+      <div style="display:flex; gap:12px; margin-bottom:20px; border-bottom:1px solid var(--border); padding-bottom:10px;">
+        <button class="btn btn-sm btn-primary" style="display:flex; align-items:center; gap:6px"><span style="font-size:1rem">🇫🇷</span> French</button>
+        <button class="btn btn-sm btn-outline" style="display:flex; align-items:center; gap:6px"><span style="font-size:1rem">🇬🇧</span> English</button>
+        <button class="btn btn-sm btn-outline" style="display:flex; align-items:center; gap:6px"><span style="font-size:1rem">🇪🇸</span> Spanish</button>
+      </div>
+
+      <div class="settings-grid">
+        <!-- Card 1: Config Email -->
+        <div class="card" style="padding:28px">
+          <h3 style="font-size:0.95rem;font-weight:700;margin-bottom:6px;color:var(--text-primary)"><i class="fa-solid fa-envelope-open-text" style="color:var(--primary)"></i> Config Email</h3>
+          <p style="font-size:0.75rem;color:var(--text-muted);margin-bottom:18px">Change your config email site</p>
+          
+          <div class="form-grid">
+            <div class="form-group full-width">
+              <label>Email Driver</label>
+              <select id="setEmailDriver" class="form-input">
+                <option value="SMTP">SMTP</option>
+                <option value="SES">Amazon SES</option>
+                <option value="Mailgun">Mailgun</option>
+                <option value="Sendmail">Sendmail</option>
+              </select>
+            </div>
+            <div class="form-group full-width">
+              <label>Email Host</label>
+              <input type="text" id="setEmailHost" class="form-input" placeholder="smtp.mailtrap.io" />
+            </div>
+            <div class="form-group full-width">
+              <label>Email Port</label>
+              <input type="text" id="setEmailPort" class="form-input" placeholder="465" />
+            </div>
+            <div class="form-group full-width">
+              <label>Email Encryption</label>
+              <select id="setEmailEncryption" class="form-input">
+                <option value="SSL">SSL</option>
+                <option value="TLS">TLS</option>
+                <option value="None">None</option>
+              </select>
+            </div>
+            <div class="form-group full-width">
+              <label>Email Username</label>
+              <input type="text" id="setEmailUsername" class="form-input" placeholder="user@example.com" />
+            </div>
+            <div class="form-group full-width">
+              <label>Email Password</label>
+              <input type="password" id="setEmailPassword" class="form-input" placeholder="••••••••" />
+            </div>
+          </div>
+        </div>
+
+        <!-- Card 2: Email From Config & Testing -->
+        <div class="card" style="padding:28px; display:flex; flex-direction:column; gap:28px">
+          <div>
+            <h3 style="font-size:0.95rem;font-weight:700;margin-bottom:6px;color:var(--text-primary)"><i class="fa-solid fa-user-gear" style="color:var(--primary)"></i> Email From Config</h3>
+            <p style="font-size:0.75rem;color:var(--text-muted);margin-bottom:18px">How your customer can contact you</p>
+            
+            <div class="form-grid">
+              <div class="form-group full-width">
+                <label>Admin Email</label>
+                <input type="email" id="setEmailAdminEmail" class="form-input" placeholder="admin@tourvoyage.com" />
+                <small style="font-size:0.7rem;color:var(--text-muted);margin-top:4px">You will get all notifications from this email</small>
+              </div>
+              <div class="form-group full-width">
+                <label>Email Form Name</label>
+                <input type="text" id="setEmailFormName" class="form-input" placeholder="TourVoyage Agency" />
+              </div>
+              <div class="form-group full-width">
+                <label>Email Form Address</label>
+                <input type="email" id="setEmailFormAddress" class="form-input" placeholder="noreply@tourvoyage.com" />
+              </div>
+            </div>
+          </div>
+
+          <div style="border-top:1px solid var(--border); padding-top:20px">
+            <h3 style="font-size:0.95rem;font-weight:700;margin-bottom:6px;color:var(--text-primary)"><i class="fa-solid fa-vial" style="color:var(--primary)"></i> Email Testing</h3>
+            <p style="font-size:0.75rem;color:var(--text-muted);margin-bottom:18px">Send a test email to verify credentials</p>
+            
+            <div class="form-group">
+              <label>Email Address</label>
+              <input type="email" id="setEmailTestAddress" class="form-input" placeholder="test@example.com" style="margin-bottom:12px" />
+              <button class="btn btn-primary" onclick="triggerTestEmailSimulation()" style="width:100%"><i class="fa-solid fa-paper-plane"></i> Send Email Test</button>
+            </div>
+          </div>
+        </div>
+
+        <!-- Card 3: Email Header & Footer HTML templates -->
+        <div class="card full-width" style="padding:28px; grid-column:span 2">
+          <h3 style="font-size:0.95rem;font-weight:700;margin-bottom:6px;color:var(--text-primary)"><i class="fa-solid fa-code" style="color:var(--primary)"></i> Email Header & Footer</h3>
+          <p style="font-size:0.75rem;color:var(--text-muted);margin-bottom:18px">Change booking email header and footer templates</p>
+          
+          <div class="form-grid">
+            <div class="form-group full-width">
+              <label style="display:flex; justify-content:space-between">
+                <span>Header HTML</span>
+                <span style="font-size:0.7rem;color:var(--text-muted)">Variables: {site_name}, {logo}</span>
+              </label>
+              <textarea id="setEmailHeaderHtml" class="form-input" rows="8" style="font-family:monospace; font-size:0.8rem; line-height:1.4"></textarea>
+            </div>
+            <div class="form-group full-width">
+              <label style="display:flex; justify-content:space-between">
+                <span>Footer HTML</span>
+                <span style="font-size:0.7rem;color:var(--text-muted)">Variables: {site_name}, {contact_email}</span>
+              </label>
+              <textarea id="setEmailFooterHtml" class="form-input" rows="8" style="font-family:monospace; font-size:0.8rem; line-height:1.4"></textarea>
+            </div>
+          </div>
+        </div>
+      </div>
     </section>
 
     <!-- ═══ EMAIL SUBMITTERS ═══ -->
@@ -740,6 +916,98 @@
 </div>
 
 <!-- ═══ MODALS ═══ -->
+
+<!-- Add/Edit Post Modal -->
+<div class="modal-overlay hidden" id="addPostModal">
+  <div class="modal" style="max-width:680px">
+    <div class="modal-header">
+      <h3 id="postModalTitle">Add New Post</h3>
+      <button class="modal-close" onclick="closeModal('addPostModal')"><i class="fa-solid fa-xmark"></i></button>
+    </div>
+    <div class="modal-body" style="max-height:70vh;overflow-y:auto">
+      <input type="hidden" id="editPostId" />
+      <div class="form-grid">
+        <div class="form-group full-width">
+          <label>Title *</label>
+          <input type="text" id="postTitle" class="form-input" placeholder="Enter post title" required />
+        </div>
+        <div class="form-group">
+          <label>Category *</label>
+          <select id="postCategory" class="form-input">
+            <option value="Hosted Tour">Hosted Tour</option>
+            <option value="Ecotourism">Ecotourism</option>
+            <option value="Adventure Travel">Adventure Travel</option>
+            <option value="Sea Travel">Sea Travel</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label>Status *</label>
+          <select id="postStatus" class="form-input">
+            <option value="Publish">Publish</option>
+            <option value="Draft">Draft</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label>Author</label>
+          <input type="text" id="postAuthor" class="form-input" placeholder="Author name" />
+        </div>
+        <div class="form-group">
+          <label>Tags (Comma separated)</label>
+          <input type="text" id="postTags" class="form-input" placeholder="e.g. ski, winter, travel" />
+        </div>
+        <div class="form-group full-width">
+          <label>Featured Image</label>
+          <div style="display:flex;gap:12px;align-items:center">
+            <input type="url" id="postImage" class="form-input" placeholder="Image URL or upload" style="flex:1" />
+            <input type="file" id="postImageFile" accept="image/*" style="display:none" onchange="uploadPostImage(this)" />
+            <button type="button" class="btn btn-outline btn-sm" onclick="document.getElementById('postImageFile').click()"><i class="fa-solid fa-cloud-arrow-up"></i> Upload</button>
+          </div>
+          <img id="postImagePreview" class="img-upload-preview" style="max-height:150px;object-fit:cover;margin-top:8px;border-radius:8px" />
+        </div>
+        <div class="form-group full-width">
+          <label>Content *</label>
+          <textarea id="postContent" class="form-input" rows="10" placeholder="Write post content here..." required></textarea>
+        </div>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-outline" onclick="closeModal('addPostModal')">Cancel</button>
+      <button class="btn btn-primary" onclick="savePost()"><i class="fa-solid fa-save"></i> Save Post</button>
+    </div>
+  </div>
+</div>
+
+<!-- Email Testing Simulator Modal -->
+<div class="modal-overlay hidden" id="emailTestModal">
+  <div class="modal" style="max-width:600px; padding:0; overflow:hidden">
+    <div class="modal-header" style="padding:20px 24px; border-bottom:1px solid var(--border)">
+      <h3 style="display:flex; align-items:center; gap:8px"><i class="fa-solid fa-terminal" style="color:var(--primary)"></i> SMTP Connection Simulator</h3>
+      <button class="modal-close" onclick="closeModal('emailTestModal')"><i class="fa-solid fa-xmark"></i></button>
+    </div>
+    
+    <!-- Tab selectors inside modal -->
+    <div style="display:flex; background:var(--bg-dark); border-bottom:1px solid var(--border)">
+      <button id="btnSimTerminal" class="btn-sim-tab active" onclick="switchSimTab('terminal')"><i class="fa-solid fa-code"></i> Terminal Log</button>
+      <button id="btnSimPreview" class="btn-sim-tab" onclick="switchSimTab('preview')"><i class="fa-solid fa-eye"></i> Email Visual Preview</button>
+    </div>
+
+    <!-- Terminal Log Tab Content -->
+    <div id="simTabTerminal" class="sim-tab-content" style="background:#1E1E1E; color:#D4D4D4; font-family:monospace; padding:20px; font-size:0.82rem; line-height:1.6; height:350px; overflow-y:auto">
+      <div id="terminalLogList"></div>
+    </div>
+
+    <!-- Email Visual Preview Tab Content -->
+    <div id="simTabPreview" class="sim-tab-content hidden" style="height:350px; overflow-y:auto; background:#f0f2f5; padding:20px">
+      <div id="emailPreviewFrame" style="max-width:500px; margin:0 auto; background:#ffffff; box-shadow:0 4px 12px rgba(0,0,0,0.08); border-radius:8px; overflow:hidden">
+        <!-- Filled dynamically -->
+      </div>
+    </div>
+
+    <div class="modal-footer" style="padding:16px 24px; border-top:1px solid var(--border)">
+      <button class="btn btn-primary" onclick="closeModal('emailTestModal')">Close Simulator</button>
+    </div>
+  </div>
+</div>
 
 <!-- Add Tour Modal -->
 <div class="modal-overlay hidden" id="addTourModal">

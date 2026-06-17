@@ -1,0 +1,127 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Blog Details | TourVoyage Morocco</title>
+  <meta name="description" content="Read our latest blog post for travel recommendations, updates, and reviews in Morocco." />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;600;700;800&family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" />
+  <link rel="stylesheet" href="css/style.css" />
+  <link rel="icon" type="image/png" href="images/favicon.png" />
+</head>
+<body>
+
+<nav class="navbar" id="mainNavbar">
+  <div class="container">
+    <div class="navbar-inner">
+      <a href="index.html" class="navbar-brand"><img src="images/logo.png" alt="TourVoyage Logo" style="height: 38px;"></a>
+      <div class="navbar-nav nav-menu-dynamic"></div>
+      <div class="navbar-actions">
+        <a href="contact.html" class="btn btn-primary btn-sm">Book Now</a>
+        <button class="navbar-toggle" id="navToggle"><i class="fa-solid fa-bars"></i></button>
+      </div>
+    </div>
+  </div>
+</nav>
+<div class="mobile-menu" id="mobileMenu">
+  <div class="nav-menu-dynamic"></div>
+  <div class="navbar-actions"><a href="contact.html" class="btn btn-primary btn-sm">Book Now</a></div>
+</div>
+
+<div class="page-hero" style="padding: 60px 0 40px 0;">
+  <div class="container">
+    <div class="page-hero-breadcrumb">
+      <a href="index.html">Home</a>
+      <i class="fa-solid fa-chevron-right"></i>
+      <a href="blog.html">Blog</a>
+      <i class="fa-solid fa-chevron-right"></i>
+      <span style="color: var(--terracotta);">Article details</span>
+    </div>
+  </div>
+</div>
+
+<section class="section" style="padding-top: 0;">
+  <div class="container">
+    <div class="blog-layout">
+      <!-- Main Content -->
+      <div class="blog-main" id="blogDetailContent">
+        <!-- Populated dynamically by main.js -->
+        <div style="text-align:center;padding:100px 0;color:var(--text-muted)">
+          <i class="fa-solid fa-spinner fa-spin" style="font-size: 2rem; margin-bottom: 12px;"></i>
+          <p>Loading article content...</p>
+        </div>
+      </div>
+
+      <!-- Sidebar -->
+      <aside class="blog-sidebar">
+        <!-- Search Widget -->
+        <div class="sidebar-widget">
+          <h4 class="widget-title">Search Articles</h4>
+          <form class="search-widget-form" action="blog.html" method="GET">
+            <input type="text" name="q" class="search-widget-input" placeholder="Type keywords..." />
+            <button type="submit" class="search-widget-btn" aria-label="Search"><i class="fa-solid fa-magnifying-glass"></i></button>
+          </form>
+        </div>
+
+        <!-- Categories Widget -->
+        <div class="sidebar-widget">
+          <h4 class="widget-title">Categories</h4>
+          <ul class="widget-categories-list" id="blogCategoriesWidget">
+            <!-- Populated dynamically by main.js -->
+          </ul>
+        </div>
+
+        <!-- Recent Posts Widget -->
+        <div class="sidebar-widget">
+          <h4 class="widget-title">Other Articles</h4>
+          <div class="widget-recent-posts" id="blogRecentWidget">
+            <!-- Populated dynamically by main.js -->
+          </div>
+        </div>
+      </aside>
+    </div>
+  </div>
+</section>
+
+<section class="newsletter-section section-sm">
+  <div class="container">
+    <div class="newsletter-inner">
+      <div class="newsletter-text">
+        <h3 class="newsletter-title">Get Exclusive Travel Deals ✈️</h3>
+        <p class="newsletter-subtitle">Subscribe and receive special offers and early access to new tours.</p>
+      </div>
+      <form class="newsletter-form" onsubmit="return false">
+        <input type="email" class="newsletter-input" placeholder="Enter your email address" />
+        <button type="submit" class="btn btn-primary">Subscribe</button>
+      </form>
+    </div>
+  </div>
+</section>
+
+<footer>
+  <div class="container">
+    <div class="footer-grid">
+      <div class="footer-brand">
+        <div class="footer-brand-name"><img src="images/logo.png" alt="TourVoyage Logo" style="height: 34px;"></div>
+        <p class="footer-desc footer-desc-text">Your trusted partner for authentic Morocco travel experiences.</p>
+        <div class="footer-socials footer-socials-dynamic"></div>
+      </div>
+      <div><h5 class="footer-col-title">Quick Links</h5><div class="footer-links"><a href="tours.html" class="footer-link">All Tours</a><a href="destinations.html" class="footer-link">Destinations</a><a href="hotels.html" class="footer-link">Hotels</a><a href="about.html" class="footer-link">About</a><a href="contact.html" class="footer-link">Contact</a></div></div>
+      <div><h5 class="footer-col-title">Tour Types</h5><div class="footer-links"><a href="tours.html?cat=circuit" class="footer-link">Circuits</a><a href="tours.html?cat=excursion" class="footer-link">Excursions</a><a href="tours.html?cat=city-tour" class="footer-link">City Tours</a><a href="tours.html?dest=Sahara" class="footer-link">Desert Tours</a></div></div>
+      <div><h5 class="footer-col-title">Contact</h5><div class="footer-contact-item"><i class="fa-solid fa-phone"></i><span class="footer-phone"></span></div><div class="footer-contact-item"><i class="fa-solid fa-envelope"></i><span class="footer-email"></span></div><div class="footer-contact-item"><i class="fa-solid fa-location-dot"></i><span class="footer-address"></span></div></div>
+    </div>
+  </div>
+  <div class="container"><div class="footer-bottom"><span class="footer-copy">© <span id="footerYear"></span> <span class="footer-site-name">TourVoyage</span>. All rights reserved.</span></div></div>
+</footer>
+
+<button class="back-to-top"><i class="fa-solid fa-arrow-up"></i></button>
+<div id="siteToastContainer" class="toast-container"></div>
+
+<script src="../shared/data.js"></script>
+<script src="js/main.js"></script>
+<script>document.getElementById('footerYear').textContent = new Date().getFullYear();</script>
+</body>
+</html>
