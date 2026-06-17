@@ -3,6 +3,7 @@
 const GOOGLE_SHEET_URL = 'https://script.google.com/macros/s/AKfycbwgp0rCRh58SZfA6KKmdhd0NjVy4k--IqpHEyAKRWur8WOimkBotHpK_CsJibvHQqii/exec ';
 
 const TM = (() => {
+  const isFreshBoot = localStorage.getItem('tm_settings') === null;
 
   // ─── Keys ────────────────────────────────────────────────────────────────
   const KEYS = {
@@ -453,13 +454,7 @@ ${pages.map(p => `  <url>
     const syncUrl = getGoogleSheetUrl();
     if (!syncUrl || !syncUrl.startsWith('http')) return;
 
-    const currentSettings = _load(KEYS.settings);
-    const currentReservations = _load(KEYS.reservations);
-
-    const isSettingsEmpty = !currentSettings;
-    const isReservationsEmpty = !currentReservations || currentReservations.length === 0;
-
-    if (isSettingsEmpty || isReservationsEmpty) {
+    if (isFreshBoot) {
       console.log('Local storage empty or cleared. Auto-restoring from Google Sheets...');
       pullFromGoogleSheets();
     }
@@ -540,6 +535,13 @@ ${pages.map(p => `  <url>
 
 // Make available globally
 window.TM = TM;
+
+// On public website pages, reload the page on successful restoration to render properly
+if (!window.location.pathname.includes('/admin-dash/')) {
+  window.addEventListener('tm_data_restored', () => {
+    window.location.reload();
+  });
+}
 
 // Auto-restore asynchronously on load
 setTimeout(() => {
