@@ -21,9 +21,11 @@ document.addEventListener('DOMContentLoaded', () => {
   loadNotifications();
   updateResBadge();
 
-  // Fetch latest data from Google Sheets on load to keep multiple admin sessions in sync
-  if (typeof TM.pullFromGoogleSheets === 'function') {
-    TM.pullFromGoogleSheets().catch(e => console.error('Startup sync error:', e));
+  // Fetch latest data from Supabase or Google Sheets on load to keep multiple admin sessions in sync
+  if (typeof TM.pullFromSupabase === 'function' && TM.get('settings').supabaseUrl) {
+    TM.pullFromSupabase().catch(e => console.error('Startup Supabase sync error:', e));
+  } else if (typeof TM.pullFromGoogleSheets === 'function') {
+    TM.pullFromGoogleSheets().catch(e => console.error('Startup Google Sheets sync error:', e));
   }
 
   // Listen for data changes from website
@@ -1755,6 +1757,8 @@ function loadSettings() {
     setLogo: 'logo', setFavicon: 'favicon',
     setGA: 'googleAnalytics',
     setGoogleSheetUrl: 'googleSheetUrl',
+    setSupabaseUrl: 'supabaseUrl',
+    setSupabaseKey: 'supabaseKey',
   };
   Object.entries(map).forEach(([id, key]) => {
     const el = document.getElementById(id);
@@ -1841,6 +1845,8 @@ function saveSettings() {
     setLogo: 'logo', setFavicon: 'favicon',
     setGA: 'googleAnalytics',
     setGoogleSheetUrl: 'googleSheetUrl',
+    setSupabaseUrl: 'supabaseUrl',
+    setSupabaseKey: 'supabaseKey',
   };
   const s = TM.get('settings');
   Object.entries(map).forEach(([id, key]) => {
@@ -2031,6 +2037,9 @@ function deleteSubscriber(email) {
     TM.set('subscribers', subscribers);
     if (typeof TM.triggerGoogleSheetSync === 'function') {
       TM.triggerGoogleSheetSync('subscribers', { email: email }, 'delete');
+    }
+    if (typeof TM.triggerSupabaseSync === 'function') {
+      TM.triggerSupabaseSync('subscribers', { email: email }, 'delete');
     }
     renderSubscribers();
     showToast('Subscriber deleted successfully', 'error');
@@ -2808,4 +2817,35 @@ function syncAllToGoogleSheets() {
   sendNext();
 }
 window.syncAllToGoogleSheets = syncAllToGoogleSheets;
+
+function openSupabaseGuide() {
+  openModal('supabaseGuideModal');
+}
+window.openSupabaseGuide = openSupabaseGuide;
+
+function syncAllToSupabase() {
+  const settings = TM.get('settings');
+  const url = settings.supabaseUrl;
+  const key = settings.supabaseKey;
+  if (!url || !key) {
+    showToast('Please configure Supabase URL and Key in settings first', 'error');
+    return;
+  }
+  
+  showToast('Synchronizing all data to Supabase...', 'info');
+  
+  if (typeof TM.syncAllToSupabase === 'function') {
+    TM.syncAllToSupabase()
+      .then(() => {
+        showToast('All data successfully synced to Supabase!', 'success');
+      })
+      .catch(err => {
+        console.error('Supabase sync error:', err);
+        showToast('Sync failed, please make sure you ran the SQL setup in Supabase.', 'error');
+      });
+  } else {
+    showToast('Supabase sync logic not available in data layer.', 'error');
+  }
+}
+window.syncAllToSupabase = syncAllToSupabase;
 

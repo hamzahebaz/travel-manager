@@ -2,6 +2,11 @@
 // Set this to automatically restore all data if local storage/cache is cleared.
 const GOOGLE_SHEET_URL = 'https://script.google.com/macros/s/AKfycbwgp0rCRh58SZfA6KKmdhd0NjVy4k--IqpHEyAKRWur8WOimkBotHpK_CsJibvHQqii/exec ';
 
+// Supabase API URL and Anon Key for real-time multi-admin synchronization
+// Copy these from your Supabase Project Settings > API panel.
+const SUPABASE_URL = '';
+const SUPABASE_ANON_KEY = '';
+
 const TM = (() => {
   const isFreshBoot = localStorage.getItem('tm_settings') === null;
 
@@ -154,6 +159,8 @@ const TM = (() => {
       logoText: 'TourVoyage',
       websiteUrl: 'website/index.html',
       googleSheetUrl: '',
+      supabaseUrl: '',
+      supabaseKey: '',
       maintenanceMode: false,
       logo: 'website/images/logo.png',
       favicon: 'website/images/favicon.png',
@@ -440,6 +447,92 @@ ${pages.map(p => `  <url>
     }
   }
 
+  let supabaseClient = null;
+
+  function loadSupabaseScript() {
+    return new Promise((resolve, reject) => {
+      if (window.supabase) {
+        resolve(window.supabase);
+        return;
+      }
+      const script = document.createElement('script');
+      script.src = 'https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2';
+      script.onload = () => resolve(window.supabase);
+      script.onerror = () => reject(new Error('Failed to load Supabase script'));
+      document.head.appendChild(script);
+    });
+  }
+
+  function getSupabaseUrl() {
+    try {
+      const settings = get('settings');
+      if (settings && settings.supabaseUrl) return settings.supabaseUrl.trim();
+    } catch(e) {}
+    return (SUPABASE_URL || '').trim();
+  }
+
+  function getSupabaseKey() {
+    try {
+      const settings = get('settings');
+      if (settings && settings.supabaseKey) return settings.supabaseKey.trim();
+    } catch(e) {}
+    return (SUPABASE_ANON_KEY || '').trim();
+  }
+
+  function initSupabase() {
+    const url = getSupabaseUrl();
+    const key = getSupabaseKey();
+    if (url && key && window.supabase) {
+      try {
+        supabaseClient = window.supabase.createClient(url, key);
+        return true;
+      } catch(e) {
+        console.error('Supabase client init failed:', e);
+      }
+    }
+    return false;
+  }
+
+  function triggerSupabaseSync(key, item, action = 'upsert') {
+    const url = getSupabaseUrl();
+    const keyVal = getSupabaseKey();
+    if (!url || !keyVal) return;
+
+    loadSupabaseScript().then(() => {
+      if (!supabaseClient && !initSupabase()) return;
+
+      try {
+        const isConfig = SYNC_CONFIG_KEYS.includes(key);
+        if (isConfig) {
+          supabaseClient
+            .from('system_config')
+            .upsert({ key: key, value: item })
+            .then(res => { if (res.error) console.error('Supabase config sync failed:', res.error); });
+        } else {
+          const uniqueKey = key === 'subscribers' ? 'email' : 'id';
+          if (action === 'delete') {
+            const val = key === 'subscribers' ? item.email : item.id;
+            supabaseClient
+              .from(key)
+              .delete()
+              .eq(uniqueKey, val)
+              .then(res => { if (res.error) console.error('Supabase delete failed:', res.error); });
+          } else {
+            const val = key === 'subscribers' ? item.email : item.id;
+            const row = { data: item };
+            row[uniqueKey] = val;
+            supabaseClient
+              .from(key)
+              .upsert(row)
+              .then(res => { if (res.error) console.error('Supabase upsert failed:', res.error); });
+          }
+        }
+      } catch (e) {
+        console.error('Supabase sync error:', e);
+      }
+    }).catch(err => console.error('Failed to load Supabase for sync:', err));
+  }
+
   function getGoogleSheetUrl() {
     try {
       const settings = get('settings');
@@ -451,6 +544,16 @@ ${pages.map(p => `  <url>
   }
 
   function autoRestoreFromGoogleSheets() {
+    const sUrl = getSupabaseUrl();
+    const sKey = getSupabaseKey();
+    if (sUrl && sKey) {
+      if (isFreshBoot) {
+        console.log('Local storage empty or cleared. Auto-restoring from Supabase...');
+        pullFromSupabase();
+      }
+      return;
+    }
+
     const syncUrl = getGoogleSheetUrl();
     if (!syncUrl || !syncUrl.startsWith('http')) return;
 
@@ -509,6 +612,105 @@ ${pages.map(p => `  <url>
       });
   }
 
+  function pullFromSupabase() {
+    const url = getSupabaseUrl();
+    const key = getSupabaseKey();
+    if (!url || !key) return Promise.reject('Supabase URL/Key not configured');
+
+    return loadSupabaseScript()
+      .then(() => {
+        if (!initSupabase()) throw new Error('Supabase client failed to initialize');
+        
+        const listPromises = SYNC_LIST_KEYS.map(k => {
+          return supabaseClient
+            .from(k)
+            .select('*')
+            .then(res => {
+              if (res.error) throw res.error;
+              return { key: k, data: (res.data || []).map(row => row.data) };
+            });
+        });
+        
+        const configPromise = supabaseClient
+          .from('system_config')
+          .select('*')
+          .then(res => {
+            if (res.error) throw res.error;
+            return { key: 'system_config', data: res.data || [] };
+          });
+          
+        return Promise.all([...listPromises, configPromise]);
+      })
+      .then(results => {
+        results.forEach(res => {
+          if (res.key === 'system_config') {
+            res.data.forEach(row => {
+              _save(KEYS[row.key], row.value);
+            });
+          } else {
+            const uniqueKey = res.key === 'subscribers' ? 'email' : 'id';
+            if (uniqueKey === 'id') {
+              res.data.forEach(item => {
+                if (item.id) item.id = Number(item.id);
+                if (item.price) item.price = Number(item.price);
+                if (item.rating) item.rating = Number(item.rating);
+                if (item.reviews) item.reviews = Number(item.reviews);
+                if (item.people) item.people = Number(item.people);
+                if (item.total) item.total = Number(item.total);
+                if (item.paid) item.paid = Number(item.paid);
+                if (item.tourId) item.tourId = Number(item.tourId);
+                if (item.stars) item.stars = Number(item.stars);
+                if (item.rooms) item.rooms = Number(item.rooms);
+              });
+            }
+            const merged = mergeLists(get(res.key) || [], res.data, uniqueKey);
+            _save(KEYS[res.key], merged);
+          }
+        });
+        console.log('Supabase data restore completed successfully!');
+        window.dispatchEvent(new CustomEvent('tm_data_restored'));
+        return true;
+      })
+      .catch(err => {
+        console.error('Supabase pull failed:', err);
+      });
+  }
+
+  function syncAllToSupabase() {
+    return loadSupabaseScript().then(() => {
+      if (!initSupabase()) throw new Error('Supabase client failed to initialize');
+      
+      const promises = [];
+      SYNC_CONFIG_KEYS.forEach(k => {
+        const data = get(k);
+        if (data) {
+          promises.push(
+            supabaseClient
+              .from('system_config')
+              .upsert({ key: k, value: data })
+          );
+        }
+      });
+      
+      SYNC_LIST_KEYS.forEach(k => {
+        const list = get(k) || [];
+        list.forEach(item => {
+          const uniqueKey = k === 'subscribers' ? 'email' : 'id';
+          const val = k === 'subscribers' ? item.email : item.id;
+          const row = { data: item };
+          row[uniqueKey] = val;
+          promises.push(
+            supabaseClient
+              .from(k)
+              .upsert(row)
+          );
+        });
+      });
+      
+      return Promise.all(promises);
+    });
+  }
+
   function mergeLists(local, remote, uniqueKey) {
     const map = new Map();
     remote.forEach(item => {
@@ -529,7 +731,7 @@ ${pages.map(p => `  <url>
   }
 
   // Public API
-  return { get, set, getAll, addItem, updateItem, deleteItem, getItem, getBySlug, getSEO, setSEO, applySEO, getStats, validateCoupon, generateSitemap, resetAll, KEYS, triggerGoogleSheetSync, pullFromGoogleSheets, autoRestoreFromGoogleSheets };
+  return { get, set, getAll, addItem, updateItem, deleteItem, getItem, getBySlug, getSEO, setSEO, applySEO, getStats, validateCoupon, generateSitemap, resetAll, KEYS, triggerGoogleSheetSync, pullFromGoogleSheets, autoRestoreFromGoogleSheets, triggerSupabaseSync, pullFromSupabase, syncAllToSupabase };
 
 })();
 

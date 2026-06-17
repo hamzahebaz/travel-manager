@@ -705,6 +705,26 @@
             <button type="button" class="btn btn-outline btn-sm" onclick="openGoogleSheetGuide()"><i class="fa-solid fa-circle-question"></i> Setup Instructions</button>
           </div>
         </div>
+        <div class="card" style="padding:28px">
+          <h3 style="font-size:0.95rem;font-weight:700;margin-bottom:18px;padding-bottom:10px;border-bottom:1px solid var(--border)"><i class="fa-solid fa-database" style="color:var(--primary)"></i> Supabase Integration</h3>
+          <div class="form-grid">
+            <div class="form-group full-width">
+              <label>Supabase API URL</label>
+              <input type="url" id="setSupabaseUrl" class="form-input" placeholder="https://your-project.supabase.co" />
+            </div>
+            <div class="form-group full-width" style="margin-bottom:0">
+              <label>Supabase Anon Key</label>
+              <input type="password" id="setSupabaseKey" class="form-input" placeholder="eyJhbGciOi..." />
+              <small style="display:block;margin-top:6px;color:var(--text-muted);font-size:0.75rem;line-height:1.4">
+                Syncs all settings, catalog, bookings, and users in real-time across all browser sessions.
+              </small>
+            </div>
+          </div>
+          <div style="display:flex;gap:10px;margin-top:16px">
+            <button type="button" class="btn btn-outline btn-sm" onclick="syncAllToSupabase()"><i class="fa-solid fa-cloud-arrow-up"></i> Sync All to Supabase</button>
+            <button type="button" class="btn btn-outline btn-sm" onclick="openSupabaseGuide()"><i class="fa-solid fa-circle-question"></i> Setup Instructions</button>
+          </div>
+        </div>
       </div>
     </section>
 
@@ -1358,6 +1378,67 @@ function doPost(e) {
     </div>
     <div class="modal-footer" style="padding-top:16px;border-top:1px solid var(--border);display:flex;justify-content:flex-end">
       <button class="btn btn-primary" onclick="closeModal('googleSheetGuideModal')">Got it</button>
+    </div>
+  </div>
+</div>
+
+<!-- Supabase Guide Modal -->
+<div class="modal-overlay hidden" id="supabaseGuideModal">
+  <div class="modal" style="max-width:600px">
+    <div class="modal-header">
+      <h3>Supabase Integration Setup</h3>
+      <button class="modal-close" onclick="closeModal('supabaseGuideModal')"><i class="fa-solid fa-xmark"></i></button>
+    </div>
+    <div class="modal-body" style="max-height:70vh;overflow-y:auto;font-size:0.9rem;line-height:1.6;color:var(--text-secondary)">
+      <p style="margin-bottom:12px">Follow these steps to synchronize your website database in real-time using Supabase:</p>
+      <ol style="margin-left:20px;margin-bottom:16px;display:flex;flex-direction:column;gap:8px">
+        <li>Create a free account on <a href="https://supabase.com" target="_blank" style="color:var(--primary);text-decoration:underline">Supabase</a>.</li>
+        <li>Create a new project (e.g. <code>Travel Platform</code>).</li>
+        <li>Once the project is ready, go to the <strong>SQL Editor</strong> in the left sidebar and click <strong>New Query</strong>.</li>
+        <li>Copy and paste the following SQL script to create your tables:
+          <pre style="background:var(--bg-dark);padding:12px;border-radius:6px;font-size:0.75rem;overflow-x:auto;color:var(--text-primary);margin-top:6px">
+CREATE TABLE IF NOT EXISTS system_config (key TEXT PRIMARY KEY, value JSONB);
+CREATE TABLE IF NOT EXISTS tours (id INT PRIMARY KEY, data JSONB);
+CREATE TABLE IF NOT EXISTS hotels (id INT PRIMARY KEY, data JSONB);
+CREATE TABLE IF NOT EXISTS destinations (id INT PRIMARY KEY, data JSONB);
+CREATE TABLE IF NOT EXISTS reservations (id INT PRIMARY KEY, data JSONB);
+CREATE TABLE IF NOT EXISTS reviews (id INT PRIMARY KEY, data JSONB);
+CREATE TABLE IF NOT EXISTS coupons (id INT PRIMARY KEY, data JSONB);
+CREATE TABLE IF NOT EXISTS users (id INT PRIMARY KEY, data JSONB);
+CREATE TABLE IF NOT EXISTS media (id INT PRIMARY KEY, data JSONB);
+CREATE TABLE IF NOT EXISTS menu (id INT PRIMARY KEY, data JSONB);
+CREATE TABLE IF NOT EXISTS redirects (id INT PRIMARY KEY, data JSONB);
+CREATE TABLE IF NOT EXISTS cars (id INT PRIMARY KEY, data JSONB);
+CREATE TABLE IF NOT EXISTS popups (id INT PRIMARY KEY, data JSONB);
+CREATE TABLE IF NOT EXISTS subscribers (email TEXT PRIMARY KEY, data JSONB);
+
+ALTER TABLE system_config DISABLE ROW LEVEL SECURITY;
+ALTER TABLE tours DISABLE ROW LEVEL SECURITY;
+ALTER TABLE hotels DISABLE ROW LEVEL SECURITY;
+ALTER TABLE destinations DISABLE ROW LEVEL SECURITY;
+ALTER TABLE reservations DISABLE ROW LEVEL SECURITY;
+ALTER TABLE reviews DISABLE ROW LEVEL SECURITY;
+ALTER TABLE coupons DISABLE ROW LEVEL SECURITY;
+ALTER TABLE users DISABLE ROW LEVEL SECURITY;
+ALTER TABLE media DISABLE ROW LEVEL SECURITY;
+ALTER TABLE menu DISABLE ROW LEVEL SECURITY;
+ALTER TABLE redirects DISABLE ROW LEVEL SECURITY;
+ALTER TABLE cars DISABLE ROW LEVEL SECURITY;
+ALTER TABLE popups DISABLE ROW LEVEL SECURITY;
+ALTER TABLE subscribers DISABLE ROW LEVEL SECURITY;</pre>
+        </li>
+        <li>Click <strong>Run</strong> at the bottom right of the editor.</li>
+        <li>Go to <strong>Project Settings > API</strong> in the left sidebar.</li>
+        <li>Copy your <strong>Project URL</strong> and the <strong>anon public</strong> API key.</li>
+        <li>Paste them into the settings inputs on the dashboard, and click <strong>Save All</strong>.</li>
+        <li>Click <strong>Sync All to Supabase</strong> to seed your new cloud database!</li>
+      </ol>
+      <div style="background:var(--sand-warm);color:var(--terracotta);padding:12px;border-radius:8px;font-size:0.8rem;font-weight:600">
+        <i class="fa-solid fa-circle-info"></i> Once configured, the platform dynamically synchronizes all data in real-time. Any changes made by other administrators will instantly appear in all browsers!
+      </div>
+    </div>
+    <div class="modal-footer" style="padding-top:16px;border-top:1px solid var(--border);display:flex;justify-content:flex-end">
+      <button class="btn btn-primary" onclick="closeModal('supabaseGuideModal')">Got it</button>
     </div>
   </div>
 </div>
