@@ -21,6 +21,11 @@ document.addEventListener('DOMContentLoaded', () => {
   loadNotifications();
   updateResBadge();
 
+  // Fetch latest data from Google Sheets on load to keep multiple admin sessions in sync
+  if (typeof TM.pullFromGoogleSheets === 'function') {
+    TM.pullFromGoogleSheets().catch(e => console.error('Startup sync error:', e));
+  }
+
   // Listen for data changes from website
   window.addEventListener('tm_data_change', () => {
     updateResBadge();

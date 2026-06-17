@@ -488,13 +488,13 @@ ${pages.map(p => `  <url>
                 });
               }
               const merged = mergeLists(get(key) || [], data[key], uniqueKey);
-              set(key, merged);
+              _save(KEYS[key], merged);
             }
           });
           
           SYNC_CONFIG_KEYS.forEach(key => {
             if (data[key]) {
-              set(key, data[key]);
+              _save(KEYS[key], data[key]);
             }
           });
           
