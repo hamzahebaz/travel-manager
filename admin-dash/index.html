@@ -1156,13 +1156,28 @@ function doGet(e) {
   try {
     var ss = SpreadsheetApp.getActiveSpreadsheet();
     var result = {};
-    var keys = ["reservations", "users", "subscribers"];
+    var sheets = ss.getSheets();
     
-    for (var k = 0; k < keys.length; k++) {
-      var type = keys[k];
-      var sheet = ss.getSheetByName(type);
-      var list = [];
-      if (sheet) {
+    for (var s = 0; s < sheets.length; s++) {
+      var sheet = sheets[s];
+      var name = sheet.getName();
+      
+      if (name === "system_config") {
+        var lastRow = sheet.getLastRow();
+        if (lastRow > 1) {
+          var values = sheet.getRange(2, 1, lastRow - 1, 2).getValues();
+          for (var i = 0; i < values.length; i++) {
+            var key = values[i][0];
+            var rawVal = values[i][1];
+            try {
+              result[key] = JSON.parse(rawVal);
+            } catch(err) {
+              result[key] = rawVal;
+            }
+          }
+        }
+      } else {
+        var list = [];
         var lastRow = sheet.getLastRow();
         var lastCol = sheet.getLastColumn();
         if (lastRow > 1) {
@@ -1174,14 +1189,26 @@ function doGet(e) {
             for (var j = 0; j < headers.length; j++) {
               var colName = headers[j];
               var cellVal = row[j];
-              var fieldName = mapHeaderToField(colName);
-              item[fieldName] = cellVal;
+              
+              var fieldName = colName;
+              if (fieldName === "ID") fieldName = "id";
+              else if (fieldName === "Email") fieldName = "email";
+              
+              if (typeof cellVal === "string" && (cellVal.indexOf("[") === 0 || cellVal.indexOf("{") === 0)) {
+                try {
+                  item[fieldName] = JSON.parse(cellVal);
+                } catch(err) {
+                  item[fieldName] = cellVal;
+                }
+              } else {
+                item[fieldName] = cellVal;
+              }
             }
             list.push(item);
           }
         }
+        result[name] = list;
       }
-      result[type] = list;
     }
     return ContentService.createTextOutput(JSON.stringify({result: "success", data: result})).setMimeType(ContentService.MimeType.JSON);
   } catch(error) {
@@ -1189,81 +1216,120 @@ function doGet(e) {
   }
 }
 
-function mapHeaderToField(header) {
-  switch(header) {
-    case "ID": return "id";
-    case "Tour Name": return "tourName";
-    case "Customer": return "customer";
-    case "Email": return "email";
-    case "Phone": return "phone";
-    case "People": return "people";
-    case "Date": return "date";
-    case "Total (€)": return "total";
-    case "Status": return "status";
-    case "Created At": return "createdAt";
-    case "Name": return "name";
-    case "Role": return "role";
-    case "Joined": return "joined";
-    default: return header.toLowerCase().replace(/[^a-z0-9]/g, '');
-  }
-}
-
 function doPost(e) {
   try {
     var json = JSON.parse(e.postData.contents);
-    var type = json.type; // "reservations", "users", "subscribers"
-    var action = json.action || "upsert"; // "upsert" or "delete"
+    var type = json.type;
+    var action = json.action || "upsert";
     var data = json.data;
     
     var ss = SpreadsheetApp.getActiveSpreadsheet();
-    var sheet = ss.getSheetByName(type);
-    if (!sheet) {
-      sheet = ss.insertSheet(type);
-      if (type === "reservations") {
-        sheet.appendRow(["ID", "Tour Name", "Customer", "Email", "Phone", "People", "Date", "Total (€)", "Status", "Created At"]);
-      } else if (type === "users") {
-        sheet.appendRow(["ID", "Name", "Email", "Role", "Status", "Joined"]);
-      } else if (type === "subscribers") {
-        sheet.appendRow(["Email", "Created At"]);
+    var isConfig = ["settings", "seo", "robots"].indexOf(type) !== -1;
+    
+    if (isConfig) {
+      var sheet = ss.getSheetByName("system_config");
+      if (!sheet) {
+        sheet = ss.insertSheet("system_config");
+        sheet.appendRow(["Key", "Value"]);
       }
-    }
-    
-    var idValue = "";
-    var newRow = [];
-    if (type === "reservations") {
-      idValue = String(data.id);
-      newRow = [data.id, data.tourName || data.item, data.customer, data.email, data.phone, data.people, data.date, data.total, data.status, data.createdAt];
-    } else if (type === "users") {
-      idValue = String(data.id);
-      newRow = [data.id, data.name, data.email, data.role, data.status, data.joined];
-    } else if (type === "subscribers") {
-      idValue = String(data.email).toLowerCase();
-      newRow = [data.email, data.createdAt || new Date().toISOString()];
-    }
-    
-    // Find existing row by ID/Email in column A
-    var lastRow = sheet.getLastRow();
-    var foundIndex = -1;
-    if (lastRow > 1) {
-      var values = sheet.getRange(1, 1, lastRow, 1).getValues();
-      for (var i = 1; i < values.length; i++) {
-        if (String(values[i][0]).toLowerCase() === idValue.toLowerCase()) {
-          foundIndex = i + 1; // 1-based index
-          break;
+      
+      var lastRow = sheet.getLastRow();
+      var foundIndex = -1;
+      if (lastRow > 1) {
+        var values = sheet.getRange(1, 1, lastRow, 1).getValues();
+        for (var i = 1; i < values.length; i++) {
+          if (String(values[i][0]) === type) {
+            foundIndex = i + 1;
+            break;
+          }
         }
       }
-    }
-    
-    if (action === "delete") {
+      
+      var stringVal = typeof data === "string" ? data : JSON.stringify(data);
       if (foundIndex !== -1) {
-        sheet.deleteRow(foundIndex);
+        sheet.getRange(foundIndex, 2).setValue(stringVal);
+      } else {
+        sheet.appendRow([type, stringVal]);
       }
     } else {
-      // Upsert
-      if (foundIndex !== -1) {
-        sheet.getRange(foundIndex, 1, 1, newRow.length).setValues([newRow]);
+      var sheet = ss.getSheetByName(type);
+      var uniqueKey = type === "subscribers" ? "email" : "id";
+      var idValue = uniqueKey === "id" ? String(data.id || "") : String(data.email || "").toLowerCase();
+      
+      var headers = [];
+      if (!sheet) {
+        sheet = ss.insertSheet(type);
+        headers.push(uniqueKey === "id" ? "ID" : "Email");
+        for (var k in data) {
+          if (k !== uniqueKey) headers.push(k);
+        }
+        sheet.appendRow(headers);
       } else {
-        sheet.appendRow(newRow);
+        var lastCol = sheet.getLastColumn();
+        if (lastCol > 0) {
+          headers = sheet.getRange(1, 1, 1, lastCol).getValues()[0];
+        } else {
+          headers.push(uniqueKey === "id" ? "ID" : "Email");
+          sheet.appendRow(headers);
+        }
+      }
+      
+      var lastCol = sheet.getLastColumn();
+      var headersModified = false;
+      for (var k in data) {
+        var headerIndex = headers.indexOf(k);
+        if (k === "id" && headers.indexOf("ID") !== -1) continue;
+        if (k === "email" && headers.indexOf("Email") !== -1) continue;
+        
+        if (headerIndex === -1) {
+          sheet.getRange(1, lastCol + 1).setValue(k);
+          headers.push(k);
+          lastCol++;
+          headersModified = true;
+        }
+      }
+      
+      var rowData = [];
+      for (var i = 0; i < headers.length; i++) {
+        var h = headers[i];
+        if (h === "ID") {
+          rowData.push(data.id);
+        } else if (h === "Email") {
+          rowData.push(data.email);
+        } else {
+          var val = data[h];
+          if (val === null || val === undefined) {
+            rowData.push("");
+          } else if (typeof val === "object") {
+            rowData.push(JSON.stringify(val));
+          } else {
+            rowData.push(val);
+          }
+        }
+      }
+      
+      var lastRow = sheet.getLastRow();
+      var foundIndex = -1;
+      if (lastRow > 1) {
+        var values = sheet.getRange(1, 1, lastRow, 1).getValues();
+        for (var i = 1; i < values.length; i++) {
+          if (String(values[i][0]).toLowerCase() === idValue.toLowerCase()) {
+            foundIndex = i + 1;
+            break;
+          }
+        }
+      }
+      
+      if (action === "delete") {
+        if (foundIndex !== -1) {
+          sheet.deleteRow(foundIndex);
+        }
+      } else {
+        if (foundIndex !== -1) {
+          sheet.getRange(foundIndex, 1, 1, rowData.length).setValues([rowData]);
+        } else {
+          sheet.appendRow(rowData);
+        }
       }
     }
     

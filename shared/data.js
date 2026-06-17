@@ -24,6 +24,9 @@ const TM = (() => {
     popups:       'tm_popups',
   };
 
+  const SYNC_LIST_KEYS = ['tours', 'hotels', 'destinations', 'reservations', 'reviews', 'coupons', 'users', 'media', 'menu', 'redirects', 'subscribers', 'cars', 'popups'];
+  const SYNC_CONFIG_KEYS = ['settings', 'seo', 'robots'];
+
   // ─── Default Data ────────────────────────────────────────────────────────
   const DEFAULTS = {
     tours: [
@@ -246,6 +249,9 @@ Sitemap: https://yourdomain.com/sitemap.xml`,
 
   function set(key, data) {
     _save(KEYS[key], data);
+    if (SYNC_CONFIG_KEYS.includes(key)) {
+      triggerGoogleSheetSync(key, data, 'upsert');
+    }
   }
 
   function getAll() {
@@ -264,8 +270,7 @@ Sitemap: https://yourdomain.com/sitemap.xml`,
     list.unshift(item);
     set(key, list);
     
-    // Automatically backup reservations, users, or subscribers if configured
-    if (['reservations', 'users', 'subscribers'].includes(key)) {
+    if (SYNC_LIST_KEYS.includes(key)) {
       triggerGoogleSheetSync(key, item, 'upsert');
     }
 
@@ -279,7 +284,7 @@ Sitemap: https://yourdomain.com/sitemap.xml`,
     list[idx] = { ...list[idx], ...updates };
     set(key, list);
 
-    if (['reservations', 'users', 'subscribers'].includes(key)) {
+    if (SYNC_LIST_KEYS.includes(key)) {
       triggerGoogleSheetSync(key, list[idx], 'upsert');
     }
 
@@ -291,8 +296,10 @@ Sitemap: https://yourdomain.com/sitemap.xml`,
     const filtered = list.filter(i => i.id != id);
     set(key, filtered);
 
-    if (['reservations', 'users', 'subscribers'].includes(key)) {
-      triggerGoogleSheetSync(key, { id: id }, 'delete');
+    if (SYNC_LIST_KEYS.includes(key)) {
+      const idVal = key === 'subscribers' ? id : Number(id);
+      const payload = key === 'subscribers' ? { email: idVal } : { id: idVal };
+      triggerGoogleSheetSync(key, payload, 'delete');
     }
   }
 
@@ -446,13 +453,13 @@ ${pages.map(p => `  <url>
     const syncUrl = getGoogleSheetUrl();
     if (!syncUrl || !syncUrl.startsWith('http')) return;
 
+    const currentSettings = _load(KEYS.settings);
     const currentReservations = _load(KEYS.reservations);
-    const currentSubscribers = _load(KEYS.subscribers);
 
+    const isSettingsEmpty = !currentSettings;
     const isReservationsEmpty = !currentReservations || currentReservations.length === 0;
-    const isSubscribersEmpty = !currentSubscribers || currentSubscribers.length === 0;
 
-    if (isReservationsEmpty || isSubscribersEmpty) {
+    if (isSettingsEmpty || isReservationsEmpty) {
       console.log('Local storage empty or cleared. Auto-restoring from Google Sheets...');
       pullFromGoogleSheets();
     }
@@ -468,30 +475,33 @@ ${pages.map(p => `  <url>
         if (res.result === 'success' && res.data) {
           const data = res.data;
           
-          if (data.reservations && data.reservations.length > 0) {
-            data.reservations.forEach(r => {
-              if (r.id) r.id = Number(r.id);
-              if (r.people) r.people = Number(r.people);
-              if (r.total) r.total = Number(r.total);
-              if (r.paid) r.paid = Number(r.paid);
-              if (r.tourId) r.tourId = Number(r.tourId);
-            });
-            const merged = mergeLists(get('reservations') || [], data.reservations, 'id');
-            set('reservations', merged);
-          }
+          SYNC_LIST_KEYS.forEach(key => {
+            if (data[key] && data[key].length > 0) {
+              const uniqueKey = key === 'subscribers' ? 'email' : 'id';
+              if (uniqueKey === 'id') {
+                data[key].forEach(item => {
+                  if (item.id) item.id = Number(item.id);
+                  if (item.price) item.price = Number(item.price);
+                  if (item.rating) item.rating = Number(item.rating);
+                  if (item.reviews) item.reviews = Number(item.reviews);
+                  if (item.people) item.people = Number(item.people);
+                  if (item.total) item.total = Number(item.total);
+                  if (item.paid) item.paid = Number(item.paid);
+                  if (item.tourId) item.tourId = Number(item.tourId);
+                  if (item.stars) item.stars = Number(item.stars);
+                  if (item.rooms) item.rooms = Number(item.rooms);
+                });
+              }
+              const merged = mergeLists(get(key) || [], data[key], uniqueKey);
+              set(key, merged);
+            }
+          });
           
-          if (data.users && data.users.length > 0) {
-            data.users.forEach(u => {
-              if (u.id) u.id = Number(u.id);
-            });
-            const merged = mergeLists(get('users') || [], data.users, 'id');
-            set('users', merged);
-          }
-          
-          if (data.subscribers && data.subscribers.length > 0) {
-            const merged = mergeLists(get('subscribers') || [], data.subscribers, 'email');
-            set('subscribers', merged);
-          }
+          SYNC_CONFIG_KEYS.forEach(key => {
+            if (data[key]) {
+              set(key, data[key]);
+            }
+          });
           
           console.log('Auto-restore from Google Sheets completed successfully!');
           window.dispatchEvent(new CustomEvent('tm_data_restored'));

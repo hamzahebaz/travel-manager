@@ -2753,24 +2753,34 @@ function syncAllToGoogleSheets() {
     return;
   }
 
-  const reservations = TM.get('reservations') || [];
-  const users = TM.get('users') || [];
-  const subscribers = TM.get('subscribers') || [];
+  const listKeys = ['tours', 'hotels', 'destinations', 'reservations', 'reviews', 'coupons', 'users', 'media', 'menu', 'redirects', 'subscribers', 'cars', 'popups'];
+  const configKeys = ['settings', 'seo', 'robots'];
 
-  const total = reservations.length + users.length + subscribers.length;
+  const itemsToSync = [];
+  
+  listKeys.forEach(key => {
+    const list = TM.get(key) || [];
+    list.forEach(item => {
+      itemsToSync.push({ type: key, data: item, action: 'upsert' });
+    });
+  });
+
+  configKeys.forEach(key => {
+    const data = TM.get(key);
+    if (data) {
+      itemsToSync.push({ type: key, data: data, action: 'upsert' });
+    }
+  });
+
+  const total = itemsToSync.length;
   if (total === 0) {
     showToast('No data to sync', 'warning');
     return;
   }
 
-  showToast(`Syncing ${total} items to Google Sheets...`, 'info');
+  showToast(`Syncing ${total} database items to Google Sheets...`, 'info');
   
   let processed = 0;
-  const itemsToSync = [];
-  reservations.forEach(r => itemsToSync.push({ type: 'reservations', data: r }));
-  users.forEach(u => itemsToSync.push({ type: 'users', data: u }));
-  subscribers.forEach(s => itemsToSync.push({ type: 'subscribers', data: s }));
-
   function sendNext() {
     if (processed >= itemsToSync.length) {
       showToast('Sync completed successfully!', 'success');
