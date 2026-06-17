@@ -29,6 +29,21 @@ document.addEventListener('DOMContentLoaded', () => {
     }
   });
 
+  // Listen for auto-restoration from Google Sheets
+  window.addEventListener('tm_data_restored', () => {
+    updateResBadge();
+    loadDashboard();
+    const activePage = document.querySelector('.page:not(.hidden)');
+    if (activePage) {
+      const id = activePage.id;
+      if (id === 'page-dashboard') loadDashboard();
+      else if (id === 'page-reservations') { if (typeof renderReservations === 'function') renderReservations(); }
+      else if (id === 'page-users') { if (typeof renderUsers === 'function') renderUsers(); }
+      else if (id === 'page-subscribers') { if (typeof renderSubscribers === 'function') renderSubscribers(); }
+    }
+    showToast('Data auto-restored from Google Sheets!', 'success');
+  });
+
   // Featured image input listener
   document.getElementById('tImage')?.addEventListener('input', (e) => {
     const preview = document.getElementById('tFeaturedImagePreview');

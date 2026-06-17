@@ -1152,6 +1152,62 @@
         <li>Go to <strong>Extensions > Apps Script</strong>.</li>
         <li>Delete any existing code and paste the following Google Apps Script code:
           <pre style="background:var(--bg-dark);padding:12px;border-radius:6px;font-size:0.75rem;overflow-x:auto;color:var(--text-primary);margin-top:6px">
+function doGet(e) {
+  try {
+    var ss = SpreadsheetApp.getActiveSpreadsheet();
+    var result = {};
+    var keys = ["reservations", "users", "subscribers"];
+    
+    for (var k = 0; k < keys.length; k++) {
+      var type = keys[k];
+      var sheet = ss.getSheetByName(type);
+      var list = [];
+      if (sheet) {
+        var lastRow = sheet.getLastRow();
+        var lastCol = sheet.getLastColumn();
+        if (lastRow > 1) {
+          var headers = sheet.getRange(1, 1, 1, lastCol).getValues()[0];
+          var values = sheet.getRange(2, 1, lastRow - 1, lastCol).getValues();
+          for (var i = 0; i < values.length; i++) {
+            var row = values[i];
+            var item = {};
+            for (var j = 0; j < headers.length; j++) {
+              var colName = headers[j];
+              var cellVal = row[j];
+              var fieldName = mapHeaderToField(colName);
+              item[fieldName] = cellVal;
+            }
+            list.push(item);
+          }
+        }
+      }
+      result[type] = list;
+    }
+    return ContentService.createTextOutput(JSON.stringify({result: "success", data: result})).setMimeType(ContentService.MimeType.JSON);
+  } catch(error) {
+    return ContentService.createTextOutput(JSON.stringify({result: "error", message: error.toString()})).setMimeType(ContentService.MimeType.JSON);
+  }
+}
+
+function mapHeaderToField(header) {
+  switch(header) {
+    case "ID": return "id";
+    case "Tour Name": return "tourName";
+    case "Customer": return "customer";
+    case "Email": return "email";
+    case "Phone": return "phone";
+    case "People": return "people";
+    case "Date": return "date";
+    case "Total (€)": return "total";
+    case "Status": return "status";
+    case "Created At": return "createdAt";
+    case "Name": return "name";
+    case "Role": return "role";
+    case "Joined": return "joined";
+    default: return header.toLowerCase().replace(/[^a-z0-9]/g, '');
+  }
+}
+
 function doPost(e) {
   try {
     var json = JSON.parse(e.postData.contents);

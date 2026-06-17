@@ -1,8 +1,6 @@
-/**
- * TM Tour Manager – Shared Data Layer
- * Acts as the bridge between the dashboard and the public website.
- * Uses localStorage as the persistent store.
- */
+// Google Sheet Web App URL for auto-sync and recovery (e.g. 'https://script.google.com/macros/s/.../exec')
+// Set this to automatically restore all data if local storage/cache is cleared.
+const GOOGLE_SHEET_URL = '';
 
 const TM = (() => {
 
@@ -434,10 +432,108 @@ ${pages.map(p => `  <url>
     }
   }
 
+  function getGoogleSheetUrl() {
+    try {
+      const settings = get('settings');
+      if (settings && settings.googleSheetUrl) {
+        return settings.googleSheetUrl;
+      }
+    } catch (e) {}
+    return GOOGLE_SHEET_URL || '';
+  }
+
+  function autoRestoreFromGoogleSheets() {
+    const syncUrl = getGoogleSheetUrl();
+    if (!syncUrl || !syncUrl.startsWith('http')) return;
+
+    const currentReservations = _load(KEYS.reservations);
+    const currentSubscribers = _load(KEYS.subscribers);
+
+    const isReservationsEmpty = !currentReservations || currentReservations.length === 0;
+    const isSubscribersEmpty = !currentSubscribers || currentSubscribers.length === 0;
+
+    if (isReservationsEmpty || isSubscribersEmpty) {
+      console.log('Local storage empty or cleared. Auto-restoring from Google Sheets...');
+      pullFromGoogleSheets();
+    }
+  }
+
+  function pullFromGoogleSheets() {
+    const syncUrl = getGoogleSheetUrl();
+    if (!syncUrl || !syncUrl.startsWith('http')) return Promise.reject('No URL configured');
+
+    return fetch(syncUrl)
+      .then(res => res.json())
+      .then(res => {
+        if (res.result === 'success' && res.data) {
+          const data = res.data;
+          
+          if (data.reservations && data.reservations.length > 0) {
+            data.reservations.forEach(r => {
+              if (r.id) r.id = Number(r.id);
+              if (r.people) r.people = Number(r.people);
+              if (r.total) r.total = Number(r.total);
+              if (r.paid) r.paid = Number(r.paid);
+              if (r.tourId) r.tourId = Number(r.tourId);
+            });
+            const merged = mergeLists(get('reservations') || [], data.reservations, 'id');
+            set('reservations', merged);
+          }
+          
+          if (data.users && data.users.length > 0) {
+            data.users.forEach(u => {
+              if (u.id) u.id = Number(u.id);
+            });
+            const merged = mergeLists(get('users') || [], data.users, 'id');
+            set('users', merged);
+          }
+          
+          if (data.subscribers && data.subscribers.length > 0) {
+            const merged = mergeLists(get('subscribers') || [], data.subscribers, 'email');
+            set('subscribers', merged);
+          }
+          
+          console.log('Auto-restore from Google Sheets completed successfully!');
+          window.dispatchEvent(new CustomEvent('tm_data_restored'));
+          return true;
+        }
+        return false;
+      })
+      .catch(err => {
+        console.error('Failed to auto-restore from Google Sheets:', err);
+      });
+  }
+
+  function mergeLists(local, remote, uniqueKey) {
+    const map = new Map();
+    remote.forEach(item => {
+      if (item[uniqueKey]) {
+        let keyVal = String(item[uniqueKey]).toLowerCase();
+        map.set(keyVal, item);
+      }
+    });
+    local.forEach(item => {
+      if (item[uniqueKey]) {
+        let keyVal = String(item[uniqueKey]).toLowerCase();
+        if (!map.has(keyVal)) {
+          map.set(keyVal, item);
+        }
+      }
+    });
+    return Array.from(map.values());
+  }
+
   // Public API
-  return { get, set, getAll, addItem, updateItem, deleteItem, getItem, getBySlug, getSEO, setSEO, applySEO, getStats, validateCoupon, generateSitemap, resetAll, KEYS, triggerGoogleSheetSync };
+  return { get, set, getAll, addItem, updateItem, deleteItem, getItem, getBySlug, getSEO, setSEO, applySEO, getStats, validateCoupon, generateSitemap, resetAll, KEYS, triggerGoogleSheetSync, pullFromGoogleSheets, autoRestoreFromGoogleSheets };
 
 })();
 
 // Make available globally
 window.TM = TM;
+
+// Auto-restore asynchronously on load
+setTimeout(() => {
+  if (typeof TM.autoRestoreFromGoogleSheets === 'function') {
+    TM.autoRestoreFromGoogleSheets();
+  }
+}, 200);
