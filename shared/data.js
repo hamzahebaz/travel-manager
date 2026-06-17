@@ -259,6 +259,11 @@ Sitemap: https://yourdomain.com/sitemap.xml`,
     _save(KEYS[key], data);
     if (SYNC_CONFIG_KEYS.includes(key)) {
       triggerGoogleSheetSync(key, data, 'upsert');
+      triggerSupabaseSync(key, data, 'upsert');
+    }
+    if (key === 'settings') {
+      supabaseClient = null;
+      initSupabaseRealtime();
     }
   }
 
@@ -280,6 +285,7 @@ Sitemap: https://yourdomain.com/sitemap.xml`,
     
     if (SYNC_LIST_KEYS.includes(key)) {
       triggerGoogleSheetSync(key, item, 'upsert');
+      triggerSupabaseSync(key, item, 'upsert');
     }
 
     return item;
@@ -294,6 +300,7 @@ Sitemap: https://yourdomain.com/sitemap.xml`,
 
     if (SYNC_LIST_KEYS.includes(key)) {
       triggerGoogleSheetSync(key, list[idx], 'upsert');
+      triggerSupabaseSync(key, list[idx], 'upsert');
     }
 
     return list[idx];
@@ -308,6 +315,7 @@ Sitemap: https://yourdomain.com/sitemap.xml`,
       const idVal = key === 'subscribers' ? id : Number(id);
       const payload = key === 'subscribers' ? { email: idVal } : { id: idVal };
       triggerGoogleSheetSync(key, payload, 'delete');
+      triggerSupabaseSync(key, payload, 'delete');
     }
   }
 
@@ -546,10 +554,28 @@ ${pages.map(p => `  <url>
   function autoRestoreFromGoogleSheets() {
     const sUrl = getSupabaseUrl();
     const sKey = getSupabaseKey();
+    const isAdmin = window.location.pathname.includes('/admin-dash/');
+
     if (sUrl && sKey) {
-      if (isFreshBoot) {
-        console.log('Local storage empty or cleared. Auto-restoring from Supabase...');
-        pullFromSupabase();
+      if (isAdmin) {
+        console.log('Admin Dashboard: Startup pull from Supabase...');
+        pullFromSupabase(false).then(() => {
+          initSupabaseRealtime();
+        }).catch(err => {
+          console.error('Admin Supabase init error:', err);
+          initSupabaseRealtime();
+        });
+      } else {
+        const lastSync = Number(localStorage.getItem('tm_last_sync') || 0);
+        const fiveMinutes = 5 * 60 * 1000;
+        
+        if (isFreshBoot) {
+          console.log('Public Site (Fresh Boot): Restoring from Supabase...');
+          pullFromSupabase(false);
+        } else if (Date.now() - lastSync > fiveMinutes) {
+          console.log('Public Site (Background Pull): Checking for updates from Supabase...');
+          pullFromSupabase(true);
+        }
       }
       return;
     }
@@ -612,7 +638,7 @@ ${pages.map(p => `  <url>
       });
   }
 
-  function pullFromSupabase() {
+  function pullFromSupabase(isBackground = false) {
     const url = getSupabaseUrl();
     const key = getSupabaseKey();
     if (!url || !key) return Promise.reject('Supabase URL/Key not configured');
@@ -642,6 +668,17 @@ ${pages.map(p => `  <url>
         return Promise.all([...listPromises, configPromise]);
       })
       .then(results => {
+        let databaseInitialized = false;
+        const configRes = results.find(r => r.key === 'system_config');
+        if (configRes && configRes.data) {
+          databaseInitialized = configRes.data.some(row => row.key === 'settings');
+        }
+
+        if (!databaseInitialized) {
+          console.log('Supabase database is empty/uninitialized. Skipping restore.');
+          return false;
+        }
+
         results.forEach(res => {
           if (res.key === 'system_config') {
             res.data.forEach(row => {
@@ -663,17 +700,104 @@ ${pages.map(p => `  <url>
                 if (item.rooms) item.rooms = Number(item.rooms);
               });
             }
-            const merged = mergeLists(get(res.key) || [], res.data, uniqueKey);
-            _save(KEYS[res.key], merged);
+            // Overwrite list cleanly to handle deletions correctly
+            _save(KEYS[res.key], res.data);
           }
         });
+
+        localStorage.setItem('tm_last_sync', Date.now().toString());
         console.log('Supabase data restore completed successfully!');
-        window.dispatchEvent(new CustomEvent('tm_data_restored'));
+        if (!isBackground) {
+          window.dispatchEvent(new CustomEvent('tm_data_restored'));
+        }
         return true;
       })
       .catch(err => {
         console.error('Supabase pull failed:', err);
       });
+  }
+
+  let realtimeChannel = null;
+
+  function initSupabaseRealtime() {
+    const url = getSupabaseUrl();
+    const key = getSupabaseKey();
+    if (!url || !key) return;
+
+    loadSupabaseScript().then(() => {
+      if (!supabaseClient && !initSupabase()) return;
+
+      if (realtimeChannel) {
+        realtimeChannel.unsubscribe();
+      }
+
+      console.log('Initializing Supabase Realtime subscription...');
+      realtimeChannel = supabaseClient
+        .channel('db-changes')
+        .on('postgres_changes', { event: '*', schema: 'public' }, (payload) => {
+          handleRealtimeChange(payload);
+        })
+        .subscribe((status) => {
+          console.log('Supabase Realtime subscription status:', status);
+        });
+    }).catch(err => console.error('Failed to load Supabase for Realtime:', err));
+  }
+
+  function handleRealtimeChange(payload) {
+    const { table, eventType, new: newRow, old: oldRow } = payload;
+    console.log(`Realtime change [${eventType}] in table [${table}]:`, payload);
+
+    if (table === 'system_config') {
+      const configKey = newRow ? newRow.key : (oldRow ? oldRow.key : null);
+      if (!configKey) return;
+
+      if (eventType === 'DELETE') {
+        localStorage.removeItem(KEYS[configKey]);
+      } else {
+        const localVal = _load(KEYS[configKey]);
+        if (JSON.stringify(localVal) !== JSON.stringify(newRow.value)) {
+          _save(KEYS[configKey], newRow.value);
+          window.dispatchEvent(new CustomEvent('tm_data_restored'));
+        }
+      }
+    } else if (SYNC_LIST_KEYS.includes(table)) {
+      const uniqueKey = table === 'subscribers' ? 'email' : 'id';
+      const localList = get(table) || [];
+      let listChanged = false;
+
+      if (eventType === 'DELETE') {
+        const deletedVal = oldRow ? oldRow[uniqueKey] : null;
+        if (deletedVal !== null && deletedVal !== undefined) {
+          const filtered = localList.filter(item => String(item[uniqueKey]) !== String(deletedVal));
+          if (filtered.length !== localList.length) {
+            _save(KEYS[table], filtered);
+            listChanged = true;
+          }
+        }
+      } else {
+        const newItem = newRow ? newRow.data : null;
+        if (newItem) {
+          const itemVal = newItem[uniqueKey];
+          const idx = localList.findIndex(item => String(item[uniqueKey]) === String(itemVal));
+
+          if (idx === -1) {
+            localList.unshift(newItem);
+            _save(KEYS[table], localList);
+            listChanged = true;
+          } else {
+            if (JSON.stringify(localList[idx]) !== JSON.stringify(newItem)) {
+              localList[idx] = newItem;
+              _save(KEYS[table], localList);
+              listChanged = true;
+            }
+          }
+        }
+      }
+
+      if (listChanged) {
+        window.dispatchEvent(new CustomEvent('tm_data_restored'));
+      }
+    }
   }
 
   function syncAllToSupabase() {
@@ -731,7 +855,7 @@ ${pages.map(p => `  <url>
   }
 
   // Public API
-  return { get, set, getAll, addItem, updateItem, deleteItem, getItem, getBySlug, getSEO, setSEO, applySEO, getStats, validateCoupon, generateSitemap, resetAll, KEYS, triggerGoogleSheetSync, pullFromGoogleSheets, autoRestoreFromGoogleSheets, triggerSupabaseSync, pullFromSupabase, syncAllToSupabase };
+  return { get, set, getAll, addItem, updateItem, deleteItem, getItem, getBySlug, getSEO, setSEO, applySEO, getStats, validateCoupon, generateSitemap, resetAll, KEYS, triggerGoogleSheetSync, pullFromGoogleSheets, autoRestoreFromGoogleSheets, triggerSupabaseSync, pullFromSupabase, syncAllToSupabase, initSupabaseRealtime };
 
 })();
 

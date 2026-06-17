@@ -21,13 +21,6 @@ document.addEventListener('DOMContentLoaded', () => {
   loadNotifications();
   updateResBadge();
 
-  // Fetch latest data from Supabase or Google Sheets on load to keep multiple admin sessions in sync
-  if (typeof TM.pullFromSupabase === 'function' && TM.get('settings').supabaseUrl) {
-    TM.pullFromSupabase().catch(e => console.error('Startup Supabase sync error:', e));
-  } else if (typeof TM.pullFromGoogleSheets === 'function') {
-    TM.pullFromGoogleSheets().catch(e => console.error('Startup Google Sheets sync error:', e));
-  }
-
   // Listen for data changes from website
   window.addEventListener('tm_data_change', () => {
     updateResBadge();
