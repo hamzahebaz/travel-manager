@@ -21,6 +21,7 @@ const TM = (() => {
     seo:          'tm_seo',
     settings:     'tm_settings',
     menu:         'tm_menu',
+    footerMenu:   'tm_footer_menu',
     redirects:    'tm_redirects',
     robots:       'tm_robots',
     subscribers:  'tm_subscribers',
@@ -29,7 +30,7 @@ const TM = (() => {
     news:         'tm_news',
   };
 
-  const SYNC_LIST_KEYS = ['tours', 'hotels', 'destinations', 'reservations', 'reviews', 'coupons', 'users', 'media', 'menu', 'redirects', 'subscribers', 'cars', 'popups', 'news'];
+  const SYNC_LIST_KEYS = ['tours', 'hotels', 'destinations', 'reservations', 'reviews', 'coupons', 'users', 'media', 'menu', 'footerMenu', 'redirects', 'subscribers', 'cars', 'popups', 'news'];
   const SYNC_CONFIG_KEYS = ['settings', 'seo', 'robots'];
 
   // ─── Default Data ────────────────────────────────────────────────────────
@@ -206,6 +207,15 @@ const TM = (() => {
       { id: 6, label: 'About', url: 'about.html', order: 6, active: true },
       { id: 7, label: 'Contact', url: 'contact.html', order: 7, active: true },
       { id: 8, label: 'Blog', url: 'blog.html', order: 8, active: true },
+    ],
+
+    footerMenu: [
+      { id: 1, label: 'All Tours', url: 'tours.html', order: 1, active: true },
+      { id: 2, label: 'Destinations', url: 'destinations.html', order: 2, active: true },
+      { id: 3, label: 'Hotels', url: 'hotels.html', order: 3, active: true },
+      { id: 4, label: 'About', url: 'about.html', order: 4, active: true },
+      { id: 5, label: 'Contact', url: 'contact.html', order: 5, active: true },
+      { id: 6, label: 'Blog', url: 'blog.html', order: 6, active: true },
     ],
 
     redirects: [

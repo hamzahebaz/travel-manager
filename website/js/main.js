@@ -143,6 +143,21 @@ function initFooter() {
       .map(([name, url]) => `<a href="${url}" target="_blank" class="social-btn" aria-label="${name}"><i class="fa-brands ${icons[name]}"></i></a>`)
       .join('');
   });
+
+  // Dynamic footer menu (Quick Links)
+  const footerMenu = TM.get('footerMenu');
+  if (footerMenu) {
+    const activeFooterMenu = footerMenu.filter(m => m.active).sort((a,b) => a.order - b.order);
+    const quickLinksTitle = $$('.footer-col-title').find(el => el.textContent.trim().toLowerCase() === 'quick links');
+    if (quickLinksTitle) {
+      const quickLinksDiv = quickLinksTitle.nextElementSibling;
+      if (quickLinksDiv && quickLinksDiv.classList.contains('footer-links')) {
+        quickLinksDiv.innerHTML = activeFooterMenu.map(m => `
+          <a href="${m.url}" class="footer-link">${m.label}</a>
+        `).join('');
+      }
+    }
+  }
 }
 
 // ─── HOME PAGE ────────────────────────────────────────────────────────────────

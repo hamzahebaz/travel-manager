@@ -13,6 +13,7 @@ let activeLayoutOrder = [];
 
 // ─── Init ─────────────────────────────────────────────────────────────────────
 document.addEventListener('DOMContentLoaded', () => {
+  initDashboardTheme();
   setCurrentDate();
   initSidebar();
   initDropdowns();
@@ -1303,10 +1304,32 @@ function copyToClipboard(text) {
 }
 
 // ─── MENU EDITOR ──────────────────────────────────────────────────────────────
+let currentMenuType = 'header';
+
+function switchMenuType(type) {
+  currentMenuType = type;
+  const btnHeader = document.getElementById('btnMenuHeader');
+  const btnFooter = document.getElementById('btnMenuFooter');
+  
+  if (type === 'header') {
+    btnHeader?.classList.add('btn-primary');
+    btnHeader?.classList.remove('btn-outline');
+    btnFooter?.classList.add('btn-outline');
+    btnFooter?.classList.remove('btn-primary');
+  } else {
+    btnHeader?.classList.add('btn-outline');
+    btnHeader?.classList.remove('btn-primary');
+    btnFooter?.classList.add('btn-primary');
+    btnFooter?.classList.remove('btn-outline');
+  }
+  renderMenu();
+}
+
 function renderMenu() {
   const list = document.getElementById('menuList');
   if (!list) return;
-  const menu = TM.get('menu').sort((a,b) => a.order - b.order);
+  const dbKey = currentMenuType === 'header' ? 'menu' : 'footerMenu';
+  const menu = TM.get(dbKey).sort((a,b) => a.order - b.order);
   list.innerHTML = menu.map((m, idx) => `
     <div class="menu-item-row" data-id="${m.id}" draggable="true" ondragstart="onMenuDragStart(event)" ondragover="onMenuDragOver(event)" ondragleave="onMenuDragLeave(event)" ondrop="onMenuDrop(event)" style="cursor:move; transition: border-color 0.2s; display:flex; align-items:center; gap:10px; padding:12px; margin-bottom:8px; border:1px solid var(--border); border-radius:8px; background:var(--card-bg)">
       <span class="menu-drag-handle" style="cursor:grab; color:var(--text-muted)"><i class="fa-solid fa-grip-vertical"></i></span>
@@ -1325,21 +1348,24 @@ function renderMenu() {
 }
 
 function toggleMenuItem(id, active) {
-  TM.updateItem('menu', id, { active });
+  const dbKey = currentMenuType === 'header' ? 'menu' : 'footerMenu';
+  TM.updateItem(dbKey, id, { active });
   showToast(`Menu item ${active ? 'shown' : 'hidden'}`, 'success');
 }
 
 function deleteMenuItem(id) {
-  confirm2('Remove this menu item?', () => { TM.deleteItem('menu', id); renderMenu(); showToast('Menu item removed', 'error'); });
+  const dbKey = currentMenuType === 'header' ? 'menu' : 'footerMenu';
+  confirm2('Remove this menu item?', () => { TM.deleteItem(dbKey, id); renderMenu(); showToast('Menu item removed', 'error'); });
 }
 
 function addMenuItem() {
   const label = document.getElementById('mLabel').value.trim();
   const url = document.getElementById('mUrl').value.trim();
   if (!label || !url) { showToast('Label and URL required', 'error'); return; }
-  const menu = TM.get('menu');
+  const dbKey = currentMenuType === 'header' ? 'menu' : 'footerMenu';
+  const menu = TM.get(dbKey);
   const maxOrder = menu.length ? Math.max(...menu.map(m=>m.order)) : 0;
-  TM.addItem('menu', { label, url, order: maxOrder + 1, active: true });
+  TM.addItem(dbKey, { label, url, order: maxOrder + 1, active: true });
   closeModal('addMenuModal');
   renderMenu();
   showToast('Menu item added!', 'success');
@@ -1347,16 +1373,17 @@ function addMenuItem() {
 
 function saveMenu() {
   const rows = document.querySelectorAll('.menu-item-row');
-  const menu = TM.get('menu');
+  const dbKey = currentMenuType === 'header' ? 'menu' : 'footerMenu';
   rows.forEach((row, i) => {
     const id = parseInt(row.getAttribute('data-id'));
-    TM.updateItem('menu', id, { order: i + 1 });
+    TM.updateItem(dbKey, id, { order: i + 1 });
   });
   showToast('Menu saved! Changes live on website.', 'success');
 }
 
 window.openEditMenuModal = function(id) {
-  const item = TM.getItem('menu', id);
+  const dbKey = currentMenuType === 'header' ? 'menu' : 'footerMenu';
+  const item = TM.getItem(dbKey, id);
   if (!item) return;
   document.getElementById('editMenuId').value = item.id;
   document.getElementById('editMLabel').value = item.label;
@@ -1369,15 +1396,16 @@ window.saveEditMenuItem = function() {
   const label = document.getElementById('editMLabel').value.trim();
   const url = document.getElementById('editMUrl').value.trim();
   if (!label || !url) { showToast('Label and URL required', 'error'); return; }
-  
-  TM.updateItem('menu', id, { label, url });
+  const dbKey = currentMenuType === 'header' ? 'menu' : 'footerMenu';
+  TM.updateItem(dbKey, id, { label, url });
   closeModal('editMenuModal');
   renderMenu();
   showToast('Menu item updated!', 'success');
 };
 
 window.moveMenuItem = function(index, direction) {
-  const menu = TM.get('menu').sort((a,b) => a.order - b.order);
+  const dbKey = currentMenuType === 'header' ? 'menu' : 'footerMenu';
+  const menu = TM.get(dbKey).sort((a,b) => a.order - b.order);
   const targetIndex = index + direction;
   if (targetIndex < 0 || targetIndex >= menu.length) return;
 
@@ -1386,7 +1414,7 @@ window.moveMenuItem = function(index, direction) {
   menu[index].order = menu[targetIndex].order;
   menu[targetIndex].order = temp;
 
-  TM.set('menu', menu);
+  TM.set(dbKey, menu);
   renderMenu();
 };
 
@@ -1415,7 +1443,8 @@ window.onMenuDrop = function(e) {
   const targetId = row.getAttribute('data-id');
   if (!draggedMenuItemId || draggedMenuItemId === targetId) return;
 
-  let menu = TM.get('menu').sort((a,b) => a.order - b.order);
+  const dbKey = currentMenuType === 'header' ? 'menu' : 'footerMenu';
+  let menu = TM.get(dbKey).sort((a,b) => a.order - b.order);
   const draggedIdx = menu.findIndex(m => m.id == draggedMenuItemId);
   const targetIdx = menu.findIndex(m => m.id == targetId);
 
@@ -1428,7 +1457,7 @@ window.onMenuDrop = function(e) {
       item.order = idx + 1;
     });
 
-    TM.set('menu', menu);
+    TM.set(dbKey, menu);
     renderMenu();
     showToast('Menu order updated', 'success');
   }
@@ -3201,46 +3230,56 @@ function triggerTestEmailSimulation() {
   const port = document.getElementById('setEmailPort').value.trim();
   const encryption = document.getElementById('setEmailEncryption').value;
   const username = document.getElementById('setEmailUsername').value.trim();
+  const password = document.getElementById('setEmailPassword').value.trim();
   const fromName = document.getElementById('setEmailFormName').value.trim();
   const fromAddress = document.getElementById('setEmailFormAddress').value.trim();
   const headerHtml = document.getElementById('setEmailHeaderHtml').value;
   const footerHtml = document.getElementById('setEmailFooterHtml').value;
-
-  const logs = [
-    `[INFO] Initializing ${driver} client...`,
-    `[INFO] Resolving SMTP server ${host}...`,
-    `[INFO] Server resolved. Connecting to ${host}:${port} (${encryption} mode)...`,
-    `[OK] Connected. Exchanging SMTP handshakes...`,
-    `[INFO] Authenticating user: ${username}...`,
-    `[OK] Authentication successful!`,
-    `[INFO] Preparing email payload:`,
-    `       From: "${fromName}" <${fromAddress}>`,
-    `       To: <${testAddress}>`,
-    `       Subject: SMTP Delivery Test Connection`,
-    `[INFO] Injecting Header Template...`,
-    `[INFO] Injecting Footer Template...`,
-    `[INFO] Rendering visual HTML compilation...`,
-    `[INFO] Transmitting payload packets (12.4 KB)...`,
-    `[OK] 250 2.0.0 OK Queue Delivery ID 9821389281`,
-    `[SUCCESS] Test email successfully delivered to <${testAddress}>!`
-  ];
 
   const logList = document.getElementById('terminalLogList');
   logList.innerHTML = '';
   switchSimTab('terminal');
   openModal('emailTestModal');
 
-  const previewFrame = document.getElementById('emailPreviewFrame');
+  function addLog(text, type = 'info') {
+    const div = document.createElement('div');
+    if (type === 'ok') {
+      div.innerHTML = `<span style="color:#22c55e">${text}</span>`;
+    } else if (type === 'success') {
+      div.innerHTML = `<span style="color:#eab308;font-weight:bold">${text}</span>`;
+    } else if (type === 'error') {
+      div.innerHTML = `<span style="color:#ef4444">${text}</span>`;
+    } else {
+      div.textContent = text;
+    }
+    logList.appendChild(div);
+    logList.scrollTop = logList.scrollHeight;
+  }
+
+  addLog(`[INFO] Initializing ${driver} client...`);
+  addLog(`[INFO] Resolving SMTP server ${host}...`);
+  addLog(`[INFO] Connecting to ${host}:${port} (${encryption} mode)...`);
+  addLog(`[INFO] Exchanging SMTP handshakes...`);
+  addLog(`[INFO] Authenticating user: ${username}...`);
+  addLog(`[INFO] Preparing email payload:`);
+  addLog(`       From: "${fromName}" <${fromAddress}>`);
+  addLog(`       To: <${testAddress}>`);
+  addLog(`       Subject: SMTP Delivery Test Connection`);
+  addLog(`[INFO] Injecting Header Template...`);
+  addLog(`[INFO] Injecting Footer Template...`);
+  addLog(`[INFO] Sending payload to server API...`);
+
   const siteName = TM.get('settings')?.siteName || 'TourVoyage';
   const compiledHeader = headerHtml.replace(/{site_name}/g, siteName);
   const compiledFooter = footerHtml.replace(/{site_name}/g, siteName).replace(/{contact_email}/g, fromAddress);
 
+  const previewFrame = document.getElementById('emailPreviewFrame');
   previewFrame.innerHTML = `
     ${compiledHeader}
     <div style="padding: 30px; font-family: sans-serif; color: #333333; line-height: 1.6;">
       <h3 style="margin-top: 0; color: #C05621;">SMTP Configuration Successful!</h3>
       <p>Hello,</p>
-      <p>This is a test email sent from the <strong>${siteName}</strong> administration panel to confirm that your SMTP connection settings are working properly.</p>
+      <p>This is a real test email sent from the <strong>${siteName}</strong> administration panel to confirm that your SMTP connection settings are working properly.</p>
       <p>Here are the connection parameters utilized:</p>
       <table style="width: 100%; border-collapse: collapse; margin: 15px 0; font-size: 0.88rem;">
         <tr style="background: #f7f7f7;"><td style="padding: 8px; border: 1px solid #ddd; font-weight: bold;">Driver</td><td style="padding: 8px; border: 1px solid #ddd;">${driver}</td></tr>
@@ -3254,29 +3293,32 @@ function triggerTestEmailSimulation() {
     ${compiledFooter}
   `;
 
-  if (simInterval) clearInterval(simInterval);
-  let logIdx = 0;
-
-  simInterval = setInterval(() => {
-    if (logIdx < logs.length) {
-      const div = document.createElement('div');
-      const text = logs[logIdx];
-      if (text.startsWith('[OK]')) {
-        div.innerHTML = `<span style="color:#22c55e">${text}</span>`;
-      } else if (text.startsWith('[SUCCESS]')) {
-        div.innerHTML = `<span style="color:#eab308;font-weight:bold">${text}</span>`;
-      } else if (text.startsWith('[ERROR]')) {
-        div.innerHTML = `<span style="color:#ef4444">${text}</span>`;
-      } else {
-        div.textContent = text;
-      }
-      logList.appendChild(div);
-      logList.scrollTop = logList.scrollHeight;
-      logIdx++;
+  fetch('/api/send-email', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({
+      driver, host, port, encryption, username, password,
+      fromName, fromAddress, headerHtml, footerHtml,
+      testAddress, siteName
+    })
+  })
+  .then(res => res.json())
+  .then(data => {
+    if (data.success) {
+      addLog(`[OK] Exchanged mail packages. Authentication successful!`, 'ok');
+      addLog(`[SUCCESS] Test email successfully delivered to <${testAddress}>!`, 'success');
+      addLog(`[INFO] Server Response: ${data.response}`, 'info');
+      showToast('Test email sent successfully!', 'success');
     } else {
-      clearInterval(simInterval);
+      addLog(`[ERROR] SMTP Transmission Failed!`, 'error');
+      addLog(`[ERROR] Reason: ${data.error}`, 'error');
+      showToast(`SMTP Error: ${data.error}`, 'error');
     }
-  }, 400);
+  })
+  .catch(err => {
+    addLog(`[ERROR] Network error contacting mailer API: ${err.message}`, 'error');
+    showToast(`Mailer API connection failed: ${err.message}`, 'error');
+  });
 }
 
 function switchSimTab(tab) {
@@ -3309,5 +3351,40 @@ window.triggerTestEmailSimulation = triggerTestEmailSimulation;
 window.switchSimTab = switchSimTab;
 window.renderNews = renderNews;
 window.loadEmailSettings = loadEmailSettings;
+
+// ─── Theme Switcher ───
+function initDashboardTheme() {
+  const currentTheme = localStorage.getItem('tm_dashboard_theme') || 'dark';
+  const body = document.body;
+  const btn = document.getElementById('themeToggleBtn');
+  if (currentTheme === 'light') {
+    body.classList.add('light-mode');
+    if (btn) btn.innerHTML = '<i class="fa-solid fa-sun"></i>';
+  } else {
+    body.classList.remove('light-mode');
+    if (btn) btn.innerHTML = '<i class="fa-solid fa-moon"></i>';
+  }
+}
+
+function toggleDashboardTheme() {
+  const body = document.body;
+  const btn = document.getElementById('themeToggleBtn');
+  body.classList.toggle('light-mode');
+  const isLight = body.classList.contains('light-mode');
+  localStorage.setItem('tm_dashboard_theme', isLight ? 'light' : 'dark');
+  if (btn) {
+    btn.innerHTML = isLight ? '<i class="fa-solid fa-sun"></i>' : '<i class="fa-solid fa-moon"></i>';
+  }
+  showToast(`Dashboard theme set to ${isLight ? 'Light' : 'Dark'} mode!`, 'success');
+}
+
+window.toggleDashboardTheme = toggleDashboardTheme;
+window.initDashboardTheme = initDashboardTheme;
+window.switchMenuType = switchMenuType;
+window.addMenuItem = addMenuItem;
+window.toggleMenuItem = toggleMenuItem;
+window.deleteMenuItem = deleteMenuItem;
+window.saveMenu = saveMenu;
+
 
 

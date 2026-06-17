@@ -101,6 +101,9 @@
       <div class="breadcrumb"><i class="fa-solid fa-house"></i><span id="breadcrumbLabel">Dashboard</span></div>
     </div>
     <div class="topbar-right">
+      <button class="topbar-btn" id="themeToggleBtn" onclick="toggleDashboardTheme()" title="Toggle Light/Dark Mode" style="margin-right:8px">
+        <i class="fa-solid fa-moon"></i>
+      </button>
       <a href="website/index.html" target="_blank" class="topbar-btn" style="color:var(--teal);border-color:rgba(20,184,166,0.3)">
         <i class="fa-solid fa-arrow-up-right-from-square"></i> <span>Live Site</span>
       </a>
@@ -423,12 +426,7 @@
         <button class="btn btn-primary" onclick="saveSettings()"><i class="fa-solid fa-save"></i> Save All</button>
       </div>
 
-      <!-- Language selector tabs matching screenshot 2 -->
-      <div style="display:flex; gap:12px; margin-bottom:20px; border-bottom:1px solid var(--border); padding-bottom:10px;">
-        <button class="btn btn-sm btn-primary" style="display:flex; align-items:center; gap:6px"><span style="font-size:1rem">🇫🇷</span> French</button>
-        <button class="btn btn-sm btn-outline" style="display:flex; align-items:center; gap:6px"><span style="font-size:1rem">🇬🇧</span> English</button>
-        <button class="btn btn-sm btn-outline" style="display:flex; align-items:center; gap:6px"><span style="font-size:1rem">🇪🇸</span> Spanish</button>
-      </div>
+
 
       <div class="settings-grid">
         <!-- Card 1: Config Email -->
@@ -569,6 +567,10 @@
         <button class="btn btn-primary" onclick="saveMenu()"><i class="fa-solid fa-save"></i> Save Menu</button>
       </div>
       <div class="card" style="padding:24px">
+        <div style="display:flex;gap:12px;margin-bottom:20px;border-bottom:1px solid var(--border);padding-bottom:12px">
+          <button class="btn btn-primary" id="btnMenuHeader" onclick="switchMenuType('header')">Header Menu</button>
+          <button class="btn btn-outline" id="btnMenuFooter" onclick="switchMenuType('footer')">Footer Menu (Quick Links)</button>
+        </div>
         <p style="color:var(--text-muted);font-size:0.85rem;margin-bottom:20px"><i class="fa-solid fa-info-circle"></i> Drag to reorder, toggle to show/hide. Changes save to the live website instantly.</p>
         <div id="menuList"></div>
         <button class="btn btn-outline" style="margin-top:16px" onclick="openModal('addMenuModal')"><i class="fa-solid fa-plus"></i> Add Menu Item</button>

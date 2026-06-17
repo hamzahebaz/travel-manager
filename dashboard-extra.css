@@ -217,3 +217,75 @@
   display: none !important;
 }
 
+/* ════════════════════════════════════════════════════
+   LIGHT THEME OVERRIDES
+   ════════════════════════════════════════════════════ */
+body.light-mode {
+  --bg-dark:   #f8fafc;        /* slate-50 */
+  --bg-card:   #ffffff;
+  --bg-card2:  #f1f5f9;        /* slate-100 */
+  --bg-sidebar:#ffffff;
+  --bg-hover:  rgba(15, 23, 42, 0.05);
+  
+  --text-primary:   #0f172a;   /* slate-900 */
+  --text-secondary: #475569;   /* slate-600 */
+  --text-muted:     #64748b;   /* slate-500 */
+  
+  --border: rgba(15, 23, 42, 0.08);
+  --border-light: rgba(15, 23, 42, 0.12);
+}
+
+body.light-mode .topbar,
+body.light-mode .sidebar {
+  border-color: var(--border);
+}
+
+body.light-mode .sidebar-logo {
+  border-bottom-color: var(--border);
+}
+
+body.light-mode .card,
+body.light-mode .data-table th,
+body.light-mode .data-table td {
+  border-color: var(--border);
+}
+
+body.light-mode .modal {
+  background: #ffffff;
+  border-color: var(--border-light);
+  color: var(--text-primary);
+}
+
+body.light-mode .modal-close {
+  background: #f1f5f9;
+  border-color: var(--border);
+  color: var(--text-secondary);
+}
+
+body.light-mode .form-input {
+  background: #f8fafc;
+  border-color: rgba(15, 23, 42, 0.15);
+  color: #0f172a;
+}
+
+body.light-mode .form-input:focus {
+  background: #ffffff;
+  border-color: var(--primary);
+}
+
+body.light-mode .topbar-btn {
+  color: var(--text-secondary);
+  border-color: var(--border);
+}
+body.light-mode .topbar-btn:hover {
+  background: var(--bg-hover);
+  color: var(--text-primary);
+}
+
+/* Light mode chart tooltips and details adjustment */
+body.light-mode .chart-container {
+  background: #ffffff;
+  border-color: var(--border);
+}
+
+
