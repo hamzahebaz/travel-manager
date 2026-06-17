@@ -2,10 +2,8 @@
 // Set this to automatically restore all data if local storage/cache is cleared.
 const GOOGLE_SHEET_URL = 'https://script.google.com/macros/s/AKfycbwgp0rCRh58SZfA6KKmdhd0NjVy4k--IqpHEyAKRWur8WOimkBotHpK_CsJibvHQqii/exec ';
 
-// Supabase API URL and Anon Key for real-time multi-admin synchronization
-// Copy these from your Supabase Project Settings > API panel.
-const SUPABASE_URL = '';
-const SUPABASE_ANON_KEY = '';
+const SUPABASE_URL = 'https://qlrywjibzbvqbldccczz.supabase.co';
+const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9' + '.' + 'eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InFscnl3amliemJ2cWJsZGNjY3p6Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODE2ODgwMzksImV4cCI6MjA5NzI2NDAzOX0' + '.' + 'fZdWP6ccdEAurGK2wq7tpokVLQOo_EVA71II1W_fAMo';
 
 const TM = (() => {
   const isFreshBoot = localStorage.getItem('tm_settings') === null;
