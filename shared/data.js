@@ -1,6 +1,6 @@
 // Google Sheet Web App URL for auto-sync and recovery (e.g. 'https://script.google.com/macros/s/.../exec')
 // Set this to automatically restore all data if local storage/cache is cleared.
-const GOOGLE_SHEET_URL = '';
+const GOOGLE_SHEET_URL = 'https://script.google.com/macros/s/AKfycbwgp0rCRh58SZfA6KKmdhd0NjVy4k--IqpHEyAKRWur8WOimkBotHpK_CsJibvHQqii/exec ';
 
 const TM = (() => {
 
@@ -436,10 +436,10 @@ ${pages.map(p => `  <url>
     try {
       const settings = get('settings');
       if (settings && settings.googleSheetUrl) {
-        return settings.googleSheetUrl;
+        return settings.googleSheetUrl.trim();
       }
     } catch (e) {}
-    return GOOGLE_SHEET_URL || '';
+    return (GOOGLE_SHEET_URL || '').trim();
   }
 
   function autoRestoreFromGoogleSheets() {
