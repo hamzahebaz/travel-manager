@@ -231,6 +231,131 @@
       </div></div>
     </section>
 
+    <!-- ═══ ROOM MANAGEMENT ═══ -->
+    <section class="page hidden" id="page-room-management">
+      <div class="page-header-row" style="margin-bottom: 20px;">
+        <div>
+          <h1 class="page-title">Room Management</h1>
+          <p class="page-subtitle">Manage rooms for <span id="rmHotelSubtitle" style="font-weight:600;color:var(--teal)">Hotel Name</span></p>
+        </div>
+        <div style="display:flex; gap:10px;">
+          <button class="btn" style="background:#fbbf24; color:#2c1810; font-weight:600;" onclick="openRoomAvailabilityModal()"><i class="fa-solid fa-calendar-days"></i> Room Availability</button>
+          <button class="btn" style="background:#14b8a6; color:#fff; font-weight:600;" onclick="navigateTo('hotels')"><i class="fa-solid fa-arrow-left"></i> Back to hotel</button>
+        </div>
+      </div>
+
+      <div class="settings-grid" style="grid-template-columns: 380px 1fr;">
+        <!-- Left: Add/Edit Room Card -->
+        <div class="card" style="padding:24px;">
+          <h3 id="roomFormTitle" style="font-size:1.1rem;font-weight:700;color:var(--text-primary);margin-bottom:16px;border-bottom:1px solid var(--border);padding-bottom:10px;">Add Room</h3>
+          <form id="roomForm" onsubmit="saveRoom(event)">
+            <input type="hidden" id="editRoomId" value="" />
+            
+            <div class="form-group">
+              <label>Room Name <span style="color:var(--red)">*</span></label>
+              <input type="text" id="rmName" class="form-input" placeholder="Room name" required />
+            </div>
+
+            <div class="form-group">
+              <label>Feature Image</label>
+              <div class="media-upload-zone" onclick="document.getElementById('rmImageFile').click()" style="padding: 20px; border-radius: 8px;">
+                <i class="fa-solid fa-cloud-arrow-up" style="font-size:1.5rem;color:var(--text-muted);margin-bottom:8px;"></i>
+                <p style="font-size:0.75rem;margin:0;">Upload image</p>
+                <input type="file" id="rmImageFile" style="display:none" accept="image/*" onchange="uploadRoomFeatureImage(this)" />
+              </div>
+              <input type="hidden" id="rmImage" value="" />
+              <div class="img-preview-wrap">
+                <img id="rmFeaturePreview" class="img-upload-preview" style="max-height:120px;" />
+              </div>
+            </div>
+
+            <div class="form-group">
+              <label>Gallery</label>
+              <button type="button" class="btn btn-outline btn-sm" onclick="document.getElementById('rmGalleryFile').click()" style="width:100%;"><i class="fa-solid fa-images"></i> Select images</button>
+              <input type="file" id="rmGalleryFile" style="display:none" accept="image/*" multiple onchange="uploadRoomGalleryImages(this)" />
+              <div id="rmGalleryPreviewGrid" class="gallery-upload-grid" style="margin-top:8px;"></div>
+            </div>
+
+            <div style="display:grid; grid-template-columns:1fr 1fr; gap:12px;">
+              <div class="form-group">
+                <label>Price <span style="color:var(--red)">*</span></label>
+                <input type="number" id="rmPrice" class="form-input" min="0" placeholder="Price" required />
+              </div>
+              <div class="form-group">
+                <label>Number of room <span style="color:var(--red)">*</span></label>
+                <input type="number" id="rmNumber" class="form-input" min="1" placeholder="Number of room" required />
+              </div>
+            </div>
+
+            <div style="display:grid; grid-template-columns:1fr 1fr; gap:12px;">
+              <div class="form-group">
+                <label>Max Adults</label>
+                <input type="number" id="rmMaxAdults" class="form-input" min="1" value="2" />
+              </div>
+              <div class="form-group">
+                <label>Max Children</label>
+                <input type="number" id="rmMaxChildren" class="form-input" min="0" value="0" />
+              </div>
+            </div>
+
+            <!-- Dynamic Attribute Lists -->
+            <div class="form-group" style="border-top:1px solid var(--border);padding-top:12px;margin-top:12px;">
+              <label style="font-weight:700;margin-bottom:8px;" id="lblRoomHotelAttributes">Attribute: Room Features</label>
+              <div id="rmHotelAttributesGrid" style="display:flex; flex-direction:column; gap:6px; max-height: 150px; overflow-y: auto; border: 1px solid var(--border); padding: 8px; border-radius: 6px; background:var(--bg-dark);"></div>
+            </div>
+
+            <div class="form-group">
+              <label style="font-weight:700;margin-bottom:8px;">Attribute: Room Amenities</label>
+              <div id="rmAmenitiesGrid" style="display:flex; flex-direction:column; gap:6px; max-height: 150px; overflow-y: auto; border: 1px solid var(--border); padding: 8px; border-radius: 6px; background:var(--bg-dark);"></div>
+            </div>
+
+            <div class="form-group" style="border-top:1px solid var(--border);padding-top:12px;margin-top:12px;">
+              <label>Status</label>
+              <select id="rmStatus" class="form-input">
+                <option value="Publish">Publish</option>
+                <option value="Draft">Draft</option>
+              </select>
+            </div>
+
+            <button type="submit" class="btn btn-primary" style="width:100%;margin-top:12px;" id="btnRoomSave">Save Room</button>
+          </form>
+        </div>
+
+        <!-- Right: Rooms List Card -->
+        <div class="card" style="padding:24px;">
+          <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:16px;">
+            <div style="display:flex; align-items:center; gap:8px;">
+              <select class="filter-select" id="rmBulkAction" style="width:150px;">
+                <option value="">Bulk Actions</option>
+                <option value="publish">Publish</option>
+                <option value="draft">Draft</option>
+                <option value="delete">Delete</option>
+              </select>
+              <button class="btn btn-outline btn-sm" onclick="applyRoomBulkAction()">Apply</button>
+            </div>
+            <div style="font-size:0.85rem;color:var(--text-muted);font-style:italic;">
+              Found <span id="rmCount" style="font-weight:700;color:var(--text-primary);">0</span> items
+            </div>
+          </div>
+
+          <div class="table-wrapper">
+            <table class="data-table full-table">
+              <thead>
+                <tr>
+                  <th style="width:40px;"><input type="checkbox" id="selectAllRooms" onclick="toggleSelectAllRooms(this)" /></th>
+                  <th>Room name</th>
+                  <th>Number</th>
+                  <th>Price</th>
+                  <th>Status</th>
+                  <th>Actions</th>
+                </tr>
+              </thead>
+              <tbody id="roomsTbody"></tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+
     <!-- ═══ DESTINATIONS ═══ -->
     <section class="page hidden" id="page-destinations">
       <div class="page-header-row">
@@ -1220,6 +1345,49 @@
     <div class="modal-footer">
       <button class="btn btn-outline" onclick="closeModal('addHotelModal')">Cancel</button>
       <button class="btn btn-primary" onclick="saveHotel()"><i class="fa-solid fa-save"></i> Save Hotel</button>
+    </div>
+  </div>
+</div>
+
+<!-- Room Availability Modal -->
+<div class="modal-overlay hidden" id="roomAvailabilityModal">
+  <div class="modal" style="max-width: 800px; width: 95%;">
+    <div class="modal-header">
+      <h3>Room Availability & Bookings Calendar</h3>
+      <button class="modal-close" onclick="closeModal('roomAvailabilityModal')"><i class="fa-solid fa-xmark"></i></button>
+    </div>
+    <div class="modal-body">
+      <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:16px;">
+        <h4 id="calHotelName" style="font-weight:700; color:var(--primary); margin:0;">Hotel Name</h4>
+        <div style="display:flex; align-items:center; gap:8px;">
+          <button class="btn btn-outline btn-xs" onclick="changeCalMonth(-1)"><i class="fa-solid fa-chevron-left"></i></button>
+          <span id="calMonthYear" style="font-weight:700; min-width: 120px; text-align: center;">June 2026</span>
+          <button class="btn btn-outline btn-xs" onclick="changeCalMonth(1)"><i class="fa-solid fa-chevron-right"></i></button>
+        </div>
+      </div>
+      
+      <!-- Calendar Grid -->
+      <div id="calendarGrid" style="display: grid; grid-template-columns: repeat(7, 1fr); gap: 4px; border: 1px solid var(--border); padding: 8px; border-radius: 8px; background: var(--bg-dark);">
+        <!-- Days of week -->
+        <div style="text-align:center; font-weight:700; font-size:0.75rem; color:var(--text-muted); padding:6px 0;">Sun</div>
+        <div style="text-align:center; font-weight:700; font-size:0.75rem; color:var(--text-muted); padding:6px 0;">Mon</div>
+        <div style="text-align:center; font-weight:700; font-size:0.75rem; color:var(--text-muted); padding:6px 0;">Tue</div>
+        <div style="text-align:center; font-weight:700; font-size:0.75rem; color:var(--text-muted); padding:6px 0;">Wed</div>
+        <div style="text-align:center; font-weight:700; font-size:0.75rem; color:var(--text-muted); padding:6px 0;">Thu</div>
+        <div style="text-align:center; font-weight:700; font-size:0.75rem; color:var(--text-muted); padding:6px 0;">Fri</div>
+        <div style="text-align:center; font-weight:700; font-size:0.75rem; color:var(--text-muted); padding:6px 0;">Sat</div>
+        <!-- Days will be rendered by JS -->
+        <div id="calendarDays" style="display:contents;"></div>
+      </div>
+      
+      <div style="margin-top:16px; display:flex; gap:16px; font-size:0.8rem; color:var(--text-muted);">
+        <div style="display:flex; align-items:center; gap:6px;"><span style="display:inline-block; width:12px; height:12px; background:var(--green); border-radius:2px;"></span> Available</div>
+        <div style="display:flex; align-items:center; gap:6px;"><span style="display:inline-block; width:12px; height:12px; background:var(--orange); border-radius:2px;"></span> Medium Booked</div>
+        <div style="display:flex; align-items:center; gap:6px;"><span style="display:inline-block; width:12px; height:12px; background:var(--red); border-radius:2px;"></span> Fully Booked</div>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-primary" onclick="closeModal('roomAvailabilityModal')">Close</button>
     </div>
   </div>
 </div>

@@ -28,9 +28,10 @@ const TM = (() => {
     cars:         'tm_cars',
     popups:       'tm_popups',
     news:         'tm_news',
+    rooms:        'tm_rooms',
   };
 
-  const SYNC_LIST_KEYS = ['tours', 'hotels', 'destinations', 'reservations', 'reviews', 'coupons', 'users', 'media', 'menu', 'footerMenu', 'redirects', 'subscribers', 'cars', 'popups', 'news'];
+  const SYNC_LIST_KEYS = ['tours', 'hotels', 'destinations', 'reservations', 'reviews', 'coupons', 'users', 'media', 'menu', 'footerMenu', 'redirects', 'subscribers', 'cars', 'popups', 'news', 'rooms'];
   const SYNC_CONFIG_KEYS = ['settings', 'seo', 'robots'];
 
   // ─── Default Data ────────────────────────────────────────────────────────
@@ -260,6 +261,14 @@ Sitemap: https://yourdomain.com/sitemap.xml`,
       { id: 6, title: 'America National Parks with Denver', slug: 'america-national-parks-denver', category: 'Hosted Tour', author: 'Ayoub', date: '2026-06-16', status: 'Publish', content: 'Denver serves as the perfect base camp for exploring the majestic Rocky Mountains, Yellowstone, and the red rock canyons. Get a full 10-day road trip itinerary covering vehicle selection, camping gear, and scenic detours.', image: 'https://images.unsplash.com/photo-1501555088652-021faa106b9b?w=800&q=80', tags: 'usa, parks, hiking' },
       { id: 7, title: 'A Seaside Reset in Laguna Beach', slug: 'seaside-reset-laguna-beach', category: 'Sea Travel', author: 'Kamal', date: '2026-06-16', status: 'Publish', content: 'Unwind along the golden tidepools and artistic shores of Southern California. We list the top boutique hotels, oceanfront restaurants, and hidden coves to escape the crowds and enjoy a refreshing seaside weekend.', image: 'https://images.unsplash.com/photo-1505118380757-91f5f5632de0?w=800&q=80', tags: 'california, beach, relax' }
     ],
+    rooms: [
+      { id: 1, hotelId: 1, name: 'Standard Double Room', number: 8, price: 150, maxAdults: 2, maxChildren: 1, active: true, status: 'Publish', image: 'https://images.unsplash.com/photo-1566665797739-1674de7a421a?w=800&q=80', gallery: [], attributes: ['Wake-up call', 'Flat Tv', 'WiFi', 'Air-conditioning', 'Bathroom'] },
+      { id: 2, hotelId: 1, name: 'Double Room With Town View', number: 6, price: 180, maxAdults: 2, maxChildren: 2, active: true, status: 'Publish', image: 'https://images.unsplash.com/photo-1590490360182-c33d57733427?w=800&q=80', gallery: [], attributes: ['Wake-up call', 'Flat Tv', 'Laundry and dry cleaning', 'Coffee and tea', 'Air-conditioning', 'Bathroom', 'Minibar'] },
+      { id: 3, hotelId: 1, name: 'Room Sheraton Hotel', number: 7, price: 250, maxAdults: 3, maxChildren: 2, active: true, status: 'Publish', image: 'https://images.unsplash.com/photo-1582719508461-905c673771fd?w=800&q=80', gallery: [], attributes: ['Wake-up call', 'Flat Tv', 'Coffee and tea', 'Air-conditioning', 'Bathroom', 'Minibar'] },
+      { id: 4, hotelId: 1, name: 'Room Kerama Islands', number: 6, price: 350, maxAdults: 4, maxChildren: 2, active: true, status: 'Publish', image: 'https://images.unsplash.com/photo-1566665797739-1674de7a421a?w=800&q=80', gallery: [], attributes: ['Wake-up call', 'Flat Tv', 'Laundry and dry cleaning', 'Coffee and tea', 'Shower', 'Air-conditioning', 'Bathroom', 'Minibar'] },
+      { id: 5, hotelId: 2, name: 'Deluxe Mountain Room', number: 4, price: 110, maxAdults: 2, maxChildren: 1, active: true, status: 'Publish', image: 'https://images.unsplash.com/photo-1591088398332-8a7791972843?w=800&q=80', gallery: [], attributes: ['WiFi', 'Air-conditioning', 'Bathroom'] },
+      { id: 6, hotelId: 2, name: 'Budget Single Room', number: 4, price: 75, maxAdults: 1, maxChildren: 0, active: true, status: 'Publish', image: 'https://images.unsplash.com/photo-1505691938895-1758d7feb511?w=800&q=80', gallery: [], attributes: ['WiFi', 'Bathroom'] }
+    ]
   };
 
   // ─── Core API ─────────────────────────────────────────────────────────────

@@ -168,8 +168,22 @@ function navigateTo(page) {
     media:'Media Library', menu:'Menu Editor', 'seo-pages':'Page SEO', 'seo-sitemap':'Sitemap',
     'seo-robots':'Robots.txt', 'seo-redirects':'Redirects', users:'Users', reports:'Reports', settings:'Settings',
     subscribers:'Email Submitters', cars: 'Car Rental', themes: 'Tous les thèmes', popups: 'Popups',
+    'room-management': 'Room Management'
   };
-  document.getElementById('breadcrumbLabel').textContent = labels[page] || page;
+  
+  if (page === 'room-management' && currentRoomHotelId) {
+    const hotel = TM.getItem('hotels', currentRoomHotelId);
+    const hotelName = hotel ? hotel.name : 'Hotel';
+    document.getElementById('breadcrumbLabel').innerHTML = `
+      <a href="#" onclick="navigateTo('hotels'); return false;" style="color:var(--primary);text-decoration:none;font-weight:500;">Hotels</a> 
+      <span style="color:var(--text-muted);margin:0 4px;">/</span> 
+      <span style="color:var(--text-muted);">Hotel: ${hotelName}</span> 
+      <span style="color:var(--text-muted);margin:0 4px;">/</span> 
+      <span style="color:var(--text-muted);font-weight:600;">Room Management</span>
+    `;
+  } else {
+    document.getElementById('breadcrumbLabel').textContent = labels[page] || page;
+  }
 
   // Page-specific loaders
   const loaders = {
@@ -196,6 +210,7 @@ function navigateTo(page) {
     settings: loadSettings,
     news: renderNews,
     'email-settings': loadEmailSettings,
+    'room-management': () => renderRooms(currentRoomHotelId),
   };
   if (loaders[page]) setTimeout(loaders[page], 50);
   document.getElementById('pageContent').scrollTo({ top: 0, behavior: 'smooth' });
@@ -770,6 +785,7 @@ function renderHotels() {
       <td>${h.featured ? '<span class="status-badge in-progress">⭐ Yes</span>' : 'No'}</td>
       <td><span class="status-badge ${h.active ? 'confirmed' : 'cancelled'}">${h.active ? 'Active' : 'Inactive'}</span></td>
       <td><div class="action-btns">
+        <button class="act-btn" onclick="navigateToRoomManagement(${h.id})" title="Manage Rooms" style="color:var(--teal);border-color:rgba(20,184,166,0.2);"><i class="fa-solid fa-bed"></i></button>
         <button class="act-btn" onclick="editHotel(${h.id})"><i class="fa-solid fa-pen"></i></button>
         <button class="act-btn delete" onclick="deleteHotel(${h.id})"><i class="fa-solid fa-trash"></i></button>
       </div></td>
@@ -817,6 +833,428 @@ function saveHotel() {
 
 function deleteHotel(id) {
   confirm2('Delete this hotel?', () => { TM.deleteItem('hotels', id); renderHotels(); showToast('Hotel deleted', 'error'); });
+}
+
+// ─── ROOM MANAGEMENT CRUD ─────────────────────────────────────────────────────
+let currentRoomHotelId = null;
+let tempRoomGallery = [];
+let calCurrentMonth = new Date().getMonth();
+let calCurrentYear = new Date().getFullYear();
+
+// Static Room Attribute list
+const ROOM_FEATURES = [
+  'Wake-up call', 'Flat Tv', 'Laundry and dry cleaning', 'Coffee and tea', 
+  'Shower', 'Air-conditioning', 'Bathroom', 'Minibar'
+];
+const ROOM_AMENITIES = [
+  'Wake-up call', 'Flat Tv', 'Laundry and dry cleaning', 'Internet - Wifi', 'Coffee and tea'
+];
+
+function navigateToRoomManagement(hotelId) {
+  const hotel = TM.getItem('hotels', hotelId);
+  if (!hotel) return;
+  currentRoomHotelId = hotelId;
+  
+  // Set subtitle
+  const subtitle = document.getElementById('rmHotelSubtitle');
+  if (subtitle) subtitle.textContent = hotel.name;
+
+  // Set attribute group name
+  const lblHotelAttr = document.getElementById('lblRoomHotelAttributes');
+  if (lblHotelAttr) lblHotelAttr.textContent = `Attribute: Room ${hotel.name}`;
+
+  // Render checklists
+  renderRoomAttributesChecklists(hotel);
+
+  // Reset/Clear Form
+  resetRoomForm();
+
+  // Navigate
+  navigateTo('room-management');
+}
+
+function renderRoomAttributesChecklists(hotel) {
+  const featuresGrid = document.getElementById('rmHotelAttributesGrid');
+  if (featuresGrid) {
+    featuresGrid.innerHTML = ROOM_FEATURES.map(feat => `
+      <label style="display:flex;align-items:center;gap:6px;font-size:0.85rem">
+        <input type="checkbox" name="rmFeatures" value="${feat}" />
+        <span>${feat}</span>
+      </label>
+    `).join('');
+  }
+
+  const amenitiesGrid = document.getElementById('rmAmenitiesGrid');
+  if (amenitiesGrid) {
+    amenitiesGrid.innerHTML = ROOM_AMENITIES.map(amen => `
+      <label style="display:flex;align-items:center;gap:6px;font-size:0.85rem">
+        <input type="checkbox" name="rmAmenities" value="${amen}" />
+        <span>${amen}</span>
+      </label>
+    `).join('');
+  }
+}
+
+function uploadRoomFeatureImage(input) {
+  if (input.files && input.files[0]) {
+    const reader = new FileReader();
+    reader.onload = function(e) {
+      const base64 = e.target.result;
+      document.getElementById('rmImage').value = base64;
+      const preview = document.getElementById('rmFeaturePreview');
+      if (preview) {
+        preview.src = base64;
+        preview.classList.add('visible');
+      }
+    };
+    reader.readAsDataURL(input.files[0]);
+  }
+}
+
+function uploadRoomGalleryImages(input) {
+  if (input.files && input.files.length) {
+    const promises = Array.from(input.files).map(file => {
+      return new Promise((resolve) => {
+        const reader = new FileReader();
+        reader.onload = (e) => resolve(e.target.result);
+        reader.readAsDataURL(file);
+      });
+    });
+    Promise.all(promises).then(images => {
+      tempRoomGallery = tempRoomGallery.concat(images);
+      renderRoomGalleryPreviews();
+    });
+  }
+}
+
+function renderRoomGalleryPreviews() {
+  const grid = document.getElementById('rmGalleryPreviewGrid');
+  if (!grid) return;
+  grid.innerHTML = tempRoomGallery.map((img, idx) => `
+    <div style="position:relative;display:inline-block;">
+      <img src="${img}" class="gallery-upload-thumb" />
+      <button type="button" onclick="removeRoomGalleryImage(${idx})" style="position:absolute;top:-4px;right:-4px;background:var(--red);color:#fff;border:none;border-radius:50%;width:18px;height:18px;font-size:10px;cursor:pointer;display:flex;align-items:center;justify-content:center" title="Remove image">&times;</button>
+    </div>
+  `).join('');
+}
+
+function removeRoomGalleryImage(idx) {
+  tempRoomGallery.splice(idx, 1);
+  renderRoomGalleryPreviews();
+}
+
+function resetRoomForm() {
+  document.getElementById('editRoomId').value = '';
+  document.getElementById('rmName').value = '';
+  document.getElementById('rmImage').value = '';
+  const preview = document.getElementById('rmFeaturePreview');
+  if (preview) {
+    preview.src = '';
+    preview.classList.remove('visible');
+  }
+  tempRoomGallery = [];
+  renderRoomGalleryPreviews();
+  document.getElementById('rmPrice').value = '';
+  document.getElementById('rmNumber').value = '';
+  document.getElementById('rmMaxAdults').value = '2';
+  document.getElementById('rmMaxChildren').value = '0';
+  document.getElementById('rmStatus').value = 'Publish';
+  document.getElementById('roomFormTitle').textContent = 'Add Room';
+  document.getElementById('btnRoomSave').textContent = 'Save Room';
+
+  // Uncheck all attributes checkboxes
+  document.querySelectorAll('input[name="rmFeatures"]').forEach(cb => cb.checked = false);
+  document.querySelectorAll('input[name="rmAmenities"]').forEach(cb => cb.checked = false);
+}
+
+function renderRooms(hotelId) {
+  if (!hotelId) return;
+  const tbody = document.getElementById('roomsTbody');
+  if (!tbody) return;
+
+  const rooms = (TM.get('rooms') || []).filter(r => r.hotelId == hotelId);
+  const settings = TM.get('settings') || {};
+  const sym = settings.currencySymbol || '€';
+
+  document.getElementById('rmCount').textContent = rooms.length;
+  document.getElementById('selectAllRooms').checked = false;
+
+  tbody.innerHTML = rooms.map(r => `
+    <tr>
+      <td><input type="checkbox" class="room-row-checkbox" value="${r.id}" onclick="updateRoomSelectAllState()" /></td>
+      <td>
+        <div style="display:flex;align-items:center;gap:10px;">
+          ${r.image ? `<img src="${r.image}" style="width:40px;height:30px;object-fit:cover;border-radius:4px;border:1px solid var(--border);" />` : `<div style="width:40px;height:30px;border-radius:4px;background:var(--bg-dark);border:1px solid var(--border);display:flex;align-items:center;justify-content:center;font-size:10px;color:var(--text-muted);"><i class="fa-solid fa-image"></i></div>`}
+          <a href="#" onclick="editRoom(${r.id}); return false;" style="font-weight:600;color:var(--text-primary);text-decoration:none;">${r.name}</a>
+        </div>
+      </td>
+      <td>${r.number || 0}</td>
+      <td>${sym} ${r.price || 0}</td>
+      <td>
+        <span class="status-badge ${r.status === 'Publish' ? 'confirmed' : 'cancelled'}" style="cursor:pointer;" onclick="toggleRoomStatus(${r.id})">
+          ${r.status || 'Publish'}
+        </span>
+      </td>
+      <td>
+        <div class="action-btns">
+          <button class="act-btn" onclick="editRoom(${r.id})"><i class="fa-solid fa-pen"></i> Edit</button>
+          <button class="act-btn delete" onclick="deleteRoom(${r.id})"><i class="fa-solid fa-trash"></i></button>
+        </div>
+      </td>
+    </tr>
+  `).join('') || `<tr><td colspan="6" style="text-align:center;padding:30px;color:var(--text-muted);">No rooms found for this hotel. Add one on the left!</td></tr>`;
+}
+
+function saveRoom(e) {
+  if (e) e.preventDefault();
+  
+  const id = document.getElementById('editRoomId').value;
+  const name = document.getElementById('rmName').value.trim();
+  const price = parseFloat(document.getElementById('rmPrice').value) || 0;
+  const number = parseInt(document.getElementById('rmNumber').value) || 1;
+  const maxAdults = parseInt(document.getElementById('rmMaxAdults').value) || 2;
+  const maxChildren = parseInt(document.getElementById('rmMaxChildren').value) || 0;
+  const status = document.getElementById('rmStatus').value;
+  const image = document.getElementById('rmImage').value;
+
+  if (!name) {
+    showToast('Room name is required', 'error');
+    return;
+  }
+
+  // Gather selected features and amenities
+  const features = Array.from(document.querySelectorAll('input[name="rmFeatures"]:checked')).map(cb => cb.value);
+  const amenities = Array.from(document.querySelectorAll('input[name="rmAmenities"]:checked')).map(cb => cb.value);
+  // Merge both into attributes array
+  const attributes = [...features, ...amenities];
+
+  const data = {
+    hotelId: currentRoomHotelId,
+    name,
+    price,
+    number,
+    maxAdults,
+    maxChildren,
+    status,
+    image,
+    gallery: tempRoomGallery,
+    attributes,
+    active: status === 'Publish'
+  };
+
+  if (id) {
+    TM.updateItem('rooms', id, data);
+    showToast('Room updated successfully!', 'success');
+  } else {
+    TM.addItem('rooms', data);
+    showToast('Room added successfully!', 'success');
+  }
+
+  resetRoomForm();
+  renderRooms(currentRoomHotelId);
+}
+
+function editRoom(id) {
+  const r = TM.getItem('rooms', id);
+  if (!r) return;
+
+  document.getElementById('editRoomId').value = r.id;
+  document.getElementById('rmName').value = r.name || '';
+  document.getElementById('rmPrice').value = r.price || '';
+  document.getElementById('rmNumber').value = r.number || '';
+  document.getElementById('rmMaxAdults').value = r.maxAdults || 2;
+  document.getElementById('rmMaxChildren').value = r.maxChildren || 0;
+  document.getElementById('rmStatus').value = r.status || 'Publish';
+  document.getElementById('rmImage').value = r.image || '';
+
+  const preview = document.getElementById('rmFeaturePreview');
+  if (preview && r.image) {
+    preview.src = r.image;
+    preview.classList.add('visible');
+  } else if (preview) {
+    preview.src = '';
+    preview.classList.remove('visible');
+  }
+
+  tempRoomGallery = r.gallery || [];
+  renderRoomGalleryPreviews();
+
+  document.getElementById('roomFormTitle').textContent = 'Edit Room';
+  document.getElementById('btnRoomSave').textContent = 'Update Room';
+
+  // Check the correct checkboxes
+  const attrs = r.attributes || [];
+  document.querySelectorAll('input[name="rmFeatures"]').forEach(cb => {
+    cb.checked = attrs.includes(cb.value);
+  });
+  document.querySelectorAll('input[name="rmAmenities"]').forEach(cb => {
+    cb.checked = attrs.includes(cb.value);
+  });
+
+  // Scroll form into view if mobile
+  document.getElementById('roomForm').scrollIntoView({ behavior: 'smooth' });
+}
+
+function deleteRoom(id) {
+  confirm2('Are you sure you want to delete this room? This cannot be undone.', () => {
+    TM.deleteItem('rooms', id);
+    renderRooms(currentRoomHotelId);
+    showToast('Room deleted successfully', 'error');
+  });
+}
+
+function toggleRoomStatus(id) {
+  const r = TM.getItem('rooms', id);
+  if (!r) return;
+  const newStatus = r.status === 'Publish' ? 'Draft' : 'Publish';
+  TM.updateItem('rooms', id, { status: newStatus, active: newStatus === 'Publish' });
+  renderRooms(currentRoomHotelId);
+  showToast(`Room status updated to ${newStatus}`, 'success');
+}
+
+function toggleSelectAllRooms(master) {
+  const checkboxes = document.querySelectorAll('.room-row-checkbox');
+  checkboxes.forEach(cb => cb.checked = master.checked);
+}
+
+function updateRoomSelectAllState() {
+  const checkboxes = document.querySelectorAll('.room-row-checkbox');
+  const allChecked = Array.from(checkboxes).every(cb => cb.checked);
+  document.getElementById('selectAllRooms').checked = allChecked && checkboxes.length > 0;
+}
+
+function applyRoomBulkAction() {
+  const action = document.getElementById('rmBulkAction').value;
+  if (!action) {
+    showToast('Please select a bulk action', 'error');
+    return;
+  }
+
+  const selectedCheckboxes = document.querySelectorAll('.room-row-checkbox:checked');
+  const selectedIds = Array.from(selectedCheckboxes).map(cb => cb.value);
+
+  if (!selectedIds.length) {
+    showToast('No rooms selected', 'error');
+    return;
+  }
+
+  if (action === 'delete') {
+    confirm2(`Are you sure you want to delete ${selectedIds.length} room(s)?`, () => {
+      selectedIds.forEach(id => TM.deleteItem('rooms', id));
+      renderRooms(currentRoomHotelId);
+      showToast(`${selectedIds.length} rooms deleted`, 'error');
+      document.getElementById('rmBulkAction').value = '';
+    });
+  } else {
+    const status = action === 'publish' ? 'Publish' : 'Draft';
+    selectedIds.forEach(id => TM.updateItem('rooms', id, { status, active: status === 'Publish' }));
+    renderRooms(currentRoomHotelId);
+    showToast(`Status updated for ${selectedIds.length} room(s)`, 'success');
+    document.getElementById('rmBulkAction').value = '';
+  }
+}
+
+// ─── ROOM AVAILABILITY CALENDAR ──────────────────────────────────────────────
+function openRoomAvailabilityModal() {
+  const hotel = TM.getItem('hotels', currentRoomHotelId);
+  if (!hotel) return;
+  
+  document.getElementById('calHotelName').textContent = hotel.name;
+  calCurrentMonth = new Date().getMonth();
+  calCurrentYear = new Date().getFullYear();
+  
+  renderCalendar();
+  openModal('roomAvailabilityModal');
+}
+
+function changeCalMonth(dir) {
+  calCurrentMonth += dir;
+  if (calCurrentMonth < 0) {
+    calCurrentMonth = 11;
+    calCurrentYear -= 1;
+  } else if (calCurrentMonth > 11) {
+    calCurrentMonth = 0;
+    calCurrentYear += 1;
+  }
+  renderCalendar();
+}
+
+function renderCalendar() {
+  const monthNames = [
+    "January", "February", "March", "April", "May", "June",
+    "July", "August", "September", "October", "November", "December"
+  ];
+  
+  document.getElementById('calMonthYear').textContent = `${monthNames[calCurrentMonth]} ${calCurrentYear}`;
+  
+  const container = document.getElementById('calendarDays');
+  if (!container) return;
+  container.innerHTML = '';
+  
+  const firstDayIndex = new Date(calCurrentYear, calCurrentMonth, 1).getDay();
+  const lastDate = new Date(calCurrentYear, calCurrentMonth + 1, 0).getDate();
+  const prevLastDate = new Date(calCurrentYear, calCurrentMonth, 0).getDate();
+  
+  // Render empty cells from previous month
+  for (let x = firstDayIndex; x > 0; x--) {
+    const dayDiv = document.createElement('div');
+    dayDiv.style.padding = '12px 6px';
+    dayDiv.style.textAlign = 'center';
+    dayDiv.style.color = 'var(--text-muted)';
+    dayDiv.style.opacity = '0.3';
+    dayDiv.textContent = prevLastDate - x + 1;
+    container.appendChild(dayDiv);
+  }
+  
+  // Get reservations to show bookings on calendar
+  const reservations = TM.get('reservations') || [];
+  
+  // Render current month days
+  for (let i = 1; i <= lastDate; i++) {
+    const dayDiv = document.createElement('div');
+    dayDiv.style.padding = '12px 6px';
+    dayDiv.style.textAlign = 'center';
+    dayDiv.style.borderRadius = '6px';
+    dayDiv.style.fontWeight = '600';
+    dayDiv.style.cursor = 'pointer';
+    dayDiv.style.position = 'relative';
+    
+    // Check bookings for this specific date
+    const dateStr = `${calCurrentYear}-${String(calCurrentMonth + 1).padStart(2, '0')}-${String(i).padStart(2, '0')}`;
+    const dateBookings = reservations.filter(r => r.date === dateStr);
+    
+    let bgColor = 'rgba(20, 184, 166, 0.1)'; // Teal tint (default available)
+    let border = '1px solid rgba(20, 184, 166, 0.3)';
+    let color = 'var(--teal)';
+    
+    if (dateBookings.length > 2) {
+      bgColor = 'rgba(239, 68, 68, 0.15)'; // Fully booked
+      border = '1px solid rgba(239, 68, 68, 0.4)';
+      color = 'var(--red)';
+    } else if (dateBookings.length > 0) {
+      bgColor = 'rgba(245, 158, 11, 0.15)'; // Medium Booked
+      border = '1px solid rgba(245, 158, 11, 0.4)';
+      color = 'var(--orange)';
+    }
+    
+    dayDiv.style.background = bgColor;
+    dayDiv.style.border = border;
+    dayDiv.style.color = color;
+    dayDiv.textContent = i;
+    
+    // Simple tooltip/detail on click
+    dayDiv.title = dateBookings.length ? `${dateBookings.length} booking(s)` : 'Available';
+    dayDiv.onclick = () => {
+      if (dateBookings.length) {
+        let details = dateBookings.map(b => `- ${b.customer} (${b.tourName || 'Booking'})`).join('\n');
+        alert(`Bookings on ${dateStr}:\n${details}`);
+      } else {
+        alert(`No bookings on ${dateStr}. Rooms are available!`);
+      }
+    };
+    
+    container.appendChild(dayDiv);
+  }
 }
 
 // ─── DESTINATIONS CRUD ────────────────────────────────────────────────────────
