@@ -697,8 +697,15 @@ ${pages.map(p => `  <url>
             .from(k)
             .select('*')
             .then(res => {
-              if (res.error) throw res.error;
+              if (res.error) {
+                console.warn(`Supabase table "${k}" read failed (it might not exist yet):`, res.error.message);
+                return { key: k, data: null };
+              }
               return { key: k, data: (res.data || []).map(row => row.data) };
+            })
+            .catch(err => {
+              console.warn(`Supabase table "${k}" query error:`, err);
+              return { key: k, data: null };
             });
         });
         
@@ -706,8 +713,15 @@ ${pages.map(p => `  <url>
           .from('system_config')
           .select('*')
           .then(res => {
-            if (res.error) throw res.error;
+            if (res.error) {
+              console.warn('Supabase system_config read failed:', res.error.message);
+              return { key: 'system_config', data: null };
+            }
             return { key: 'system_config', data: res.data || [] };
+          })
+          .catch(err => {
+            console.warn('Supabase system_config query error:', err);
+            return { key: 'system_config', data: null };
           });
           
         return Promise.all([...listPromises, configPromise]);
@@ -720,11 +734,13 @@ ${pages.map(p => `  <url>
         }
 
         if (!databaseInitialized) {
-          console.log('Supabase database is empty/uninitialized. Skipping restore.');
+          console.log('Supabase database is empty/uninitialized or system_config read failed. Skipping restore.');
           return false;
         }
 
         results.forEach(res => {
+          if (res.data === null) return; // Skip failed tables cleanly
+          
           if (res.key === 'system_config') {
             res.data.forEach(row => {
               _save(KEYS[row.key], row.value);
