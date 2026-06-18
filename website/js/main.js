@@ -1016,12 +1016,379 @@ function initHotelsPage() {
         </div>
         <div class="hotel-card-footer">
           <div class="hotel-price">${sym}${h.price}<small>/night</small></div>
-          <a href="contact.html" class="btn btn-primary btn-sm">Book Hotel</a>
+          <a href="hotel-detail.html?id=${h.id}" class="btn btn-primary btn-sm">View Rooms</a>
         </div>
       </div>
     </div>
   `).join('');
 }
+
+// ─── HOTEL DETAIL PAGE ────────────────────────────────────────────────────────
+let activeSelectedRoom = null;
+let activeHotelDiscount = 0;
+let appliedHotelCouponCode = '';
+
+function initHotelDetailPage() {
+  const container = document.getElementById('hotelRoomsSection');
+  if (!container) return; // Only run on hotel-detail page
+
+  const id = new URLSearchParams(window.location.search).get('id');
+  if (!id) {
+    window.location.href = 'hotels.html';
+    return;
+  }
+
+  const hotel = TM.getItem('hotels', id);
+  if (!hotel) {
+    window.location.href = 'hotels.html';
+    return;
+  }
+
+  const settings = TM.get('settings') || {};
+  const sym = settings.currencySymbol || '€';
+
+  // Fill in Hotel Details
+  document.getElementById('detailTitleH1').textContent = hotel.name;
+  document.getElementById('detailHeroImg').src = hotel.image;
+  document.getElementById('detailDest').textContent = hotel.destination;
+  document.getElementById('detailRating').textContent = '★'.repeat(hotel.stars);
+  document.getElementById('detailContent').textContent = hotel.description || '';
+
+  // Render Amenities Tags
+  const amenitiesContainer = document.getElementById('hotelAmenitiesTags');
+  if (amenitiesContainer) {
+    amenitiesContainer.innerHTML = (hotel.amenities || []).map(amen => `
+      <span class="amenity-tag" style="background:var(--sand-warm);color:var(--coffee-dark);padding:6px 12px;border-radius:4px;font-size:0.82rem;font-weight:600;"><i class="fa-solid fa-check" style="color:var(--teal)"></i> ${amen}</span>
+    `).join('');
+  }
+
+  // Render Gallery
+  if (hotel.gallery && hotel.gallery.length > 0) {
+    const gallerySection = document.getElementById('hotelGallerySection');
+    const galleryGrid = document.getElementById('hotelGalleryGrid');
+    if (gallerySection && galleryGrid) {
+      gallerySection.style.display = 'block';
+      galleryGrid.innerHTML = hotel.gallery.map(img => `
+        <div class="gallery-item" onclick="openLightbox('${img}')">
+          <img src="${img}" alt="Hotel Gallery Image" />
+        </div>
+      `).join('');
+    }
+  }
+
+  // Fetch and Render Rooms
+  const rooms = (TM.get('rooms') || []).filter(r => r.hotelId == id && r.status === 'Publish');
+  const roomsGrid = document.getElementById('hotelRoomsGrid');
+  if (roomsGrid) {
+    if (rooms.length === 0) {
+      roomsGrid.innerHTML = `
+        <div style="text-align:center;padding:40px;background:var(--cream);border-radius:8px;border:1px solid var(--border);color:var(--text-muted)">
+          <i class="fa-solid fa-circle-info" style="font-size:2rem;color:var(--teal);margin-bottom:12px"></i>
+          <p>No available rooms listed at this moment. Please contact us directly for reservations.</p>
+        </div>
+      `;
+    } else {
+      roomsGrid.innerHTML = rooms.map(r => {
+        const featHTML = (r.attributes || []).map(f => `<span class="amenity-tag" style="font-size:0.75rem;"><i class="fa-solid fa-tag"></i> ${f}</span>`).join('');
+        return `
+          <div style="display:grid; grid-template-columns: 240px 1fr; border:1px solid var(--border); border-radius:8px; overflow:hidden; background:white;">
+            <div style="position:relative; max-height: 180px;">
+              <img src="${r.image || 'https://images.unsplash.com/photo-1566665797739-1674de7a421a?w=400&q=70'}" alt="${r.name}" style="width:100%; height:100%; object-fit:cover;" />
+            </div>
+            <div style="padding:20px; display:flex; flex-direction:column; justify-content:space-between; gap:12px;">
+              <div>
+                <h4 style="font-size:1.1rem; font-weight:700; color:var(--coffee-dark); margin:0 0 6px 0;">${r.name}</h4>
+                <div style="display:flex; gap:12px; font-size:0.8rem; color:var(--text-muted); margin-bottom:8px;">
+                  <span><i class="fa-solid fa-user"></i> Max Adults: ${r.maxAdults || 2}</span>
+                  <span><i class="fa-solid fa-child"></i> Max Children: ${r.maxChildren || 0}</span>
+                  <span><i class="fa-solid fa-hotel"></i> Available: ${r.number || 1} rooms</span>
+                </div>
+                <div style="display:flex; flex-wrap:wrap; gap:6px;">
+                  ${featHTML}
+                </div>
+              </div>
+              <div style="display:flex; justify-content:space-between; align-items:center; border-top:1px solid var(--border); padding-top:12px;">
+                <div style="font-weight:700; font-size:1.2rem; color:var(--coffee-dark);">${sym}${r.price}<small style="font-size:0.7rem; font-weight:normal; color:var(--text-muted);"> /night</small></div>
+                <button type="button" class="btn btn-primary btn-sm" onclick="selectRoomForBooking(${r.id}, '${r.name.replace(/'/g, "\\'")}', ${r.price})">Select Room</button>
+              </div>
+            </div>
+          </div>
+        `;
+      }).join('');
+    }
+  }
+
+  // Render Booking Form Card
+  renderHotelBookingCard(hotel, rooms);
+}
+
+function selectRoomForBooking(roomId, roomName, roomPrice) {
+  activeSelectedRoom = { id: roomId, name: roomName, price: roomPrice };
+  
+  // Set room selection value in select element
+  const selectEl = document.getElementById('bRoomSelect');
+  if (selectEl) {
+    selectEl.value = roomId;
+  }
+  
+  updateHotelBookingTotal();
+  
+  // Scroll to booking form
+  document.getElementById('bookingCard').scrollIntoView({ behavior: 'smooth' });
+}
+
+function renderHotelBookingCard(hotel, rooms) {
+  const bookingCard = document.getElementById('bookingCard');
+  if (!bookingCard) return;
+
+  const settings = TM.get('settings') || {};
+  const sym = settings.currencySymbol || '€';
+
+  const todayStr = new Date().toISOString().split('T')[0];
+  const tomorrow = new Date();
+  tomorrow.setDate(tomorrow.getDate() + 1);
+  const tomorrowStr = tomorrow.toISOString().split('T')[0];
+
+  const roomOptions = rooms.map(r => `<option value="${r.id}">${r.name} - ${sym}${r.price}/night</option>`).join('');
+
+  bookingCard.innerHTML = `
+    <div class="booking-card-price" style="padding:20px; text-align:center; border-bottom:1px solid var(--border);">
+      <h4 style="font-size:0.9rem;text-transform:uppercase;color:var(--text-muted);margin:0 0 6px 0;">Request Reservation</h4>
+      <div id="bookingSelectedRoomName" style="font-weight:700; font-size:1.1rem; color:var(--coffee-dark);">Please select a room</div>
+    </div>
+    <form class="booking-form" id="hotelBookingForm" onsubmit="submitHotelBooking(event, ${hotel.id})">
+      <div class="form-group">
+        <label class="form-label">Full Name *</label>
+        <input class="form-input" type="text" id="bhName" required placeholder="Your full name" />
+      </div>
+      <div class="form-group">
+        <label class="form-label">Email *</label>
+        <input class="form-input" type="email" id="bhEmail" required placeholder="your@email.com" />
+      </div>
+      <div class="form-group">
+        <label class="form-label">Phone</label>
+        <input class="form-input" type="tel" id="bhPhone" placeholder="+212 6 00 00 00 00" />
+      </div>
+      
+      <div style="display:grid; grid-template-columns:1fr 1fr; gap:12px;">
+        <div class="form-group">
+          <label class="form-label">Check-in Date *</label>
+          <input class="form-input" type="date" id="bhCheckIn" required min="${todayStr}" value="${todayStr}" onchange="updateHotelBookingDates()" />
+        </div>
+        <div class="form-group">
+          <label class="form-label">Check-out Date *</label>
+          <input class="form-input" type="date" id="bhCheckOut" required min="${tomorrowStr}" value="${tomorrowStr}" onchange="updateHotelBookingTotal()" />
+        </div>
+      </div>
+
+      <div class="form-group">
+        <label class="form-label">Select Room *</label>
+        <select class="form-input" id="bRoomSelect" required onchange="handleRoomSelectChange(this, ${JSON.stringify(rooms).replace(/"/g, '&quot;')})">
+          <option value="">-- Choose Room --</option>
+          ${roomOptions}
+        </select>
+      </div>
+
+      <div class="form-group">
+        <label class="form-label">Coupon Code</label>
+        <div class="coupon-row" style="display:flex; gap:8px;">
+          <input class="form-input" type="text" id="bhCoupon" placeholder="Enter coupon" style="flex:1;" />
+          <button type="button" class="btn btn-ghost btn-sm" onclick="applyHotelCoupon()">Apply</button>
+        </div>
+        <div id="bhCouponMsg" style="font-size:0.78rem;margin-top:4px"></div>
+      </div>
+
+      <div class="form-group">
+        <label class="form-label">Notes / Requests</label>
+        <textarea class="form-textarea" id="bhNotes" placeholder="Additional requirements..."></textarea>
+      </div>
+
+      <div class="booking-summary" id="bhBookingSummary" style="display:none; background:var(--cream); padding:12px; border-radius:6px; margin-bottom:16px;">
+        <div class="booking-summary-row" style="display:flex; justify-content:space-between; font-size:0.85rem; margin-bottom:6px;">
+          <span>Room price/night</span><span id="bhRoomPrice">0</span>
+        </div>
+        <div class="booking-summary-row" style="display:flex; justify-content:space-between; font-size:0.85rem; margin-bottom:6px;">
+          <span>Number of Nights</span><span id="bhNights">1</span>
+        </div>
+        <div class="booking-summary-row total" style="display:flex; justify-content:space-between; font-weight:700; border-top:1px dashed var(--border); padding-top:8px; font-size:1.1rem; color:var(--coffee-dark);">
+          <span>Total Cost</span><span id="bhTotalDisplay">0</span>
+        </div>
+      </div>
+
+      <button type="submit" class="btn btn-primary" style="width:100%; justify-content:center;">
+        <i class="fa-solid fa-calendar-check"></i> Request Booking
+      </button>
+    </form>
+  `;
+
+  // Prefill first room
+  if (rooms.length > 0) {
+    selectRoomForBooking(rooms[0].id, rooms[0].name, rooms[0].price);
+  }
+}
+
+function handleRoomSelectChange(select, rooms) {
+  const roomId = select.value;
+  if (!roomId) {
+    activeSelectedRoom = null;
+    document.getElementById('bookingSelectedRoomName').textContent = 'Please select a room';
+    document.getElementById('bhBookingSummary').style.display = 'none';
+    return;
+  }
+  const r = rooms.find(room => room.id == roomId);
+  if (r) {
+    activeSelectedRoom = { id: r.id, name: r.name, price: r.price };
+    document.getElementById('bookingSelectedRoomName').textContent = r.name;
+    updateHotelBookingTotal();
+  }
+}
+
+function updateHotelBookingDates() {
+  const checkIn = document.getElementById('bhCheckIn').value;
+  const checkOutEl = document.getElementById('bhCheckOut');
+  if (checkIn && checkOutEl) {
+    const minCheckOut = new Date(checkIn);
+    minCheckOut.setDate(minCheckOut.getDate() + 1);
+    const minCheckOutStr = minCheckOut.toISOString().split('T')[0];
+    checkOutEl.min = minCheckOutStr;
+    if (new Date(checkOutEl.value) <= new Date(checkIn)) {
+      checkOutEl.value = minCheckOutStr;
+    }
+  }
+  updateHotelBookingTotal();
+}
+
+function updateHotelBookingTotal() {
+  if (!activeSelectedRoom) return;
+
+  const checkIn = document.getElementById('bhCheckIn')?.value;
+  const checkOut = document.getElementById('bhCheckOut')?.value;
+  const summary = document.getElementById('bhBookingSummary');
+  if (!checkIn || !checkOut || !summary) return;
+
+  const date1 = new Date(checkIn);
+  const date2 = new Date(checkOut);
+  const diffTime = Math.abs(date2 - date1);
+  const nights = Math.max(1, Math.ceil(diffTime / (1000 * 60 * 60 * 24)));
+
+  const settings = TM.get('settings') || {};
+  const sym = settings.currencySymbol || '€';
+
+  let rawTotal = activeSelectedRoom.price * nights;
+  let discountedTotal = rawTotal;
+  
+  if (activeHotelDiscount > 0) {
+    discountedTotal = Math.max(0, rawTotal - activeHotelDiscount);
+  }
+
+  summary.style.display = 'block';
+  document.getElementById('bhRoomPrice').textContent = `${sym}${activeSelectedRoom.price}`;
+  document.getElementById('bhNights').textContent = nights;
+  document.getElementById('bhTotalDisplay').textContent = `${sym}${discountedTotal}`;
+}
+
+function applyHotelCoupon() {
+  if (!activeSelectedRoom) {
+    showToast('Please select a room first', 'warning');
+    return;
+  }
+
+  const code = document.getElementById('bhCoupon').value.trim();
+  const msg = document.getElementById('bhCouponMsg');
+  if (!code) {
+    showToast('Enter a coupon code', 'error');
+    return;
+  }
+
+  const checkIn = document.getElementById('bhCheckIn').value;
+  const checkOut = document.getElementById('bhCheckOut').value;
+  const date1 = new Date(checkIn);
+  const date2 = new Date(checkOut);
+  const diffTime = Math.abs(date2 - date1);
+  const nights = Math.max(1, Math.ceil(diffTime / (1000 * 60 * 60 * 24)));
+  const totalAmount = activeSelectedRoom.price * nights;
+
+  const res = TM.validateCoupon(code, totalAmount);
+  if (res.valid) {
+    activeHotelDiscount = res.discount;
+    appliedHotelCouponCode = res.code;
+    msg.style.color = 'var(--green)';
+    msg.innerHTML = `<i class="fa-solid fa-circle-check"></i> Coupon applied! Saved €${res.discount}`;
+    updateHotelBookingTotal();
+  } else {
+    activeHotelDiscount = 0;
+    appliedHotelCouponCode = '';
+    msg.style.color = 'var(--red)';
+    msg.innerHTML = `<i class="fa-solid fa-triangle-exclamation"></i> ${res.message}`;
+    updateHotelBookingTotal();
+  }
+}
+
+function submitHotelBooking(event, hotelId) {
+  if (event) event.preventDefault();
+  if (!activeSelectedRoom) {
+    showToast('Please select a room type', 'error');
+    return;
+  }
+
+  const name = document.getElementById('bhName').value.trim();
+  const email = document.getElementById('bhEmail').value.trim();
+  const phone = document.getElementById('bhPhone').value.trim();
+  const checkIn = document.getElementById('bhCheckIn').value;
+  const checkOut = document.getElementById('bhCheckOut').value;
+  const notes = document.getElementById('bhNotes').value.trim();
+
+  const hotel = TM.getItem('hotels', hotelId);
+  const hotelName = hotel ? hotel.name : 'Hotel';
+
+  const date1 = new Date(checkIn);
+  const date2 = new Date(checkOut);
+  const diffTime = Math.abs(date2 - date1);
+  const nights = Math.max(1, Math.ceil(diffTime / (1000 * 60 * 60 * 24)));
+  const baseCost = activeSelectedRoom.price * nights;
+  const total = Math.max(0, baseCost - activeHotelDiscount);
+
+  const bookingData = {
+    tourId: 0, 
+    tourName: `${hotelName} - ${activeSelectedRoom.name}`,
+    customer: name,
+    email: email,
+    phone: phone,
+    people: 1, 
+    date: checkIn,
+    total: total,
+    paid: 0,
+    coupon: appliedHotelCouponCode,
+    status: 'In Progress',
+    notes: `Check-in: ${checkIn} | Check-out: ${checkOut}\nNights: ${nights}\nRoom Type: ${activeSelectedRoom.name}\n${notes}`,
+  };
+
+  TM.addItem('reservations', bookingData);
+  
+  // Show success alert
+  const formCard = document.getElementById('hotelBookingForm');
+  if (formCard) {
+    formCard.innerHTML = `
+      <div style="text-align:center;padding:30px;color:var(--coffee-dark);">
+        <i class="fa-solid fa-circle-check" style="font-size:3.5rem;color:var(--teal);margin-bottom:16px;"></i>
+        <h3 style="font-family:var(--font-headings);font-size:1.3rem;font-weight:700;margin-bottom:8px;">Booking Requested!</h3>
+        <p style="font-size:0.88rem;color:var(--text-muted);line-height:1.5;">Thank you ${name}. Your reservation request for <strong>${activeSelectedRoom.name}</strong> at <strong>${hotelName}</strong> has been received.<br>Our agents will contact you shortly.</p>
+        <a href="hotels.html" class="btn btn-primary btn-sm" style="margin-top:20px;display:inline-flex;">Browse Hotels</a>
+      </div>
+    `;
+  }
+
+  showToast('Booking request submitted successfully!', 'success');
+}
+
+// Make room booking helpers available globally
+window.initHotelDetailPage = initHotelDetailPage;
+window.selectRoomForBooking = selectRoomForBooking;
+window.handleRoomSelectChange = handleRoomSelectChange;
+window.updateHotelBookingDates = updateHotelBookingDates;
+window.updateHotelBookingTotal = updateHotelBookingTotal;
+window.applyHotelCoupon = applyHotelCoupon;
+window.submitHotelBooking = submitHotelBooking;
 
 // ─── ABOUT PAGE ───────────────────────────────────────────────────────────────
 function initAboutPage() {
@@ -1205,13 +1572,15 @@ document.addEventListener('DOMContentLoaded', () => {
   const pageMap = {
     'index.html': 'home', 'tours.html': 'tours', 'tour-detail.html': 'tours',
     'cars.html': 'cars',
-    'destinations.html': 'destinations', 'hotels.html': 'hotels',
+    'destinations.html': 'destinations', 'hotels.html': 'hotels', 'hotel-detail.html': 'hotels',
     'about.html': 'about', 'contact.html': 'contact',
     'blog.html': 'home', 'blog-detail.html': 'home'
   };
   let currentPage = window.location.pathname.split('/').pop() || 'index.html';
   if (window.location.pathname.includes('/tours/')) {
     currentPage = 'tour-detail.html';
+  } else if (window.location.pathname.includes('/hotels/')) {
+    currentPage = 'hotel-detail.html';
   } else if (window.location.pathname.includes('/blog/')) {
     currentPage = 'blog-detail.html';
   } else if (currentPage && !currentPage.includes('.')) {
@@ -1225,6 +1594,7 @@ document.addEventListener('DOMContentLoaded', () => {
   initTourDetailPage();
   initDestinationsPage();
   initHotelsPage();
+  initHotelDetailPage();
   initAboutPage();
   initContactPage();
   initCarsPage();
