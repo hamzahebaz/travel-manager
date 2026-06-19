@@ -1854,11 +1854,13 @@ CREATE TABLE IF NOT EXISTS coupons (id INT PRIMARY KEY, data JSONB);
 CREATE TABLE IF NOT EXISTS users (id INT PRIMARY KEY, data JSONB);
 CREATE TABLE IF NOT EXISTS media (id INT PRIMARY KEY, data JSONB);
 CREATE TABLE IF NOT EXISTS menu (id INT PRIMARY KEY, data JSONB);
+CREATE TABLE IF NOT EXISTS "footerMenu" (id INT PRIMARY KEY, data JSONB);
 CREATE TABLE IF NOT EXISTS redirects (id INT PRIMARY KEY, data JSONB);
 CREATE TABLE IF NOT EXISTS cars (id INT PRIMARY KEY, data JSONB);
 CREATE TABLE IF NOT EXISTS popups (id INT PRIMARY KEY, data JSONB);
 CREATE TABLE IF NOT EXISTS subscribers (email TEXT PRIMARY KEY, data JSONB);
 CREATE TABLE IF NOT EXISTS rooms (id INT PRIMARY KEY, data JSONB);
+CREATE TABLE IF NOT EXISTS news (id INT PRIMARY KEY, data JSONB);
 
 ALTER TABLE system_config DISABLE ROW LEVEL SECURITY;
 ALTER TABLE tours DISABLE ROW LEVEL SECURITY;
@@ -1870,11 +1872,13 @@ ALTER TABLE coupons DISABLE ROW LEVEL SECURITY;
 ALTER TABLE users DISABLE ROW LEVEL SECURITY;
 ALTER TABLE media DISABLE ROW LEVEL SECURITY;
 ALTER TABLE menu DISABLE ROW LEVEL SECURITY;
+ALTER TABLE "footerMenu" DISABLE ROW LEVEL SECURITY;
 ALTER TABLE redirects DISABLE ROW LEVEL SECURITY;
 ALTER TABLE cars DISABLE ROW LEVEL SECURITY;
 ALTER TABLE popups DISABLE ROW LEVEL SECURITY;
 ALTER TABLE subscribers DISABLE ROW LEVEL SECURITY;
 ALTER TABLE rooms DISABLE ROW LEVEL SECURITY;
+ALTER TABLE news DISABLE ROW LEVEL SECURITY;
 
 -- Enable Realtime replication for all tables
 do $$
@@ -1884,7 +1888,7 @@ begin
   end if;
 end $$;
 
-alter publication supabase_realtime add table system_config, tours, hotels, destinations, reservations, reviews, coupons, users, media, menu, redirects, cars, popups, subscribers, rooms;</pre>
+alter publication supabase_realtime add table system_config, tours, hotels, destinations, reservations, reviews, coupons, users, media, menu, "footerMenu", redirects, cars, popups, subscribers, rooms, news;</pre>
         </li>
         <li>Click <strong>Run</strong> at the bottom right of the editor.</li>
         <li>Go to <strong>Project Settings > API</strong> in the left sidebar.</li>

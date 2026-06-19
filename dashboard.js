@@ -3426,14 +3426,6 @@ function openSupabaseGuide() {
 window.openSupabaseGuide = openSupabaseGuide;
 
 function syncAllToSupabase() {
-  const settings = TM.get('settings');
-  const url = settings.supabaseUrl;
-  const key = settings.supabaseKey;
-  if (!url || !key) {
-    showToast('Please configure Supabase URL and Key in settings first', 'error');
-    return;
-  }
-  
   showToast('Synchronizing all data to Supabase...', 'info');
   
   if (typeof TM.syncAllToSupabase === 'function') {

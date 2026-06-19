@@ -306,6 +306,11 @@ Sitemap: https://yourdomain.com/sitemap.xml`,
       triggerGoogleSheetSync(key, data, 'upsert');
       triggerSupabaseSync(key, data, 'upsert');
     }
+    if (SYNC_LIST_KEYS.includes(key)) {
+      if (Array.isArray(data)) {
+        syncListToSupabase(key, data);
+      }
+    }
     if (key === 'settings') {
       supabaseClient = null;
       initSupabaseRealtime();
@@ -611,16 +616,8 @@ ${pages.map(p => `  <url>
           initSupabaseRealtime();
         });
       } else {
-        const lastSync = Number(localStorage.getItem('tm_last_sync') || 0);
-        const fiveMinutes = 5 * 60 * 1000;
-        
-        if (isFreshBoot) {
-          console.log('Public Site (Fresh Boot): Restoring from Supabase...');
-          pullFromSupabase(false);
-        } else if (Date.now() - lastSync > fiveMinutes) {
-          console.log('Public Site (Background Pull): Checking for updates from Supabase...');
-          pullFromSupabase(true);
-        }
+        console.log('Public Site: Background pull from Supabase...');
+        pullFromSupabase(true);
       }
       return;
     }
@@ -628,10 +625,8 @@ ${pages.map(p => `  <url>
     const syncUrl = getGoogleSheetUrl();
     if (!syncUrl || !syncUrl.startsWith('http')) return;
 
-    if (isFreshBoot) {
-      console.log('Local storage empty or cleared. Auto-restoring from Google Sheets...');
-      pullFromGoogleSheets();
-    }
+    console.log('Public Site: Pulling from Google Sheets...');
+    pullFromGoogleSheets();
   }
 
   function pullFromGoogleSheets() {
@@ -643,6 +638,7 @@ ${pages.map(p => `  <url>
       .then(res => {
         if (res.result === 'success' && res.data) {
           const data = res.data;
+          let changed = false;
           
           SYNC_LIST_KEYS.forEach(key => {
             if (data[key] && data[key].length > 0) {
@@ -661,19 +657,30 @@ ${pages.map(p => `  <url>
                   if (item.rooms) item.rooms = Number(item.rooms);
                 });
               }
+              const localVal = _load(KEYS[key]);
               const merged = mergeLists(get(key) || [], data[key], uniqueKey);
-              _save(KEYS[key], merged);
+              if (JSON.stringify(localVal) !== JSON.stringify(merged)) {
+                _save(KEYS[key], merged);
+                changed = true;
+              }
             }
           });
           
           SYNC_CONFIG_KEYS.forEach(key => {
             if (data[key]) {
-              _save(KEYS[key], data[key]);
+              const localVal = _load(KEYS[key]);
+              if (JSON.stringify(localVal) !== JSON.stringify(data[key])) {
+                _save(KEYS[key], data[key]);
+                changed = true;
+              }
             }
           });
           
-          console.log('Auto-restore from Google Sheets completed successfully!');
-          window.dispatchEvent(new CustomEvent('tm_data_restored'));
+          console.log('Google Sheets pull sync completed.');
+          if (changed) {
+            console.log('Google Sheets data changed. Reloading page...');
+            window.dispatchEvent(new CustomEvent('tm_data_restored'));
+          }
           return true;
         }
         return false;
@@ -738,12 +745,18 @@ ${pages.map(p => `  <url>
           return false;
         }
 
+        let changed = false;
+
         results.forEach(res => {
           if (res.data === null) return; // Skip failed tables cleanly
           
           if (res.key === 'system_config') {
             res.data.forEach(row => {
-              _save(KEYS[row.key], row.value);
+              const localVal = _load(KEYS[row.key]);
+              if (JSON.stringify(localVal) !== JSON.stringify(row.value)) {
+                _save(KEYS[row.key], row.value);
+                changed = true;
+              }
             });
           } else {
             const uniqueKey = res.key === 'subscribers' ? 'email' : 'id';
@@ -761,14 +774,17 @@ ${pages.map(p => `  <url>
                 if (item.rooms) item.rooms = Number(item.rooms);
               });
             }
-            // Overwrite list cleanly to handle deletions correctly
-            _save(KEYS[res.key], res.data);
+            const localVal = _load(KEYS[res.key]);
+            if (!compareLists(localVal, res.data, uniqueKey)) {
+              _save(KEYS[res.key], res.data);
+              changed = true;
+            }
           }
         });
 
         localStorage.setItem('tm_last_sync', Date.now().toString());
-        console.log('Supabase data restore completed successfully!');
-        if (!isBackground) {
+        console.log('Supabase data restore completed. changed =', changed);
+        if (changed) {
           window.dispatchEvent(new CustomEvent('tm_data_restored'));
         }
         return true;
@@ -913,6 +929,61 @@ ${pages.map(p => `  <url>
       }
     });
     return Array.from(map.values());
+  }
+
+  function compareLists(listA, listB, uniqueKey) {
+    const a = Array.isArray(listA) ? listA : [];
+    const b = Array.isArray(listB) ? listB : [];
+    if (a.length !== b.length) return false;
+
+    const sortedA = [...a].sort((x, y) => String(x[uniqueKey] || '').localeCompare(String(y[uniqueKey] || '')));
+    const sortedB = [...b].sort((x, y) => String(x[uniqueKey] || '').localeCompare(String(y[uniqueKey] || '')));
+
+    return JSON.stringify(sortedA) === JSON.stringify(sortedB);
+  }
+
+  function syncListToSupabase(key, list) {
+    const url = getSupabaseUrl();
+    const keyVal = getSupabaseKey();
+    if (!url || !keyVal) return;
+
+    loadSupabaseScript().then(() => {
+      if (!supabaseClient && !initSupabase()) return;
+
+      const uniqueKey = key === 'subscribers' ? 'email' : 'id';
+
+      // 1. Upsert all current items
+      const upsertPromises = list.map(item => {
+        const val = key === 'subscribers' ? item.email : item.id;
+        const row = { data: item };
+        row[uniqueKey] = val;
+        return supabaseClient.from(key).upsert(row);
+      });
+
+      // 2. Fetch all IDs currently in the database to delete those not in local list
+      supabaseClient.from(key).select(uniqueKey).then(res => {
+        if (res.error) {
+          console.error(`Failed to fetch ${key} IDs for sync:`, res.error);
+          return;
+        }
+
+        const dbIds = (res.data || []).map(row => String(row[uniqueKey]));
+        const localIds = new Set(list.map(item => String(item[uniqueKey])));
+
+        const deletePromises = [];
+        dbIds.forEach(id => {
+          if (!localIds.has(id)) {
+            deletePromises.push(
+              supabaseClient.from(key).delete().eq(uniqueKey, key === 'subscribers' ? id : Number(id))
+            );
+          }
+        });
+
+        Promise.all([...upsertPromises, ...deletePromises])
+          .then(() => console.log(`Supabase list sync completed for ${key}`))
+          .catch(err => console.error(`Supabase list sync failed for ${key}:`, err));
+      });
+    }).catch(err => console.error(`Failed to load Supabase for list sync:`, err));
   }
 
   // Public API
