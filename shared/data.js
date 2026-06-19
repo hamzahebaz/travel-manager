@@ -160,8 +160,7 @@ const TM = (() => {
       logoText: 'TourVoyage',
       websiteUrl: 'website/index.html',
       googleSheetUrl: '',
-      supabaseUrl: '',
-      supabaseKey: '',
+      // supabaseUrl and supabaseKey are hardcoded in data.js — not configurable via settings
       maintenanceMode: false,
       logo: 'website/images/logo.png',
       favicon: 'website/images/favicon.png',
@@ -310,10 +309,6 @@ Sitemap: https://yourdomain.com/sitemap.xml`,
       if (Array.isArray(data)) {
         syncListToSupabase(key, data);
       }
-    }
-    if (key === 'settings') {
-      supabaseClient = null;
-      initSupabaseRealtime();
     }
   }
 
@@ -521,28 +516,10 @@ ${pages.map(p => `  <url>
     });
   }
 
-  function getSupabaseUrl() {
-    try {
-      const settings = get('settings');
-      if (settings && settings.supabaseUrl) return settings.supabaseUrl.trim();
-    } catch(e) {}
-    return (SUPABASE_URL || '').trim();
-  }
-
-  function getSupabaseKey() {
-    try {
-      const settings = get('settings');
-      if (settings && settings.supabaseKey) return settings.supabaseKey.trim();
-    } catch(e) {}
-    return (SUPABASE_ANON_KEY || '').trim();
-  }
-
   function initSupabase() {
-    const url = getSupabaseUrl();
-    const key = getSupabaseKey();
-    if (url && key && window.supabase) {
+    if (SUPABASE_URL && SUPABASE_ANON_KEY && window.supabase) {
       try {
-        supabaseClient = window.supabase.createClient(url, key);
+        supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
         return true;
       } catch(e) {
         console.error('Supabase client init failed:', e);
@@ -552,9 +529,7 @@ ${pages.map(p => `  <url>
   }
 
   function triggerSupabaseSync(key, item, action = 'upsert') {
-    const url = getSupabaseUrl();
-    const keyVal = getSupabaseKey();
-    if (!url || !keyVal) return;
+    if (!SUPABASE_URL || !SUPABASE_ANON_KEY) return;
 
     loadSupabaseScript().then(() => {
       if (!supabaseClient && !initSupabase()) return;
@@ -602,11 +577,9 @@ ${pages.map(p => `  <url>
   }
 
   function autoRestoreFromGoogleSheets() {
-    const sUrl = getSupabaseUrl();
-    const sKey = getSupabaseKey();
     const isAdmin = window.location.pathname.includes('/admin-dash/');
 
-    if (sUrl && sKey) {
+    if (SUPABASE_URL && SUPABASE_ANON_KEY) {
       if (isAdmin) {
         console.log('Admin Dashboard: Startup pull from Supabase...');
         pullFromSupabase(false).then(() => {
@@ -691,9 +664,7 @@ ${pages.map(p => `  <url>
   }
 
   function pullFromSupabase(isBackground = false) {
-    const url = getSupabaseUrl();
-    const key = getSupabaseKey();
-    if (!url || !key) return Promise.reject('Supabase URL/Key not configured');
+    if (!SUPABASE_URL || !SUPABASE_ANON_KEY) return Promise.reject('Supabase URL/Key not configured');
 
     return loadSupabaseScript()
       .then(() => {
@@ -797,9 +768,7 @@ ${pages.map(p => `  <url>
   let realtimeChannel = null;
 
   function initSupabaseRealtime() {
-    const url = getSupabaseUrl();
-    const key = getSupabaseKey();
-    if (!url || !key) return;
+    if (!SUPABASE_URL || !SUPABASE_ANON_KEY) return;
 
     loadSupabaseScript().then(() => {
       if (!supabaseClient && !initSupabase()) return;
@@ -943,9 +912,7 @@ ${pages.map(p => `  <url>
   }
 
   function syncListToSupabase(key, list) {
-    const url = getSupabaseUrl();
-    const keyVal = getSupabaseKey();
-    if (!url || !keyVal) return;
+    if (!SUPABASE_URL || !SUPABASE_ANON_KEY) return;
 
     loadSupabaseScript().then(() => {
       if (!supabaseClient && !initSupabase()) return;
