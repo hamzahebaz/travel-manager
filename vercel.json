@@ -1,6 +1,8 @@
 {
   "cleanUrls": false,
   "rewrites": [
+    { "source": "/sitemap.xml", "destination": "/api/sitemap" },
+    { "source": "/robots.txt", "destination": "/api/robots" },
     { "source": "/", "destination": "/website/index.html" },
     { "source": "/index.html", "destination": "/website/index.html" },
     { "source": "/css/:path*", "destination": "/website/css/:path*" },
