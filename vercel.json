@@ -20,6 +20,18 @@
     { "source": "/cars", "destination": "/website/cars.html" },
     { "source": "/cars.html", "destination": "/website/cars.html" },
     { "source": "/tour-detail", "destination": "/website/tour-detail.html" },
-    { "source": "/tour-detail.html", "destination": "/website/tour-detail.html" }
+    { "source": "/tour-detail.html", "destination": "/website/tour-detail.html" },
+    { "source": "/blog", "destination": "/website/blog.html" },
+    { "source": "/blog.html", "destination": "/website/blog.html" },
+    { "source": "/blog-detail", "destination": "/website/blog-detail.html" },
+    { "source": "/blog-detail.html", "destination": "/website/blog-detail.html" },
+    { "source": "/hotel-detail", "destination": "/website/hotel-detail.html" },
+    { "source": "/hotel-detail.html", "destination": "/website/hotel-detail.html" },
+    { "source": "/privacy", "destination": "/website/privacy.html" },
+    { "source": "/privacy.html", "destination": "/website/privacy.html" },
+    { "source": "/terms", "destination": "/website/terms.html" },
+    { "source": "/terms.html", "destination": "/website/terms.html" },
+    { "source": "/sitemap", "destination": "/website/sitemap.html" },
+    { "source": "/sitemap.html", "destination": "/website/sitemap.html" }
   ]
 }
